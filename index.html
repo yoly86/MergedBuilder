@@ -4,16 +4,19 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Triple One OS Pro</title>
+    
     <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
     <style>
         input[type="text"], input[type="number"], input[type="date"], select, textarea { font-size: 16px !important; }
         .pt-safe { padding-top: env(safe-area-inset-top, 0px); }
         .pb-safe { padding-bottom: env(safe-area-inset-bottom, 0px); }
         .pb-content { padding-bottom: calc(env(safe-area-inset-bottom, 20px) + 90px); }
+        
         @media print {
             @page { margin: 0; }
             body { background-color: white !important; margin: 1cm !important; }
@@ -23,6 +26,7 @@
             .page-container { background: transparent !important; box-shadow: none !important; margin: 0 !important; padding: 0 !important; }
             * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
         }
+        
         input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
         .scrollbar-hide::-webkit-scrollbar { display: none; }
         .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
@@ -34,8 +38,10 @@
 </head>
 <body class="bg-slate-100 font-sans antialiased text-slate-900 selection:bg-indigo-100">
     <div id="root"></div>
+
     <script type="text/babel">
         const { useState, useEffect, useMemo, useRef } = React;
+
         const Icon = ({ name, size = 24, className = "" }) => {
             const icons = {
                 calculator: <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><rect width="16" height="20" x="4" y="2" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="16" y1="14" x2="16" y2="18"/><path d="M16 10h.01"/><path d="M12 10h.01"/><path d="M8 10h.01"/><path d="M12 14h.01"/><path d="M8 14h.01"/><path d="M12 18h.01"/><path d="M8 18h.01"/></svg>,
@@ -55,23 +61,28 @@
                 tag: <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>,
                 percent: <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><line x1="19" y1="5" x2="5" y2="19"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/></svg>,
                 settings: <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>,
+                fileCheck: <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="m9 15 2 2 4-4"/></svg>,
                 building: <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><rect x="4" y="2" width="16" height="20" rx="2" ry="2"/><path d="M9 22v-4h6v4"/><path d="M8 6h.01"/><path d="M16 6h.01"/><path d="M12 6h.01"/><path d="M12 10h.01"/><path d="M12 14h.01"/><path d="M16 10h.01"/><path d="M16 14h.01"/><path d="M8 10h.01"/><path d="M8 14h.01"/></svg>,
                 activity: <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>,
                 alertTriangle: <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>,
                 target: <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>,
                 trendingUp: <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>,
                 trendingDown: <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polyline points="22 17 13.5 8.5 8.5 13.5 2 7"/><polyline points="16 17 22 17 22 11"/></svg>,
-                safe: <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><rect width="18" height="18" x="3" y="3" rx="2"/><circle cx="12" cy="12" r="3"/><path d="M12 9v-1"/><path d="M12 16v-1"/><path d="M15 12h1"/><path d="M8 12h1"/></svg>,
-                checkCircle: <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                shield: <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>,
+                pieChart: <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M21.21 15.89A10 10 0 1 1 8 2.83"/><path d="M22 12A10 10 0 0 0 12 2v10z"/></svg>
             };
             return icons[name] || null;
         };
 
         const STAGES = [
-            { id: 'quote', label: '1. Quote Issued', color: 'bg-slate-200 text-slate-800' }, { id: 'new', label: '2. Deposit Paid', color: 'bg-sky-100 text-sky-800' },
-            { id: 'ordering', label: '3. Ordering Blanks', color: 'bg-amber-100 text-amber-800' }, { id: 'receiving', label: '4. Receiving Blanks', color: 'bg-orange-100 text-orange-800' },
-            { id: 'prepping', label: '5. Prepping / DTF', color: 'bg-indigo-100 text-indigo-800' }, { id: 'printing', label: '6. Emb / Print', color: 'bg-blue-100 text-blue-800' },
-            { id: 'pickup', label: '7. Ready for Pickup', color: 'bg-emerald-100 text-emerald-800' }, { id: 'archived', label: 'Archived', color: 'bg-slate-800 text-white' }
+            { id: 'quote', label: '1. Quote Issued', color: 'bg-slate-200 text-slate-800' },
+            { id: 'new', label: '2. Deposit Paid', color: 'bg-sky-100 text-sky-800' },
+            { id: 'ordering', label: '3. Ordering Blanks', color: 'bg-amber-100 text-amber-800' },
+            { id: 'receiving', label: '4. Receiving Blanks', color: 'bg-orange-100 text-orange-800' },
+            { id: 'prepping', label: '5. Prepping / DTF', color: 'bg-indigo-100 text-indigo-800' },
+            { id: 'printing', label: '6. Emb / Print', color: 'bg-blue-100 text-blue-800' },
+            { id: 'pickup', label: '7. Ready for Pickup', color: 'bg-emerald-100 text-emerald-800' },
+            { id: 'archived', label: 'Archived', color: 'bg-slate-800 text-white' }
         ];
 
         const PLACEMENTS = [
@@ -82,8 +93,10 @@
         ];
 
         const STITCH_MATRIX = [
-            { maxStitch: 8000, prices: [15, 15, 14.5, 14.5, 14] }, { maxStitch: 15000, prices: [22.5, 22, 21, 21, 20] },
-            { maxStitch: 20000, prices: [30, 28, 27, 27, 25] }, { maxStitch: Infinity, prices: [50, 45, 43, 43, 40] }
+            { maxStitch: 8000, prices: [15, 15, 14.5, 14.5, 14] },
+            { maxStitch: 15000, prices: [22.5, 22, 21, 21, 20] },
+            { maxStitch: 20000, prices: [30, 28, 27, 27, 25] },
+            { maxStitch: Infinity, prices: [50, 45, 43, 43, 40] }
         ];
         const QTY_TIERS = [{ max: 10, index: 0 }, { max: 49, index: 1 }, { max: 100, index: 2 }, { max: 299, index: 3 }, { max: Infinity, index: 4 }];
         const getEmbroideryCostPerPiece = (stitches, qty) => {
@@ -106,26 +119,40 @@
         const formatCurrency = (val) => '$' + (val || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
         const generateEmptySizes = () => SIZES_LIST.reduce((acc, size) => { acc[size] = ''; return acc; }, {});
 
+        // --- MAIN APP COMPONENT ---
         function App() {
             const [appModule, setAppModule] = useState('pipeline'); 
             const [pipelineView, setPipelineView] = useState('active'); 
             const [showInternalBreakdown, setShowInternalBreakdown] = useState(false);
             const [bookTab, setBookTab] = useState('dashboard');
+            
             const [selectedOrder, setSelectedOrder] = useState(null); 
             const pdfGenRef = useRef(null);
             const [pdfConfig, setPdfConfig] = useState(null); 
             const [editingOrderId, setEditingOrderId] = useState(null);
 
-            const [orders, setOrders] = useState(() => { try { return JSON.parse(localStorage.getItem('t1_orders')) || []; } catch(e) { return []; } });
-            const [transactions, setTransactions] = useState(() => { try { return JSON.parse(localStorage.getItem('t1_ledger')) || []; } catch(e) { return []; } });
+            // Safe Local Storage
+            const [orders, setOrders] = useState(() => {
+                try { return JSON.parse(localStorage.getItem('t1_orders')) || []; } catch(e) { return []; }
+            });
+            const [transactions, setTransactions] = useState(() => {
+                try { return JSON.parse(localStorage.getItem('t1_ledger')) || []; } catch(e) { return []; }
+            });
             const [businessDetails, setBusinessDetails] = useState(() => {
-                try { return JSON.parse(localStorage.getItem('t1_biz')) || { name: '', address: '', phone: '', email: '', website: '', taxPct: 15, machinePct: 5, consumablePct: 20 }; } 
-                catch(e) { return { name: '', address: '', phone: '', email: '', website: '', taxPct: 15, machinePct: 5, consumablePct: 20 }; }
+                try { return JSON.parse(localStorage.getItem('t1_biz')) || { name: '', address: '', phone: '', email: '', website: '' }; } 
+                catch(e) { return { name: '', address: '', phone: '', email: '', website: '' }; }
+            });
+            
+            // NEW: Shop Financial Settings
+            const [shopSettings, setShopSettings] = useState(() => {
+                try { return JSON.parse(localStorage.getItem('t1_settings')) || { marginGreen: 45, marginYellow: 30, fundConsumables: 5, fundGrowth: 5, fundTax: 15 }; }
+                catch(e) { return { marginGreen: 45, marginYellow: 30, fundConsumables: 5, fundGrowth: 5, fundTax: 15 }; }
             });
 
             useEffect(() => { localStorage.setItem('t1_orders', JSON.stringify(orders)); }, [orders]);
             useEffect(() => { localStorage.setItem('t1_ledger', JSON.stringify(transactions)); }, [transactions]);
             useEffect(() => { localStorage.setItem('t1_biz', JSON.stringify(businessDetails)); }, [businessDetails]);
+            useEffect(() => { localStorage.setItem('t1_settings', JSON.stringify(shopSettings)); }, [shopSettings]);
 
             const defaultOrderData = { customerName: '', orderName: '', dateRequired: '', orderDescription: '', designNotes: '', mockupImage: null, setupFees: '', digitizingFee: '', digitizingCost: '', taxRate: 5, discount: '' };
             const defaultItem = { id: genId(), name: '', color: '', qty: 1, rawCost: '', shippingCost: '1.00', margin: 35, decoDiscount: '', sizes: generateEmptySizes(), locations: [ { id: genId(), type: 'none', placement: 'custom', desc: '', stitches: '', dtfSize: 'small', isPuff: false, puffMarkup: 5, adjustment: '' } ] };
@@ -133,13 +160,17 @@
             const [orderData, setOrderData] = useState(defaultOrderData);
             const [items, setItems] = useState([defaultItem]);
 
+            // --- QUOTER LOGIC & MATH ---
             const updateBiz = (field, value) => setBusinessDetails(prev => ({ ...prev, [field]: value }));
+            const updateSetting = (field, value) => setShopSettings(prev => ({ ...prev, [field]: parseFloat(value) || 0 }));
             const updateOrder = (field, value) => setOrderData(prev => ({ ...prev, [field]: value }));
+            
             const handleImageUpload = (e) => {
                 const file = e.target.files[0];
                 if (file) { const reader = new FileReader(); reader.onloadend = () => updateOrder('mockupImage', reader.result); reader.readAsDataURL(file); }
                 e.target.value = null;
             };
+            
             const updateItem = (itemId, field, value) => setItems(items.map(item => item.id === itemId ? { ...item, [field]: value } : item));
             const updateSize = (itemId, sizeKey, value) => setItems(items.map(item => item.id === itemId ? { ...item, sizes: { ...item.sizes, [sizeKey]: value } } : item));
             const addLocation = (itemId) => setItems(items.map(item => item.id === itemId ? { ...item, locations: [...item.locations, { id: genId(), type: 'none', placement: 'custom', desc: '', stitches: '', dtfSize: 'small', isPuff: false, puffMarkup: 5, adjustment: '' }] } : item));
@@ -150,46 +181,65 @@
             const removeItem = (itemId) => { if(items.length > 1) setItems(items.filter(item => item.id !== itemId)); };
 
             const calc = useMemo(() => {
-                let orderGarmentCostTotal = 0, orderGarmentRetailTotal = 0, orderDecoRetailTotal = 0, orderDecoCostTotal = 0;
+                let orderGarmentCostTotal = 0, orderGarmentRetailTotal = 0, orderDecoRetailTotal = 0, orderDecoCostTotal = 0, totalDtfCost = 0, totalThreadCost = 0, totalStabilizerCost = 0;
+                
                 const processedItems = items.map(item => {
                     const sizeSum = SIZES_LIST.reduce((sum, size) => sum + Math.max(0, parseInt(item.sizes?.[size]) || 0), 0);
                     const calculatedQty = sizeSum > 0 ? sizeSum : Math.max(1, parseInt(item.qty) || 1);
                     const rawCost = parseFloat(item.rawCost) || 0;
                     const shipping = parseFloat(item.shippingCost) || 0;
                     const margin = parseFloat(item.margin) || 0;
+                    
                     const explicitDecoDiscount = Math.abs(parseFloat(item.decoDiscount) || 0);
+
                     const landedCost = rawCost + shipping;
                     const effectiveMargin = Math.min(margin, 99.9);
                     const clientGarmentPrice = landedCost / (1 - (effectiveMargin / 100));
                     
-                    let dtfCount = 0, itemDecoPerPiece = 0, itemDecoCostPerPiece = 0;
+                    let dtfCount = 0, itemDecoPerPiece = 0, itemDecoCostPerPiece = 0, itemDtfCost = 0, itemThreadCost = 0, itemStabilizerCost = 0;
+                    
                     const processedLocations = item.locations.map(loc => {
                         let baseCost = 0, matCost = 0;
                         if (loc.type === 'embroidery') {
                             baseCost = getEmbroideryCostPerPiece(parseInt(loc.stitches) || 0, calculatedQty);
                             if (loc.isPuff) baseCost += parseFloat(loc.puffMarkup) || 0;
-                            matCost = 1.00 + ((parseInt(loc.stitches) || 0) / 2500); 
+                            let stabCost = 1.00;
+                            let threadCost = ((parseInt(loc.stitches) || 0) / 2500);
+                            matCost = stabCost + threadCost;
+                            itemStabilizerCost += stabCost; itemThreadCost += threadCost;
                         } else if (loc.type === 'dtf') {
                             dtfCount++;
                             baseCost = dtfCount === 1 ? (DTF_PRIMARY_FEES[loc.dtfSize] || 0) : (DTF_SECONDARY_FEES[loc.dtfSize] || 0);
                             matCost = DTF_MATERIAL_COSTS[loc.dtfSize] || 0;
+                            itemDtfCost += matCost;
                         }
-                        let cost = Math.max(0, baseCost + (parseFloat(loc.adjustment) || 0));
+                        let adjustmentCost = parseFloat(loc.adjustment) || 0;
+                        let cost = Math.max(0, baseCost + adjustmentCost);
                         itemDecoPerPiece += cost; 
                         itemDecoCostPerPiece += matCost;
                         return { ...loc, baseCost, cost, materialCost: matCost, isFirstDtf: loc.type === 'dtf' && dtfCount === 1 };
                     });
+                    
                     itemDecoPerPiece = Math.max(0, itemDecoPerPiece - explicitDecoDiscount);
 
                     const totalGarmentCost = landedCost * calculatedQty;
+                    const totalGarmentRetail = clientGarmentPrice * calculatedQty;
+                    const totalDecoRetail = itemDecoPerPiece * calculatedQty;
+                    const totalDecoMaterialCost = itemDecoCostPerPiece * calculatedQty;
                     const lineTotalPerPiece = clientGarmentPrice + itemDecoPerPiece;
                     const lineTotal = lineTotalPerPiece * calculatedQty;
-                    orderGarmentCostTotal += totalGarmentCost; 
-                    orderGarmentRetailTotal += (clientGarmentPrice * calculatedQty);
-                    orderDecoRetailTotal += (itemDecoPerPiece * calculatedQty); 
-                    orderDecoCostTotal += (itemDecoCostPerPiece * calculatedQty);
+                    const decoDiscountTotal = explicitDecoDiscount * calculatedQty;
+                    
+                    // Margin Health Calculation per item
+                    const itemTotalCost = landedCost + itemDecoCostPerPiece;
+                    const itemProfit = lineTotalPerPiece - itemTotalCost;
+                    const itemMarginPercent = lineTotalPerPiece > 0 ? (itemProfit / lineTotalPerPiece) * 100 : 0;
 
-                    return { ...item, calculatedQty, sizeSum, landedCost, clientGarmentPrice, processedLocations, itemDecoPerPiece, lineTotalPerPiece, lineTotal, explicitDecoDiscount, decoDiscountTotal: explicitDecoDiscount * calculatedQty };
+                    orderGarmentCostTotal += totalGarmentCost; orderGarmentRetailTotal += totalGarmentRetail;
+                    orderDecoRetailTotal += totalDecoRetail; orderDecoCostTotal += totalDecoMaterialCost;
+                    totalDtfCost += itemDtfCost * calculatedQty; totalThreadCost += itemThreadCost * calculatedQty; totalStabilizerCost += itemStabilizerCost * calculatedQty;
+
+                    return { ...item, calculatedQty, sizeSum, landedCost, clientGarmentPrice, processedLocations, itemDecoPerPiece, totalGarmentRetail, totalDecoRetail, lineTotalPerPiece, lineTotal, explicitDecoDiscount, decoDiscountTotal, itemMarginPercent };
                 });
 
                 const setup = parseFloat(orderData.setupFees) || 0;
@@ -197,26 +247,33 @@
                 const digitizingCost = parseFloat(orderData.digitizingCost) || 0;
                 const discount = Math.abs(parseFloat(orderData.discount) || 0);
                 const taxRate = parseFloat(orderData.taxRate) || 0;
+                
                 const totalDecoDiscount = processedItems.reduce((sum, item) => sum + (item.decoDiscountTotal || 0), 0);
                 const subtotal = orderGarmentRetailTotal + orderDecoRetailTotal + setup + digitizing;
                 const grossSubtotal = subtotal + totalDecoDiscount; 
                 const discountedSubtotal = Math.max(0, subtotal - discount);
                 const tax = discountedSubtotal * (taxRate / 100);
                 const grandTotal = discountedSubtotal + tax;
-                const reservePercent = parseFloat(businessDetails.machinePct) || 5;
-                const machineReserve = discountedSubtotal * (reservePercent / 100);
+                
+                // Fund Allocations
+                const allocConsumables = discountedSubtotal * (shopSettings.fundConsumables / 100);
+                const allocGrowth = discountedSubtotal * (shopSettings.fundGrowth / 100);
+                const allocTax = discountedSubtotal * (shopSettings.fundTax / 100);
+
                 const grossProfit = discountedSubtotal - orderGarmentCostTotal;
-                const netProfit = grossProfit - orderDecoCostTotal - digitizingCost;
-                const totalMarginPercent = discountedSubtotal > 0 ? (netProfit / discountedSubtotal) * 100 : 0;
+                const netProfit = grossProfit - orderDecoCostTotal - allocConsumables - allocGrowth - allocTax - digitizingCost;
                 const deposit = Math.ceil(grandTotal) / 2;
+                
+                // Overall Margin
+                const overallMarginPercent = discountedSubtotal > 0 ? (netProfit / discountedSubtotal) * 100 : 0;
 
-                const taxFundAlloc = discountedSubtotal * ((parseFloat(businessDetails.taxPct) || 15) / 100);
-                const machineFundAlloc = discountedSubtotal * ((parseFloat(businessDetails.machinePct) || 5) / 100);
-                const consumableFundAlloc = discountedSubtotal * ((parseFloat(businessDetails.consumablePct) || 20) / 100);
-                const operatingCash = discountedSubtotal - taxFundAlloc - machineFundAlloc - consumableFundAlloc - orderGarmentCostTotal - orderDecoCostTotal - digitizingCost;
-
-                return { items: processedItems, orderGarmentCostTotal, orderDecoCostTotal, setup, digitizing, digitizingCost, discount, machineReserve, subtotal, grossSubtotal, discountedSubtotal, tax, grandTotal, netProfit, deposit, totalMarginPercent, totalDiscount: totalDecoDiscount + discount, allocations: { tax: taxFundAlloc, machine: machineFundAlloc, consumables: consumableFundAlloc, opCash: operatingCash } };
-            }, [items, orderData, businessDetails]);
+                return { 
+                    items: processedItems, orderGarmentCostTotal, orderDecoCostTotal, setup, digitizing, digitizingCost, discount, 
+                    allocConsumables, allocGrowth, allocTax, 
+                    subtotal, grossSubtotal, discountedSubtotal, tax, grandTotal, netProfit, deposit, totalDiscount: totalDecoDiscount + discount,
+                    overallMarginPercent
+                };
+            }, [items, orderData, shopSettings]);
 
             const getSizeString = (item) => {
                 const activeSizes = SIZES_LIST.filter(s => (parseInt(item.sizes?.[s]) || 0) > 0);
@@ -226,9 +283,11 @@
 
             const imageInputRef = useRef(null);
 
+            // --- PIPELINE & MODAL ACTIONS ---
             const handleSendToPipeline = () => {
                 if(!orderData.customerName) return alert("Please add a Customer Name before sending to the Pipeline.");
                 const currentStage = editingOrderId ? (orders.find(o=>o.id===editingOrderId)?.stage || 'quote') : 'quote';
+                
                 const newOrder = {
                     id: editingOrderId || `JOB-${Date.now().toString().slice(-4)}`,
                     customer: orderData.customerName,
@@ -240,12 +299,14 @@
                     fullData: { orderData, items, calc },
                     dateAdded: editingOrderId ? (orders.find(o=>o.id===editingOrderId)?.dateAdded || new Date().toLocaleDateString()) : new Date().toLocaleDateString()
                 };
+                
                 if(editingOrderId) {
                     setOrders(orders.map(o => o.id === editingOrderId ? newOrder : o));
                     setEditingOrderId(null);
                 } else {
                     setOrders([newOrder, ...orders]);
                 }
+                
                 setOrderData(defaultOrderData);
                 setItems([defaultItem]);
                 setAppModule('pipeline');
@@ -304,6 +365,7 @@
                 }
             };
 
+            // --- PDF ENGINE ---
             useEffect(() => {
                 if (pdfConfig && pdfGenRef.current) {
                     const { order, type } = pdfConfig;
@@ -316,6 +378,7 @@
                         html2canvas: { scale: 2, useCORS: true, letterRendering: true }, 
                         jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' } 
                     };
+                    
                     pdfGenRef.current.style.display = 'block';
                     setTimeout(() => {
                         window.html2pdf().set(opt).from(pdfGenRef.current).save().then(() => {
@@ -326,13 +389,15 @@
                 }
             }, [pdfConfig]);
 
+            // --- BOOKKEEPING & KPI LOGIC ---
             const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
             const ledCats = {
                 income: ['Product Sales', 'Service Income', 'Online Sales', 'Consulting / Freelance', 'Other Business Income'],
-                expense: ['Garments / Blanks', 'Consumables (DTF/Thread)', 'Equipment Purchase', 'Repairs / Maintenance', 'Taxes Paid', 'Advertising & Marketing', 'Shipping & Packaging', 'Software & Subscriptions', 'Office Supplies', 'Travel', 'Rent', 'Professional Fees', 'Spoilage / Machine Error']
+                expense: ['Advertising & Marketing', 'Shipping & Packaging', 'Software & Subscriptions', 'Office Supplies', 'Travel', 'Rent', 'Professional Fees', 'Garments / Blanks', 'Consumables (DTF/Thread)', 'Spoilage / Machine Error', 'Growth / Machine Repair', 'Taxes Paid']
             };
 
             const filteredByYear = useMemo(() => transactions.filter(t => new Date(t.date).getFullYear() === parseInt(selectedYear)), [transactions, selectedYear]);
+            
             const calculateTotals = (data) => {
                 const income = data.filter(t => t.type === 'income').reduce((sum, t) => sum + (parseFloat(t.netAmount) || 0), 0);
                 const expenses = data.filter(t => t.type === 'expense').reduce((sum, t) => sum + (parseFloat(t.netAmount) || 0), 0);
@@ -342,26 +407,41 @@
             };
             const annualTotals = useMemo(() => calculateTotals(filteredByYear), [filteredByYear]);
             
+            // Advanced KPIs & Funds
             const kpiData = useMemo(() => {
                 const activeOrders = orders.filter(o => o.stage !== 'quote' && o.stage !== 'archived');
                 const pipelineValue = activeOrders.reduce((sum, o) => sum + (o.total || 0), 0);
+                
                 const convertedOrders = orders.filter(o => o.stage !== 'quote');
                 const aov = convertedOrders.length > 0 ? convertedOrders.reduce((sum, o) => sum + (o.total || 0), 0) / convertedOrders.length : 0;
+                
                 const spoilageTotal = filteredByYear.filter(t => t.category === 'Spoilage / Machine Error' && t.type === 'expense').reduce((sum, t) => sum + t.netAmount, 0);
                 const spoilageRate = annualTotals.expenses > 0 ? (spoilageTotal / annualTotals.expenses) * 100 : 0;
-                const expenseBreakdown = ledCats.expense.map(cat => ({ name: cat, value: filteredByYear.filter(t => t.category === cat && t.type === 'expense').reduce((sum, t) => sum + t.netAmount, 0) })).filter(c => c.value > 0).sort((a, b) => b.value - a.value);
 
-                const allTimeIn = transactions.filter(t => t.type === 'income').reduce((sum, t) => sum + t.netAmount, 0);
-                const taxSpent = transactions.filter(t => t.type === 'expense' && t.category === 'Taxes Paid').reduce((sum, t) => sum + t.netAmount, 0);
-                const machineSpent = transactions.filter(t => t.type === 'expense' && (t.category === 'Repairs / Maintenance' || t.category === 'Equipment Purchase')).reduce((sum, t) => sum + t.netAmount, 0);
-                const consumablesSpent = transactions.filter(t => t.type === 'expense' && (t.category === 'Garments / Blanks' || t.category === 'Consumables (DTF/Thread)')).reduce((sum, t) => sum + t.netAmount, 0);
+                const expenseBreakdown = ledCats.expense.map(cat => {
+                    return { name: cat, value: filteredByYear.filter(t => t.category === cat && t.type === 'expense').reduce((sum, t) => sum + t.netAmount, 0) };
+                }).filter(c => c.value > 0).sort((a, b) => b.value - a.value);
 
-                const taxFund = (allTimeIn * ((businessDetails.taxPct || 15) / 100)) - taxSpent;
-                const machineFund = (allTimeIn * ((businessDetails.machinePct || 5) / 100)) - machineSpent;
-                const consumablesFund = (allTimeIn * ((businessDetails.consumablePct || 20) / 100)) - consumablesSpent;
+                // Calculate Fund Balances (Total Archived Income Allocations minus specific expenses)
+                const archivedIncome = orders.filter(o => o.stage === 'archived').reduce((sum, o) => sum + (o.fullData?.calc?.discountedSubtotal || 0), 0);
+                
+                let consTotal = archivedIncome * (shopSettings.fundConsumables / 100);
+                let growthTotal = archivedIncome * (shopSettings.fundGrowth / 100);
+                let taxTotal = archivedIncome * (shopSettings.fundTax / 100);
 
-                return { pipelineValue, aov, spoilageRate, spoilageTotal, activeJobsCount: activeOrders.length, expenseBreakdown, taxFund, machineFund, consumablesFund };
-            }, [orders, filteredByYear, annualTotals.expenses, transactions, businessDetails]);
+                const consSpent = transactions.filter(t => t.type === 'expense' && t.category === 'Consumables (DTF/Thread)').reduce((sum, t) => sum + t.amount, 0);
+                const growthSpent = transactions.filter(t => t.type === 'expense' && t.category === 'Growth / Machine Repair').reduce((sum, t) => sum + t.amount, 0);
+                const taxSpent = transactions.filter(t => t.type === 'expense' && t.category === 'Taxes Paid').reduce((sum, t) => sum + t.amount, 0);
+
+                return { 
+                    pipelineValue, aov, spoilageRate, spoilageTotal, activeJobsCount: activeOrders.length, expenseBreakdown,
+                    funds: {
+                        consumables: Math.max(0, consTotal - consSpent),
+                        growth: Math.max(0, growthTotal - growthSpent),
+                        tax: Math.max(0, taxTotal - taxSpent)
+                    }
+                };
+            }, [orders, filteredByYear, annualTotals.expenses, shopSettings, transactions]);
 
             const currentLedgerType = bookTab === 'expenses' ? 'expense' : 'income';
             const filteredLedgerTransactions = useMemo(() => transactions.filter(t => t.type === currentLedgerType), [transactions, currentLedgerType]);
@@ -370,7 +450,10 @@
                 e.preventDefault();
                 const formData = new FormData(e.target);
                 const amount = parseFloat(formData.get('amount')) || 0;
-                const newTx = { id: Date.now(), type: formData.get('type'), date: formData.get('date'), category: formData.get('category'), amount, netAmount: amount, description: formData.get('description') };
+                const newTx = {
+                    id: Date.now(), type: formData.get('type'), date: formData.get('date'), category: formData.get('category'),
+                    amount, netAmount: amount, description: formData.get('description')
+                };
                 setTransactions([newTx, ...transactions]);
                 e.target.reset();
             };
@@ -379,17 +462,37 @@
                 <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex flex-col relative overflow-hidden group">
                     <div className={`absolute -right-2 -top-2 p-6 opacity-[0.03] transition-transform group-hover:scale-110 text-${color}-600`}><IconCmp size={80} /></div>
                     <span className="text-slate-400 text-[10px] font-black uppercase tracking-widest">{title}</span>
-                    <div className="mt-2"><span className={`text-2xl md:text-3xl font-black text-slate-800`}>{typeof value === 'number' && title !== 'Profit Margin' && title !== 'Spoilage Rate' ? formatCurrency(value) : value}</span></div>
+                    <div className="mt-2">
+                        <span className={`text-2xl md:text-3xl font-black text-slate-800`}>
+                            {typeof value === 'number' && title !== 'Profit Margin' && title !== 'Spoilage Rate' ? formatCurrency(value) : value}
+                        </span>
+                    </div>
                     {subtext && <span className="text-[10px] text-slate-400 mt-2 font-bold uppercase">{subtext}</span>}
                 </div>
             );
 
+            // Returns appropriate health color class
+            const getHealthColor = (margin) => {
+                if (margin >= shopSettings.marginGreen) return 'text-emerald-500';
+                if (margin >= shopSettings.marginYellow) return 'text-amber-500';
+                return 'text-rose-500';
+            };
+            const getHealthBg = (margin) => {
+                if (margin >= shopSettings.marginGreen) return 'bg-emerald-50 border-emerald-200';
+                if (margin >= shopSettings.marginYellow) return 'bg-amber-50 border-amber-200';
+                return 'bg-rose-50 border-rose-200';
+            };
+
+            // --- UI RENDERS ---
             const renderSettings = () => (
-                <div className="fade-in max-w-4xl mx-auto space-y-6">
+                <div className="fade-in max-w-2xl mx-auto space-y-6">
                     <div className="bg-white rounded-2xl shadow-sm p-6 md:p-8 border border-slate-200">
                         <div className="flex items-start gap-4 mb-6 border-b border-slate-100 pb-6">
                             <div className="p-3 bg-indigo-50 rounded-xl text-indigo-600"><Icon name="building" size={24}/></div>
-                            <div><h2 className="text-lg font-black text-slate-800 uppercase tracking-widest">Business Profile</h2><p className="text-xs text-slate-500 mt-1 leading-relaxed">These details appear on your customer-facing PDFs. They are securely saved only to this device.</p></div>
+                            <div>
+                                <h2 className="text-lg font-black text-slate-800 uppercase tracking-widest">Business Profile</h2>
+                                <p className="text-xs text-slate-500 mt-1 leading-relaxed">These details appear on your customer-facing Proposals, Invoices, and Receipts. They are securely saved only to this device's local storage.</p>
+                            </div>
                         </div>
                         <div className="space-y-5">
                             <div><label className="block text-[11px] font-bold text-slate-500 mb-1.5 uppercase">Business Name</label><input type="text" placeholder="e.g. Triple One Threads" className="w-full p-3 soft-input rounded-xl text-sm font-semibold text-slate-800" value={businessDetails.name} onChange={e => updateBiz('name', e.target.value)} /></div>
@@ -401,46 +504,74 @@
                             <div><label className="block text-[11px] font-bold text-slate-500 mb-1.5 uppercase">Website / Social URL</label><input type="text" placeholder="tripleonethreads.com" className="w-full p-3 soft-input rounded-xl text-sm text-indigo-600" value={businessDetails.website} onChange={e => updateBiz('website', e.target.value)} /></div>
                         </div>
                     </div>
+
                     <div className="bg-white rounded-2xl shadow-sm p-6 md:p-8 border border-slate-200">
                         <div className="flex items-start gap-4 mb-6 border-b border-slate-100 pb-6">
-                            <div className="p-3 bg-emerald-50 rounded-xl text-emerald-600"><Icon name="wallet" size={24}/></div>
-                            <div><h2 className="text-lg font-black text-slate-800 uppercase tracking-widest">Global Fund Allocations</h2><p className="text-xs text-slate-500 mt-1 leading-relaxed">Define how you want to split every incoming dollar. This builds your "Profit First" virtual buckets in the Ledger Dashboard.</p></div>
+                            <div className="p-3 bg-emerald-50 rounded-xl text-emerald-600"><Icon name="pieChart" size={24}/></div>
+                            <div>
+                                <h2 className="text-lg font-black text-slate-800 uppercase tracking-widest">Financial Margins & Funds</h2>
+                                <p className="text-xs text-slate-500 mt-1 leading-relaxed">Set your health meter targets and automate how much cash gets transferred to savings per job.</p>
+                            </div>
                         </div>
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                            <div className="bg-slate-50 p-4 rounded-xl border border-slate-200"><label className="block text-[11px] font-bold text-slate-500 mb-1.5 uppercase">Tax Reserve (%)</label><input type="number" className="w-full p-3 soft-input rounded-lg text-lg font-bold text-rose-600 text-center" value={businessDetails.taxPct} onChange={e => updateBiz('taxPct', e.target.value)} /><p className="text-[10px] text-slate-400 mt-2 text-center">Set aside for government dues.</p></div>
-                            <div className="bg-slate-50 p-4 rounded-xl border border-slate-200"><label className="block text-[11px] font-bold text-slate-500 mb-1.5 uppercase">Machine/Growth Fund (%)</label><input type="number" className="w-full p-3 soft-input rounded-lg text-lg font-bold text-indigo-600 text-center" value={businessDetails.machinePct} onChange={e => updateBiz('machinePct', e.target.value)} /><p className="text-[10px] text-slate-400 mt-2 text-center">Set aside for repairs or new gear.</p></div>
-                            <div className="bg-slate-50 p-4 rounded-xl border border-slate-200"><label className="block text-[11px] font-bold text-slate-500 mb-1.5 uppercase">Consumables Fund (%)</label><input type="number" className="w-full p-3 soft-input rounded-lg text-lg font-bold text-emerald-600 text-center" value={businessDetails.consumablePct} onChange={e => updateBiz('consumablePct', e.target.value)} /><p className="text-[10px] text-slate-400 mt-2 text-center">Set aside to buy more blanks/DTF.</p></div>
+                        
+                        <div className="mb-6">
+                            <h3 className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-3">Profit Margin "Health Meter" Targets</h3>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                                <div className="bg-emerald-50 p-4 rounded-xl border border-emerald-100">
+                                    <label className="block text-[11px] font-bold text-emerald-700 mb-1.5 uppercase">Green Margin (Target)</label>
+                                    <div className="flex items-center gap-2"><span className="text-sm font-bold text-emerald-600">&gt;</span><input type="number" className="w-full p-2 soft-input rounded-lg text-sm text-emerald-700 font-bold" value={shopSettings.marginGreen} onChange={e => updateSetting('marginGreen', e.target.value)} /><span className="text-sm font-bold text-emerald-600">%</span></div>
+                                </div>
+                                <div className="bg-amber-50 p-4 rounded-xl border border-amber-100">
+                                    <label className="block text-[11px] font-bold text-amber-700 mb-1.5 uppercase">Yellow Margin (Warning)</label>
+                                    <div className="flex items-center gap-2"><span className="text-sm font-bold text-amber-600">&gt;</span><input type="number" className="w-full p-2 soft-input rounded-lg text-sm text-amber-700 font-bold" value={shopSettings.marginYellow} onChange={e => updateSetting('marginYellow', e.target.value)} /><span className="text-sm font-bold text-amber-600">%</span></div>
+                                </div>
+                                <p className="text-[10px] text-slate-400 md:col-span-2 italic">Anything below the Yellow Margin target will automatically trigger the Red (Danger) warning on quotes.</p>
+                            </div>
+                        </div>
+
+                        <div>
+                            <h3 className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-3">Automated Fund Allocations</h3>
+                            <p className="text-[11px] text-slate-500 mb-4">These percentages are deducted from a job's gross subtotal to calculate your true Net Operating Profit.</p>
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                                <div><label className="block text-[11px] font-bold text-slate-500 mb-1.5 uppercase">Consumables Fund (%)</label><input type="number" className="w-full p-3 soft-input rounded-xl text-sm" value={shopSettings.fundConsumables} onChange={e => updateSetting('fundConsumables', e.target.value)} /></div>
+                                <div><label className="block text-[11px] font-bold text-slate-500 mb-1.5 uppercase">Growth / Machine (%)</label><input type="number" className="w-full p-3 soft-input rounded-xl text-sm" value={shopSettings.fundGrowth} onChange={e => updateSetting('fundGrowth', e.target.value)} /></div>
+                                <div><label className="block text-[11px] font-bold text-slate-500 mb-1.5 uppercase">Tax Reserve (%)</label><input type="number" className="w-full p-3 soft-input rounded-xl text-sm" value={shopSettings.fundTax} onChange={e => updateSetting('fundTax', e.target.value)} /></div>
+                            </div>
                         </div>
                     </div>
                 </div>
             );
 
-            const renderQuoter = () => {
-                const healthColor = calc.totalMarginPercent >= 45 ? 'emerald' : calc.totalMarginPercent >= 30 ? 'amber' : 'rose';
-                const healthText = calc.totalMarginPercent >= 45 ? 'Healthy Margin' : calc.totalMarginPercent >= 30 ? 'Acceptable Margin' : 'Low Margin Risk';
-
-                return (
+            const renderQuoter = () => (
                 <div className="space-y-6 pb-6 fade-in">
                     <div className="bg-white rounded-2xl shadow-sm p-6 border border-slate-200">
                         <div className="flex justify-between items-center mb-6">
                             <h2 className="text-sm font-bold text-slate-800 flex items-center gap-2 uppercase tracking-wider"><Icon name="calculator" size={18} className="text-indigo-500" /> Build Quote</h2>
-                            <button onClick={() => setShowInternalBreakdown(!showInternalBreakdown)} className="text-xs font-bold text-indigo-600 bg-indigo-50 px-3 py-1.5 rounded-lg border border-indigo-100 hover:bg-indigo-100 transition-colors">{showInternalBreakdown ? 'Hide Math' : 'View Line Items & Math'}</button>
+                            <button onClick={() => setShowInternalBreakdown(!showInternalBreakdown)} className="text-xs font-bold text-indigo-600 bg-indigo-50 px-3 py-1.5 rounded-lg border border-indigo-100">
+                                {showInternalBreakdown ? 'Hide Math' : 'View Line Items & Math'}
+                            </button>
                         </div>
+                        
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-6">
                             <div><label className="block text-xs font-semibold text-slate-500 mb-1 flex items-center gap-1.5"><Icon name="user" size={14}/> Customer / Company</label><input type="text" className="w-full p-3 soft-input rounded-xl text-sm" value={orderData.customerName} onChange={e => updateOrder('customerName', e.target.value)} /></div>
                             <div><label className="block text-xs font-semibold text-slate-500 mb-1 flex items-center gap-1.5"><Icon name="fileText" size={14}/> Order Name</label><input type="text" placeholder="e.g. Summer Staff Gear" className="w-full p-3 soft-input rounded-xl text-sm" value={orderData.orderName} onChange={e => updateOrder('orderName', e.target.value)} /></div>
                             <div><label className="block text-xs font-semibold text-slate-500 mb-1 flex items-center gap-1.5"><Icon name="calendar" size={14}/> Date Required</label><input type="date" className="w-full p-3 soft-input rounded-xl text-sm text-slate-600" value={orderData.dateRequired} onChange={e => updateOrder('dateRequired', e.target.value)} /></div>
+                            
                             <div>
                                 <label className="block text-xs font-semibold text-slate-500 mb-1 flex items-center gap-1.5"><Icon name="image" size={14}/> Mockup Image</label>
                                 <input type="file" accept="image/*" style={{ display: 'none' }} ref={imageInputRef} onChange={handleImageUpload} />
-                                <button onClick={() => imageInputRef.current && imageInputRef.current.click()} className="w-full p-3 bg-indigo-50 text-indigo-700 border border-indigo-200 border-dashed rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-sm font-bold flex items-center justify-center gap-2 hover:bg-indigo-100 transition-colors"><Icon name="image" size={18} /> {orderData.mockupImage ? 'Replace Mockup' : 'Upload Mockup'}</button>
+                                <button onClick={() => imageInputRef.current && imageInputRef.current.click()} className="w-full p-3 bg-indigo-50 text-indigo-700 border border-indigo-200 border-dashed rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-sm font-bold flex items-center justify-center gap-2 hover:bg-indigo-100 transition-colors">
+                                    <Icon name="image" size={18} /> {orderData.mockupImage ? 'Replace Mockup' : 'Upload Mockup'}
+                                </button>
                             </div>
+
                             {orderData.mockupImage && (
                                 <div className="md:col-span-2 relative bg-slate-50 p-2 rounded-xl border border-slate-200 flex justify-center">
                                     <img src={orderData.mockupImage} alt="Mockup" className="max-h-48 rounded-lg object-contain shadow-sm" />
                                     <button onClick={() => updateOrder('mockupImage', null)} className="absolute top-4 right-4 bg-red-500 hover:bg-red-600 text-white p-2 rounded-full shadow-md transition-transform active:scale-95"><Icon name="trash" size={16} /></button>
                                 </div>
                             )}
+
                             <div className="md:col-span-2"><label className="block text-xs font-semibold text-slate-500 mb-1">Job Description / Overview</label><textarea placeholder="Visible on Proposal..." className="w-full p-3 soft-input rounded-xl text-sm resize-none" rows="2" value={orderData.orderDescription} onChange={e => updateOrder('orderDescription', e.target.value)}></textarea></div>
                             <div className="md:col-span-2"><label className="block text-xs font-semibold text-indigo-500 mb-1">Design Notes / Proofing Disclaimers</label><textarea placeholder="Visible on Proposal..." className="w-full p-3 bg-indigo-50 border border-indigo-100 rounded-xl focus:ring-2 focus:ring-indigo-400 outline-none text-sm resize-none" rows="2" value={orderData.designNotes} onChange={e => updateOrder('designNotes', e.target.value)}></textarea></div>
                         </div>
@@ -474,7 +605,7 @@
                                     <div className="grid grid-cols-2 md:grid-cols-4 gap-3 bg-white p-3 rounded-lg border border-slate-200">
                                         <div><label className="block text-[10px] font-bold text-slate-500 mb-1">Wholesale $</label><input type="number" className="w-full p-2 soft-input rounded-md text-sm" value={item.rawCost} onChange={e => updateItem(item.id, 'rawCost', e.target.value)} /></div>
                                         <div><label className="block text-[10px] font-bold text-slate-500 mb-1">Freight $</label><input type="number" className="w-full p-2 soft-input rounded-md text-sm" value={item.shippingCost} onChange={e => updateItem(item.id, 'shippingCost', e.target.value)} /></div>
-                                        <div><label className="block text-[10px] font-bold text-slate-500 mb-1">Margin %</label><input type="number" className="w-full p-2 soft-input rounded-md text-sm text-indigo-700 font-bold" value={item.margin} onChange={e => updateItem(item.id, 'margin', e.target.value)} /></div>
+                                        <div><label className="block text-[10px] font-bold text-slate-500 mb-1">Target Margin %</label><input type="number" className="w-full p-2 soft-input rounded-md text-sm text-indigo-700 font-bold" value={item.margin} onChange={e => updateItem(item.id, 'margin', e.target.value)} /></div>
                                         <div>
                                             <label className="block text-[10px] font-bold text-emerald-600 mb-1">Deco Discount $</label>
                                             <div className="relative">
@@ -488,21 +619,50 @@
                                         {item.processedLocations.map((loc, lIdx) => (
                                             <div key={loc.id} className="bg-white border border-slate-200 rounded-lg p-3 mb-2 flex flex-col lg:flex-row gap-3 items-center relative pr-8">
                                                 {item.locations.length > 1 && <button onClick={() => removeLocation(item.id, loc.id)} className="absolute right-2 top-2 text-slate-300 hover:text-red-500"><Icon name="x" size={14} /></button>}
-                                                <select className="w-full lg:w-32 p-2 soft-input rounded-md text-xs font-bold shrink-0" value={loc.type} onChange={e => updateLocation(item.id, loc.id, 'type', e.target.value)}><option value="none">None</option><option value="embroidery">Embroidery</option><option value="dtf">DTF Print</option></select>
+                                                
+                                                <select className="w-full lg:w-32 p-2 soft-input rounded-md text-xs font-bold shrink-0" value={loc.type} onChange={e => updateLocation(item.id, loc.id, 'type', e.target.value)}>
+                                                    <option value="none">None</option>
+                                                    <option value="embroidery">Embroidery</option>
+                                                    <option value="dtf">DTF Print</option>
+                                                </select>
+                                                
                                                 {loc.type === 'embroidery' && (
                                                     <div className="w-full lg:w-auto flex items-center gap-2 shrink-0">
                                                         <input type="number" placeholder="Stitches" className="w-24 p-2 soft-input rounded-md text-xs" value={loc.stitches} onChange={e => updateLocation(item.id, loc.id, 'stitches', e.target.value)} />
-                                                        <label className="flex items-center gap-1 text-[10px] font-bold text-slate-500 cursor-pointer whitespace-nowrap"><input type="checkbox" checked={loc.isPuff} onChange={e => updateLocation(item.id, loc.id, 'isPuff', e.target.checked)} className="rounded text-indigo-600 focus:ring-indigo-500" />3D Puff</label>
+                                                        <label className="flex items-center gap-1 text-[10px] font-bold text-slate-500 cursor-pointer whitespace-nowrap">
+                                                            <input type="checkbox" checked={loc.isPuff} onChange={e => updateLocation(item.id, loc.id, 'isPuff', e.target.checked)} className="rounded text-indigo-600 focus:ring-indigo-500" />
+                                                            3D Puff
+                                                        </label>
                                                         {loc.isPuff && <input type="number" className="w-16 p-2 soft-input rounded-md text-xs text-indigo-700 font-bold" value={loc.puffMarkup} onChange={e => updateLocation(item.id, loc.id, 'puffMarkup', e.target.value)} placeholder="+$" />}
                                                     </div>
                                                 )}
-                                                {loc.type === 'dtf' && <select className="w-full lg:w-32 p-2 soft-input rounded-md text-xs shrink-0" value={loc.dtfSize} onChange={e => updateLocation(item.id, loc.id, 'dtfSize', e.target.value)}>{DTF_SIZES.map(s => <option key={s.id} value={s.id}>{s.label}</option>)}</select>}
-                                                {loc.type !== 'none' && <select className="w-full lg:w-40 p-2 soft-input rounded-md text-xs shrink-0" value={loc.placement} onChange={e => updateLocation(item.id, loc.id, 'placement', e.target.value)}>{PLACEMENTS.map(p => <option key={p.id} value={p.id}>{p.label}</option>)}</select>}
-                                                {loc.type !== 'none' && <input type="text" placeholder="Custom notes..." className="w-full flex-1 p-2 soft-input rounded-md text-xs min-w-[100px]" value={loc.desc} onChange={e => updateLocation(item.id, loc.id, 'desc', e.target.value)} />}
-                                                {loc.type !== 'none' && <div className="w-full lg:w-auto flex justify-end shrink-0"><span className="text-xs font-black text-indigo-700 bg-indigo-50 px-3 py-2 rounded-md border border-indigo-100 shadow-sm whitespace-nowrap">+{formatCurrency(loc.baseCost)} / ea</span></div>}
+                                                
+                                                {loc.type === 'dtf' && (
+                                                    <select className="w-full lg:w-32 p-2 soft-input rounded-md text-xs shrink-0" value={loc.dtfSize} onChange={e => updateLocation(item.id, loc.id, 'dtfSize', e.target.value)}>
+                                                        {DTF_SIZES.map(s => <option key={s.id} value={s.id}>{s.label}</option>)}
+                                                    </select>
+                                                )}
+                                                
+                                                {loc.type !== 'none' && (
+                                                    <select className="w-full lg:w-40 p-2 soft-input rounded-md text-xs shrink-0" value={loc.placement} onChange={e => updateLocation(item.id, loc.id, 'placement', e.target.value)}>
+                                                        {PLACEMENTS.map(p => <option key={p.id} value={p.id}>{p.label}</option>)}
+                                                    </select>
+                                                )}
+                                                
+                                                {loc.type !== 'none' && (
+                                                    <input type="text" placeholder="Custom notes..." className="w-full flex-1 p-2 soft-input rounded-md text-xs min-w-[100px]" value={loc.desc} onChange={e => updateLocation(item.id, loc.id, 'desc', e.target.value)} />
+                                                )}
+
+                                                {loc.type !== 'none' && (
+                                                    <div className="w-full lg:w-auto flex justify-end shrink-0">
+                                                        <span className="text-xs font-black text-indigo-700 bg-indigo-50 px-3 py-2 rounded-md border border-indigo-100 shadow-sm whitespace-nowrap">
+                                                            +{formatCurrency(loc.baseCost)} / ea
+                                                        </span>
+                                                    </div>
+                                                )}
                                             </div>
                                         ))}
-                                        <button onClick={() => addLocation(item.id)} className="text-[10px] font-bold text-indigo-600 bg-indigo-50 px-3 py-1.5 rounded-md mt-1 hover:bg-indigo-100 transition-colors">+ Add Decor</button>
+                                        <button onClick={() => addLocation(item.id)} className="text-[10px] font-bold text-indigo-600 bg-indigo-50 px-3 py-1.5 rounded-md mt-1">+ Add Decor</button>
                                     </div>
                                 </div>
                             </div>
@@ -517,7 +677,10 @@
                             <div><label className="block text-[11px] font-semibold text-slate-500 mb-1.5 uppercase">Digitizing Fee</label><input type="number" className="w-full p-3 soft-input rounded-xl text-sm" value={orderData.digitizingFee} onFocus={(e) => e.target.select()} onChange={e => updateOrder('digitizingFee', e.target.value)} /></div>
                             <div>
                                 <label className="block text-[11px] font-semibold text-slate-500 mb-1.5 uppercase flex items-center gap-1"><Icon name="tag" size={12}/> Order Discount ($)</label>
-                                <div className="relative"><span className="absolute left-3 top-3 text-emerald-600 font-bold">-$</span><input type="number" className="w-full pl-8 p-3 soft-input rounded-xl text-sm text-emerald-600 font-bold focus:ring-emerald-500" value={orderData.discount} onFocus={(e) => e.target.select()} onChange={e => updateOrder('discount', e.target.value)} /></div>
+                                <div className="relative">
+                                    <span className="absolute left-3 top-3 text-emerald-600 font-bold">-$</span>
+                                    <input type="number" className="w-full pl-8 p-3 soft-input rounded-xl text-sm text-emerald-600 font-bold focus:ring-emerald-500" value={orderData.discount} onFocus={(e) => e.target.select()} onChange={e => updateOrder('discount', e.target.value)} />
+                                </div>
                             </div>
                             <div><label className="block text-[11px] font-semibold text-slate-500 mb-1.5 uppercase flex items-center gap-1"><Icon name="percent" size={12}/> Tax Rate (%)</label><input type="number" className="w-full p-3 soft-input rounded-xl text-sm" value={orderData.taxRate} onFocus={(e) => e.target.select()} onChange={e => updateOrder('taxRate', e.target.value)} /></div>
                         </div>
@@ -526,27 +689,34 @@
                     {showInternalBreakdown && (
                         <div className="bg-slate-900 text-white rounded-2xl p-6 shadow-lg space-y-6">
                             <div>
-                                <div className="flex justify-between items-center border-b border-slate-700 pb-3 mb-4">
-                                    <h3 className="text-sm font-bold text-indigo-300 uppercase tracking-widest">Line Item Analysis</h3>
-                                    <span className={`px-2 py-1 rounded bg-${healthColor}-500/20 text-${healthColor}-400 text-[10px] font-bold border border-${healthColor}-500/30 uppercase tracking-wider`}>{calc.totalMarginPercent.toFixed(1)}% - {healthText}</span>
-                                </div>
+                                <h3 className="text-sm font-bold border-b border-slate-700 pb-3 mb-4 text-indigo-300 uppercase tracking-widest">Line Item Analysis</h3>
                                 <div className="space-y-4">
                                     {calc.items.map((item, idx) => {
                                         const sizeStr = getSizeString(item);
                                         return (
                                         <div key={item.id} className="bg-slate-800 border border-slate-700 rounded-xl p-4 shadow-sm">
                                             <div className="flex justify-between items-start mb-3 border-b border-slate-700 pb-3">
-                                                <div><h4 className="font-bold text-white">{idx + 1}. {item.name || 'Unnamed Item'} {item.color ? `(${item.color})` : ''} (Qty: {item.calculatedQty})</h4>{sizeStr && <p className="text-[10px] font-bold text-slate-400 mt-1">{sizeStr}</p>}</div>
-                                                <span className="font-bold text-indigo-300 text-lg">{formatCurrency(item.lineTotal)}</span>
+                                                <div>
+                                                    <h4 className="font-bold text-white">{idx + 1}. {item.name || 'Unnamed Item'} {item.color ? `(${item.color})` : ''} (Qty: {item.calculatedQty})</h4>
+                                                    {sizeStr && <p className="text-[10px] font-bold text-slate-400 mt-1">{sizeStr}</p>}
+                                                </div>
+                                                <div className="text-right">
+                                                    <span className="font-bold text-indigo-300 text-lg block">{formatCurrency(item.lineTotal)}</span>
+                                                    <span className={`text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-md ${getHealthBg(item.itemMarginPercent)} ${getHealthColor(item.itemMarginPercent)}`}>
+                                                        {item.itemMarginPercent.toFixed(1)}% Margin
+                                                    </span>
+                                                </div>
                                             </div>
                                             <div className="grid grid-cols-2 gap-x-6 gap-y-2 text-sm text-slate-300">
                                                 <div className="flex justify-between"><span>Landed Cost /ea:</span><span className="font-semibold">{formatCurrency(item.landedCost)}</span></div>
                                                 <div className="flex justify-between"><span>Garment Retail /ea:</span><span className="font-semibold">{formatCurrency(item.clientGarmentPrice)}</span></div>
                                                 <div className="flex justify-between"><span>Garment Profit /ea:</span><span className="font-bold text-emerald-400">{formatCurrency(item.clientGarmentPrice - item.landedCost)}</span></div>
                                                 <div className="flex justify-between"><span>Deco Revenue /ea (Net):</span><span className="font-bold text-indigo-300">{formatCurrency(item.itemDecoPerPiece)}</span></div>
+                                                
                                                 {item.explicitDecoDiscount > 0 && (
                                                     <div className="col-span-2 flex justify-between bg-emerald-900/30 text-emerald-400 p-2 rounded-lg mt-1 border border-emerald-800">
-                                                        <span className="font-bold text-xs">Item Discount Applied</span><span className="font-bold text-xs">-{formatCurrency(item.decoDiscountTotal)} (-{formatCurrency(item.explicitDecoDiscount)}/ea)</span>
+                                                        <span className="font-bold text-xs">Item Discount Applied</span>
+                                                        <span className="font-bold text-xs">-{formatCurrency(item.decoDiscountTotal)} (-{formatCurrency(item.explicitDecoDiscount)}/ea)</span>
                                                     </div>
                                                 )}
                                             </div>
@@ -556,26 +726,50 @@
                             </div>
                             
                             <div>
-                                <h3 className="text-sm font-bold border-b border-slate-700 pb-3 mb-4 text-amber-300 uppercase tracking-widest">Profit First Fund Allocations</h3>
-                                <p className="text-[10px] text-slate-400 mb-4 leading-relaxed">Based on your Global Settings, this is exactly how this job's revenue will be split when paid. True Profit is what remains after all costs and funds are filled.</p>
-                                <div className="grid grid-cols-2 gap-4 text-sm">
+                                <h3 className="text-sm font-bold border-b border-slate-700 pb-3 mb-4 text-amber-300 uppercase tracking-widest">Order Math & Cash Allocation</h3>
+                                <div className="grid grid-cols-2 gap-4 text-sm mb-4">
                                     <div className="flex justify-between"><span className="text-slate-400">Total Rev:</span><span className="font-bold">{formatCurrency(calc.discountedSubtotal)}</span></div>
-                                    <div className="flex justify-between"><span className="text-slate-400">Garment Cost:</span><span className="font-bold text-slate-300">-{formatCurrency(calc.orderGarmentCostTotal)}</span></div>
-                                    <div className="flex justify-between"><span className="text-slate-400">Deco Consumables:</span><span className="font-bold text-slate-300">-{formatCurrency(calc.orderDecoCostTotal)}</span></div>
-                                    <div className="flex justify-between"><span className="text-slate-400">Tax Reserve ({businessDetails.taxPct}%):</span><span className="font-bold text-rose-400">-{formatCurrency(calc.allocations.tax)}</span></div>
-                                    <div className="flex justify-between"><span className="text-slate-400">Machine Fund ({businessDetails.machinePct}%):</span><span className="font-bold text-indigo-400">-{formatCurrency(calc.allocations.machine)}</span></div>
-                                    <div className="flex justify-between"><span className="text-slate-400">Restock Fund ({businessDetails.consumablePct}%):</span><span className="font-bold text-amber-400">-{formatCurrency(calc.allocations.consumables)}</span></div>
+                                    <div className="flex justify-between"><span className="text-slate-400">Garment Cost:</span><span className="font-bold text-rose-400">-{formatCurrency(calc.orderGarmentCostTotal)}</span></div>
+                                    <div className="flex justify-between"><span className="text-slate-400">Deco Cost:</span><span className="font-bold text-rose-400">-{formatCurrency(calc.orderDecoCostTotal)}</span></div>
+                                    <div className="flex justify-between"><span className="text-slate-400">Gross Profit:</span><span className="font-bold text-white">{formatCurrency(calc.discountedSubtotal - calc.orderGarmentCostTotal - calc.orderDecoCostTotal)}</span></div>
                                 </div>
-                                <div className="mt-4 pt-4 border-t border-slate-700 flex justify-between items-center"><span className="font-bold uppercase tracking-widest text-xs text-slate-300">True Operating Profit</span><span className="text-3xl font-black text-emerald-400">{formatCurrency(calc.allocations.opCash)}</span></div>
+                                <div className="bg-slate-800 p-3 rounded-xl border border-slate-700 space-y-2 text-sm mb-4">
+                                    <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Automated Fund Deductions</h4>
+                                    <div className="flex justify-between"><span className="text-amber-200">Consumables ({shopSettings.fundConsumables}%):</span><span className="font-bold text-amber-400">-{formatCurrency(calc.allocConsumables)}</span></div>
+                                    <div className="flex justify-between"><span className="text-amber-200">Growth/Machine ({shopSettings.fundGrowth}%):</span><span className="font-bold text-amber-400">-{formatCurrency(calc.allocGrowth)}</span></div>
+                                    <div className="flex justify-between"><span className="text-amber-200">Tax Reserve ({shopSettings.fundTax}%):</span><span className="font-bold text-amber-400">-{formatCurrency(calc.allocTax)}</span></div>
+                                </div>
+                                <div className="mt-4 pt-4 border-t border-slate-700 flex justify-between items-center">
+                                    <div className="flex flex-col">
+                                        <span className="font-bold uppercase tracking-widest text-xs text-slate-300">True Net Profit</span>
+                                        <span className={`text-[11px] font-black uppercase tracking-widest ${getHealthColor(calc.overallMarginPercent)}`}>{calc.overallMarginPercent.toFixed(1)}% MARGIN</span>
+                                    </div>
+                                    <span className={`text-3xl font-black ${getHealthColor(calc.overallMarginPercent)}`}>{formatCurrency(calc.netProfit)}</span>
+                                </div>
                             </div>
                         </div>
                     )}
 
-                    <div className="bg-white rounded-2xl shadow-sm p-6 border border-slate-200">
-                        <div className="flex justify-between items-end border-b border-slate-100 pb-4 mb-4"><span className="text-slate-500 font-bold uppercase tracking-widest text-sm">Order Total</span><span className="text-4xl font-black text-indigo-700">{formatCurrency(calc.grandTotal)}</span></div>
-                        <div className="flex flex-col md:flex-row gap-3">
-                            <button onClick={handleSendToPipeline} className="flex-1 py-4 bg-emerald-600 text-white rounded-xl font-bold text-lg shadow-md hover:bg-emerald-700 active:scale-95 transition-all">{editingOrderId ? 'Update Quote in Pipeline' : 'Save & Send to Pipeline'}</button>
-                            {editingOrderId && <button onClick={() => { setEditingOrderId(null); setOrderData(defaultOrderData); setItems([defaultItem]); setAppModule('pipeline'); }} className="px-8 bg-slate-200 text-slate-700 rounded-xl font-bold hover:bg-slate-300 active:scale-95 transition-all">Cancel Edit</button>}
+                    <div className="bg-white rounded-2xl shadow-sm p-6 border border-slate-200 relative overflow-hidden">
+                        <div className={`absolute top-0 left-0 w-2 h-full ${calc.overallMarginPercent >= shopSettings.marginGreen ? 'bg-emerald-500' : calc.overallMarginPercent >= shopSettings.marginYellow ? 'bg-amber-500' : 'bg-rose-500'}`}></div>
+                        <div className="flex justify-between items-end border-b border-slate-100 pb-4 mb-4 pl-4">
+                            <span className="text-slate-500 font-bold uppercase tracking-widest text-sm">Order Total</span>
+                            <span className="text-4xl font-black text-indigo-700">{formatCurrency(calc.grandTotal)}</span>
+                        </div>
+                        <div className="flex flex-col md:flex-row gap-3 pl-4">
+                            <button onClick={handleSendToPipeline} className="flex-1 py-4 bg-emerald-600 text-white rounded-xl font-bold text-lg shadow-md hover:bg-emerald-700 active:scale-95 transition-all">
+                                {editingOrderId ? 'Update Quote in Pipeline' : 'Save & Send to Pipeline'}
+                            </button>
+                            {editingOrderId && (
+                                <button onClick={() => {
+                                    setEditingOrderId(null);
+                                    setOrderData(defaultOrderData);
+                                    setItems([defaultItem]);
+                                    setAppModule('pipeline');
+                                }} className="px-8 bg-slate-200 text-slate-700 rounded-xl font-bold hover:bg-slate-300 active:scale-95 transition-all">
+                                    Cancel Edit
+                                </button>
+                            )}
                         </div>
                     </div>
                 </div>
@@ -587,14 +781,20 @@
                         const stageItems = orders.filter(o => o.stage === stage.id);
                         return (
                             <div key={stage.id} className="min-w-[280px] w-[280px] flex-shrink-0 snap-center bg-slate-100/50 rounded-2xl border border-slate-200 flex flex-col max-h-[75vh]">
-                                <div className={`p-3 border-b border-slate-200 rounded-t-2xl font-black text-[11px] flex justify-between items-center uppercase tracking-widest ${stage.color}`}>{stage.label} <span className="bg-white/50 px-2 py-0.5 rounded-full">{stageItems.length}</span></div>
+                                <div className={`p-3 border-b border-slate-200 rounded-t-2xl font-black text-[11px] flex justify-between items-center uppercase tracking-widest ${stage.color}`}>
+                                    {stage.label} <span className="bg-white/50 px-2 py-0.5 rounded-full">{stageItems.length}</span>
+                                </div>
                                 <div className="p-3 overflow-y-auto space-y-3 flex-1">
                                     {stageItems.length === 0 ? <p className="text-[10px] text-slate-400 text-center py-6 font-bold uppercase">Empty</p> : stageItems.map(order => (
                                         <div key={order.id} onClick={() => setSelectedOrder(order)} className="bg-white p-4 rounded-xl shadow-sm border border-slate-200 cursor-pointer hover:border-indigo-300 transition-colors relative active:scale-95">
                                             <span className="text-[9px] font-black text-slate-400 absolute top-3 right-3">{order.id}</span>
                                             <h4 className="font-bold text-slate-800 text-sm pr-10">{order.customer}</h4>
                                             <p className="text-[11px] text-slate-500 mt-1 truncate">{order.desc}</p>
-                                            <div className="mt-3 pt-3 border-t border-slate-50 flex justify-between items-center"><span className={`text-[10px] font-bold px-2 py-1 rounded-md ${order.balance > 0 ? 'bg-rose-50 text-rose-600' : 'bg-emerald-50 text-emerald-600'}`}>{order.balance > 0 ? `Owes ${formatCurrency(order.balance)}` : 'Paid in Full'}</span></div>
+                                            <div className="mt-3 pt-3 border-t border-slate-50 flex justify-between items-center">
+                                                <span className={`text-[10px] font-bold px-2 py-1 rounded-md ${order.balance > 0 ? 'bg-rose-50 text-rose-600' : 'bg-emerald-50 text-emerald-600'}`}>
+                                                    {order.balance > 0 ? `Owes ${formatCurrency(order.balance)}` : 'Paid in Full'}
+                                                </span>
+                                            </div>
                                         </div>
                                     ))}
                                 </div>
@@ -607,13 +807,19 @@
             const renderPipelineArchive = () => {
                 const archivedOrders = orders.filter(o => o.stage === 'archived');
                 return (
-                    <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden fade-in max-w-4xl mx-auto">
+                    <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden fade-in">
                         <div className="p-4 border-b border-slate-100 bg-slate-50"><h3 className="text-xs font-black text-slate-500 uppercase tracking-widest">Completed Jobs History</h3></div>
                         <div className="divide-y divide-slate-100">
                             {archivedOrders.length === 0 ? <p className="p-8 text-center text-slate-400 text-sm">No completed jobs yet.</p> : archivedOrders.map(order => (
                                 <div key={order.id} onClick={() => setSelectedOrder(order)} className="p-4 flex justify-between items-center hover:bg-slate-50 cursor-pointer transition-colors">
-                                    <div><p className="font-bold text-slate-800">{order.customer}</p><p className="text-[11px] text-slate-500">{order.dateAdded} • {order.desc}</p></div>
-                                    <div className="text-right"><p className="font-black text-emerald-600">{formatCurrency(order.total)}</p><p className="text-[10px] font-bold text-slate-400 uppercase">Paid in Full</p></div>
+                                    <div>
+                                        <p className="font-bold text-slate-800">{order.customer}</p>
+                                        <p className="text-[11px] text-slate-500">{order.dateAdded} • {order.desc}</p>
+                                    </div>
+                                    <div className="text-right">
+                                        <p className="font-black text-emerald-600">{formatCurrency(order.total)}</p>
+                                        <p className="text-[10px] font-bold text-slate-400 uppercase">Paid in Full</p>
+                                    </div>
                                 </div>
                             ))}
                         </div>
@@ -622,7 +828,7 @@
             };
 
             const renderBookkeeping = () => (
-                <div className="fade-in space-y-6 max-w-5xl mx-auto">
+                <div className="fade-in space-y-6">
                     <div className="flex bg-slate-200 p-1.5 rounded-xl max-w-sm mx-auto">
                         <button onClick={() => setBookTab('dashboard')} className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${bookTab === 'dashboard' ? 'bg-white text-indigo-700 shadow-sm' : 'text-slate-600'}`}>Dashboard</button>
                         <button onClick={() => setBookTab('income')} className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${bookTab === 'income' ? 'bg-white text-emerald-700 shadow-sm' : 'text-slate-600'}`}>Income</button>
@@ -631,7 +837,12 @@
 
                     {bookTab === 'dashboard' && (
                         <div>
-                            <div className="flex justify-between items-center mb-4"><h3 className="font-black text-slate-800 uppercase tracking-widest text-sm">Financial Health</h3><select value={selectedYear} onChange={(e) => setSelectedYear(e.target.value)} className="soft-input rounded-xl px-4 py-2 text-sm font-bold text-indigo-700 cursor-pointer">{[2024, 2025, 2026, 2027, 2028, 2029].map(y => <option key={y} value={y}>{y}</option>)}</select></div>
+                            <div className="flex justify-between items-center mb-4">
+                                <h3 className="font-black text-slate-800 uppercase tracking-widest text-sm">Financial Health</h3>
+                                <select value={selectedYear} onChange={(e) => setSelectedYear(e.target.value)} className="soft-input rounded-xl px-4 py-2 text-sm font-bold text-indigo-700 cursor-pointer">
+                                    {[2024, 2025, 2026, 2027, 2028, 2029].map(y => <option key={y} value={y}>{y}</option>)}
+                                </select>
+                            </div>
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
                                 <KPICard title="Gross Income" value={annualTotals.income} icon={(p) => <Icon name="trendingUp" {...p}/>} color="emerald" />
                                 <KPICard title="Total Expenses" value={annualTotals.expenses} icon={(p) => <Icon name="trendingDown" {...p}/>} color="rose" />
@@ -639,11 +850,21 @@
                                 <KPICard title="Profit Margin" value={`${annualTotals.margin.toFixed(1)}%`} icon={(p) => <Icon name="percent" {...p}/>} color="indigo" />
                             </div>
 
-                            <h3 className="font-black text-slate-800 uppercase tracking-widest text-sm mb-4">Virtual Fund Balances (All Time)</h3>
+                            <h3 className="font-black text-slate-800 uppercase tracking-widest text-sm mb-4">Available Fund Balances</h3>
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-                                <div className="bg-rose-50 p-6 rounded-2xl border border-rose-100 shadow-sm"><span className="text-[10px] font-black text-rose-500 uppercase tracking-widest">Tax Reserve</span><p className="text-3xl font-black text-rose-600 mt-2">{formatCurrency(kpiData.taxFund)}</p><p className="text-[10px] text-rose-400 font-bold mt-2 uppercase">Target: {businessDetails.taxPct}% of Revenue</p></div>
-                                <div className="bg-indigo-50 p-6 rounded-2xl border border-indigo-100 shadow-sm"><span className="text-[10px] font-black text-indigo-500 uppercase tracking-widest">Machine / Growth Fund</span><p className="text-3xl font-black text-indigo-600 mt-2">{formatCurrency(kpiData.machineFund)}</p><p className="text-[10px] text-indigo-400 font-bold mt-2 uppercase">Target: {businessDetails.machinePct}% of Revenue</p></div>
-                                <div className="bg-amber-50 p-6 rounded-2xl border border-amber-100 shadow-sm"><span className="text-[10px] font-black text-amber-500 uppercase tracking-widest">Consumables Restock</span><p className="text-3xl font-black text-amber-600 mt-2">{formatCurrency(kpiData.consumablesFund)}</p><p className="text-[10px] text-amber-500 font-bold mt-2 uppercase">Target: {businessDetails.consumablePct}% of Revenue</p></div>
+                                <div className="bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-700">
+                                    <span className="text-slate-400 text-[10px] font-black uppercase tracking-widest">Consumables Fund</span>
+                                    <div className="mt-2 text-2xl font-black text-white">{formatCurrency(kpiData.funds.consumables)}</div>
+                                </div>
+                                <div className="bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-700">
+                                    <span className="text-slate-400 text-[10px] font-black uppercase tracking-widest">Growth / Machine</span>
+                                    <div className="mt-2 text-2xl font-black text-white">{formatCurrency(kpiData.funds.growth)}</div>
+                                </div>
+                                <div className="bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-700">
+                                    <span className="text-slate-400 text-[10px] font-black uppercase tracking-widest">Tax Reserve</span>
+                                    <div className="mt-2 text-2xl font-black text-white">{formatCurrency(kpiData.funds.tax)}</div>
+                                </div>
+                                <p className="text-[10px] text-slate-500 md:col-span-3">Balances are calculated automatically based on fully paid and ARCHIVED jobs, minus any expenses logged to these specific categories.</p>
                             </div>
 
                             <h3 className="font-black text-slate-800 uppercase tracking-widest text-sm mb-4">Operational KPIs</h3>
@@ -661,8 +882,13 @@
                                             const percent = annualTotals.expenses > 0 ? ((exp.value / annualTotals.expenses) * 100).toFixed(1) : 0;
                                             return (
                                                 <div key={i}>
-                                                    <div className="flex justify-between text-xs font-bold text-slate-600 mb-1"><span>{exp.name}</span><span>{formatCurrency(exp.value)} ({percent}%)</span></div>
-                                                    <div className="w-full bg-slate-100 rounded-full h-2"><div className="bg-rose-500 h-2 rounded-full" style={{ width: `${percent}%` }}></div></div>
+                                                    <div className="flex justify-between text-xs font-bold text-slate-600 mb-1">
+                                                        <span>{exp.name}</span>
+                                                        <span>{formatCurrency(exp.value)} ({percent}%)</span>
+                                                    </div>
+                                                    <div className="w-full bg-slate-100 rounded-full h-2">
+                                                        <div className="bg-rose-500 h-2 rounded-full" style={{ width: `${percent}%` }}></div>
+                                                    </div>
                                                 </div>
                                             )
                                         })}
@@ -697,30 +923,67 @@
                 </div>
             );
 
+            // --- THE PIPELINE MODAL ---
             const renderModal = () => {
                 if (!selectedOrder) return null;
                 const { fullData, customer, id, stage, balance, total } = selectedOrder;
                 const { calc: orderCalc, items: orderItems } = fullData || {};
+
                 const currentIndex = STAGES.findIndex(s => s.id === stage);
                 const nextStage = currentIndex >= 0 && currentIndex < STAGES.length - 1 ? STAGES[currentIndex + 1] : null;
 
                 return (
                     <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 fade-in">
                         <div className="bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] shadow-2xl flex flex-col overflow-hidden">
+                            
                             <div className="p-5 border-b border-slate-100 flex justify-between items-start bg-slate-50">
                                 <div>
-                                    <div className="flex items-center gap-2 mb-1"><h2 className="font-black text-2xl text-slate-800">{customer}</h2><span className="text-[10px] font-bold bg-slate-200 text-slate-600 px-2 py-1 rounded-md">{id}</span>{stage === 'archived' && <span className="text-[10px] font-bold bg-slate-800 text-white px-2 py-1 rounded-md uppercase">Archived</span>}</div>
-                                    {stage !== 'archived' && <select value={stage} onChange={(e) => moveOrderStage(id, e.target.value)} className="text-xs font-bold text-indigo-700 bg-indigo-50 border border-indigo-100 rounded-md p-1 outline-none cursor-pointer">{STAGES.filter(s => s.id !== 'archived').map(s => <option key={s.id} value={s.id}>{s.label}</option>)}</select>}
+                                    <div className="flex items-center gap-2 mb-1">
+                                        <h2 className="font-black text-2xl text-slate-800">{customer}</h2>
+                                        <span className="text-[10px] font-bold bg-slate-200 text-slate-600 px-2 py-1 rounded-md">{id}</span>
+                                        {stage === 'archived' && <span className="text-[10px] font-bold bg-slate-800 text-white px-2 py-1 rounded-md uppercase">Archived</span>}
+                                    </div>
+                                    {stage !== 'archived' && (
+                                        <select value={stage} onChange={(e) => moveOrderStage(id, e.target.value)} className="text-xs font-bold text-indigo-700 bg-indigo-50 border border-indigo-100 rounded-md p-1 outline-none cursor-pointer">
+                                            {STAGES.filter(s => s.id !== 'archived').map(s => <option key={s.id} value={s.id}>{s.label}</option>)}
+                                        </select>
+                                    )}
                                 </div>
                                 <button onClick={() => setSelectedOrder(null)} className="bg-white p-2 rounded-full border border-slate-200 text-slate-400 hover:text-slate-800 active:scale-95"><Icon name="x" size={20} /></button>
                             </div>
 
                             <div className="p-5 overflow-y-auto flex-1 bg-white space-y-6">
                                 <div className="grid grid-cols-3 gap-3">
-                                    <div className="bg-slate-50 p-3 rounded-xl border border-slate-100"><span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Order Total</span><p className="font-black text-slate-800 text-lg">{formatCurrency(total)}</p></div>
-                                    <div className="bg-slate-50 p-3 rounded-xl border border-slate-100"><span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Paid</span><p className="font-black text-emerald-600 text-lg">{formatCurrency(total - balance)}</p></div>
-                                    <div className={`p-3 rounded-xl border ${balance > 0 ? 'bg-rose-50 border-rose-100' : 'bg-emerald-50 border-emerald-100'}`}><span className={`text-[10px] font-bold uppercase tracking-widest ${balance > 0 ? 'text-rose-400' : 'text-emerald-400'}`}>Balance Due</span><p className={`font-black text-lg ${balance > 0 ? 'text-rose-600' : 'text-emerald-600'}`}>{formatCurrency(balance)}</p></div>
+                                    <div className="bg-slate-50 p-3 rounded-xl border border-slate-100">
+                                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Order Total</span>
+                                        <p className="font-black text-slate-800 text-lg">{formatCurrency(total)}</p>
+                                    </div>
+                                    <div className="bg-slate-50 p-3 rounded-xl border border-slate-100">
+                                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Paid</span>
+                                        <p className="font-black text-emerald-600 text-lg">{formatCurrency(total - balance)}</p>
+                                    </div>
+                                    <div className={`p-3 rounded-xl border ${balance > 0 ? 'bg-rose-50 border-rose-100' : 'bg-emerald-50 border-emerald-100'}`}>
+                                        <span className={`text-[10px] font-bold uppercase tracking-widest ${balance > 0 ? 'text-rose-400' : 'text-emerald-400'}`}>Balance Due</span>
+                                        <p className={`font-black text-lg ${balance > 0 ? 'text-rose-600' : 'text-emerald-600'}`}>{formatCurrency(balance)}</p>
+                                    </div>
                                 </div>
+
+                                {stage === 'archived' && orderCalc && (
+                                    <div className="bg-indigo-50 border border-indigo-100 rounded-xl p-4 flex flex-col">
+                                        <div className="flex items-center gap-2 mb-3 border-b border-indigo-100 pb-2">
+                                            <Icon name="wallet" size={16} className="text-indigo-600"/>
+                                            <h3 className="text-[11px] font-black text-indigo-800 uppercase tracking-widest">Bank Transfer Guide</h3>
+                                        </div>
+                                        <p className="text-xs text-indigo-700 mb-3">Transfer these allocated funds into your specific real-world bank accounts to keep your shop healthy:</p>
+                                        <div className="space-y-2 text-sm">
+                                            <div className="flex justify-between items-center"><span className="text-slate-600">Garment/Blank Cost:</span><span className="font-bold text-slate-800">{formatCurrency(orderCalc.orderGarmentCostTotal)}</span></div>
+                                            <div className="flex justify-between items-center"><span className="text-slate-600">Consumables Fund:</span><span className="font-bold text-slate-800">{formatCurrency(orderCalc.allocConsumables)}</span></div>
+                                            <div className="flex justify-between items-center"><span className="text-slate-600">Growth/Machine Fund:</span><span className="font-bold text-slate-800">{formatCurrency(orderCalc.allocGrowth)}</span></div>
+                                            <div className="flex justify-between items-center"><span className="text-slate-600">Tax Reserve:</span><span className="font-bold text-slate-800">{formatCurrency(orderCalc.allocTax)}</span></div>
+                                            <div className="flex justify-between items-center pt-2 border-t border-indigo-200 mt-2"><span className="font-bold text-indigo-800 uppercase text-[10px] tracking-widest">True Operating Profit:</span><span className="font-black text-emerald-600 text-lg">{formatCurrency(orderCalc.netProfit)}</span></div>
+                                        </div>
+                                    </div>
+                                )}
 
                                 <div>
                                     <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-3 border-b border-slate-100 pb-2">Line Items</h3>
@@ -732,12 +995,20 @@
                                             <div>
                                                 <p className="font-bold text-sm text-slate-800">{item.qty}x {item.name} {item.color ? `(${item.color})` : ''}</p>
                                                 {sizeStr && <p className="text-[10px] text-slate-500 mt-0.5">{sizeStr}</p>}
+                                                
                                                 <div className="mt-1 pl-2 border-l border-indigo-200">
                                                     {item.locations.filter(l=>l.type!=='none').map((l, i) => {
                                                         const pLabel = PLACEMENTS.find(p=>p.id===l.placement)?.label || 'Custom';
-                                                        return <p key={i} className="text-[10px] text-slate-600">{l.type === 'embroidery' ? (l.isPuff ? '3D Puff Emb' : 'Embroidery') : 'DTF Print'} {l.placement !== 'custom' && ` - ${pLabel}`} {l.desc && ` - ${l.desc}`}</p>
+                                                        return (
+                                                            <p key={i} className="text-[10px] text-slate-600">
+                                                                {l.type === 'embroidery' ? (l.isPuff ? '3D Puff Emb' : 'Embroidery') : 'DTF Print'} 
+                                                                {l.placement !== 'custom' && ` - ${pLabel}`} 
+                                                                {l.desc && ` - ${l.desc}`}
+                                                            </p>
+                                                        )
                                                     })}
                                                 </div>
+
                                                 {item.decoDiscount > 0 && <p className="text-[10px] text-emerald-600 font-bold mt-1">- Item Discount Applied</p>}
                                             </div>
                                             <span className="font-bold text-sm text-slate-600">{orderCalc ? formatCurrency(orderCalc.items[idx].lineTotal) : ''}</span>
@@ -747,23 +1018,54 @@
                             </div>
 
                             <div className="p-5 border-t border-slate-200 bg-slate-50 space-y-3">
-                                {stage === 'quote' && <button onClick={() => editQuote(selectedOrder)} className="w-full bg-white text-slate-700 py-2.5 rounded-xl text-xs font-bold border border-slate-300 hover:bg-slate-100 active:scale-95 transition-all flex items-center justify-center gap-2"><Icon name="settings" size={14} /> Edit Quote Details</button>}
+                                {stage === 'quote' && (
+                                    <button onClick={() => editQuote(selectedOrder)} className="w-full bg-white text-slate-700 py-2.5 rounded-xl text-xs font-bold border border-slate-300 hover:bg-slate-100 active:scale-95 transition-all flex items-center justify-center gap-2">
+                                        <Icon name="settings" size={14} /> Edit Quote Details
+                                    </button>
+                                )}
+
                                 <div className="flex gap-2">
                                     {stage === 'quote' && <button onClick={() => setPdfConfig({ order: selectedOrder, type: 'proposal' })} className="flex-1 bg-white border border-slate-300 text-slate-700 py-2.5 rounded-xl text-xs font-bold hover:bg-slate-100 transition-colors flex justify-center items-center gap-1.5"><Icon name="fileText" size={14} /> Download Proposal</button>}
                                     {stage !== 'quote' && balance > 0 && <button onClick={() => setPdfConfig({ order: selectedOrder, type: 'invoice' })} className="flex-1 bg-white border border-slate-300 text-slate-700 py-2.5 rounded-xl text-xs font-bold hover:bg-slate-100 transition-colors flex justify-center items-center gap-1.5"><Icon name="fileText" size={14} /> Invoice PDF</button>}
                                     {(balance === 0 || stage === 'archived') && <button onClick={() => setPdfConfig({ order: selectedOrder, type: 'receipt' })} className="flex-1 bg-white border border-slate-300 text-slate-700 py-2.5 rounded-xl text-xs font-bold hover:bg-slate-100 transition-colors flex justify-center items-center gap-1.5"><Icon name="fileCheck" size={14} /> Receipt PDF</button>}
                                 </div>
-                                {stage === 'quote' && <button onClick={() => handleApproveQuote(selectedOrder)} className="w-full bg-indigo-600 text-white py-3 rounded-xl text-sm font-bold shadow-md hover:bg-indigo-700 active:scale-95 transition-all">Approve Quote & Log {formatCurrency(selectedOrder.depositAmount)} Deposit</button>}
-                                {stage !== 'quote' && stage !== 'archived' && stage !== 'pickup' && nextStage && <button onClick={() => advanceToNextStage(selectedOrder)} className="w-full bg-slate-800 text-white py-3 rounded-xl text-sm font-bold shadow-md hover:bg-slate-900 active:scale-95 transition-all flex items-center justify-center gap-2">Move to {nextStage.label} <Icon name="arrowRight" size={16}/></button>}
-                                {stage === 'pickup' && balance > 0 && <button onClick={() => handleClearBalanceAndArchive(selectedOrder)} className="w-full bg-emerald-600 text-white py-3 rounded-xl text-sm font-bold shadow-md hover:bg-emerald-700 active:scale-95 transition-all">Log Final Payment ({formatCurrency(balance)}) & Archive</button>}
-                                {stage === 'pickup' && balance === 0 && <button onClick={() => handleClearBalanceAndArchive(selectedOrder)} className="w-full bg-emerald-600 text-white py-3 rounded-xl text-sm font-bold shadow-md hover:bg-emerald-700 active:scale-95 transition-all">Mark as Picked Up & Archive</button>}
-                                {stage === 'archived' && <button onClick={() => deleteOrder(selectedOrder.id)} className="w-full bg-rose-50 text-rose-600 border border-rose-200 py-3 rounded-xl text-sm font-bold hover:bg-rose-100 active:scale-95 transition-all">Permanently Delete Record</button>}
+
+                                {stage === 'quote' && (
+                                    <button onClick={() => handleApproveQuote(selectedOrder)} className="w-full bg-indigo-600 text-white py-3 rounded-xl text-sm font-bold shadow-md hover:bg-indigo-700 active:scale-95 transition-all">
+                                        Approve Quote & Log {formatCurrency(selectedOrder.depositAmount)} Deposit
+                                    </button>
+                                )}
+                                
+                                {stage !== 'quote' && stage !== 'archived' && stage !== 'pickup' && nextStage && (
+                                    <button onClick={() => advanceToNextStage(selectedOrder)} className="w-full bg-slate-800 text-white py-3 rounded-xl text-sm font-bold shadow-md hover:bg-slate-900 active:scale-95 transition-all flex items-center justify-center gap-2">
+                                        Move to {nextStage.label} <Icon name="arrowRight" size={16}/>
+                                    </button>
+                                )}
+
+                                {stage === 'pickup' && balance > 0 && (
+                                    <button onClick={() => handleClearBalanceAndArchive(selectedOrder)} className="w-full bg-emerald-600 text-white py-3 rounded-xl text-sm font-bold shadow-md hover:bg-emerald-700 active:scale-95 transition-all">
+                                        Log Final Payment ({formatCurrency(balance)}) & Archive
+                                    </button>
+                                )}
+
+                                {stage === 'pickup' && balance === 0 && (
+                                    <button onClick={() => handleClearBalanceAndArchive(selectedOrder)} className="w-full bg-emerald-600 text-white py-3 rounded-xl text-sm font-bold shadow-md hover:bg-emerald-700 active:scale-95 transition-all">
+                                        Mark as Picked Up & Archive
+                                    </button>
+                                )}
+
+                                {stage === 'archived' && (
+                                    <button onClick={() => deleteOrder(selectedOrder.id)} className="w-full bg-rose-50 text-rose-600 border border-rose-200 py-3 rounded-xl text-sm font-bold hover:bg-rose-100 active:scale-95 transition-all">
+                                        Permanently Delete Record
+                                    </button>
+                                )}
                             </div>
                         </div>
                     </div>
                 );
             };
 
+            // --- HIDDEN PDF VIEWS ---
             const renderHiddenPDF = () => {
                 if(!pdfConfig) return null;
                 const { order, type } = pdfConfig;
@@ -775,6 +1077,7 @@
                 return (
                     <div style={{ position: 'fixed', left: '-10000px', top: 0, zIndex: -100 }}>
                         <div ref={pdfGenRef} className="print-full-width" style={{ width: '8.5in', padding: '0.8in', backgroundColor: 'white', color: '#0f172a', fontFamily: 'Helvetica, Arial, sans-serif' }}>
+                            
                             <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '2px solid #cbd5e1', paddingBottom: '30px', marginBottom: '40px' }}>
                                 <div>
                                     <h2 style={{ fontSize: '24px', fontWeight: 'bold', margin: '0 0 5px 0' }}>{businessDetails.name || 'Your Business Name'}</h2>
@@ -914,6 +1217,7 @@
                                     {type === 'proposal' ? '* Quotes are valid for 14 days from date of issue.' : 'Thank you for your business!'}
                                 </p>
                             </div>
+
                         </div>
                     </div>
                 );
@@ -924,6 +1228,7 @@
                     <div className="bg-white border-b border-slate-200 shadow-sm sticky top-0 z-30 pt-safe no-print">
                         <div className="max-w-4xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4 p-4">
                             <div><h1 className="text-2xl font-black flex items-center gap-2 tracking-tight text-slate-800"><Icon name="layers" size={28} className="text-indigo-600"/> Triple One OS</h1></div>
+                            
                             <div className="flex bg-slate-100 p-1.5 rounded-xl border border-slate-200 w-full md:w-auto overflow-x-auto hide-scrollbar">
                                 <button onClick={() => setAppModule('quoter')} className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-5 py-2 rounded-lg text-sm font-bold transition-all ${appModule === 'quoter' ? 'bg-white text-indigo-700 shadow-sm' : 'text-slate-500'}`}><Icon name="calculator" size={18} /> Quoter</button>
                                 <button onClick={() => setAppModule('pipeline')} className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-5 py-2 rounded-lg text-sm font-bold transition-all ${appModule === 'pipeline' ? 'bg-white text-emerald-700 shadow-sm' : 'text-slate-500'}`}><Icon name="layers" size={18} /> Pipeline</button>
@@ -940,6 +1245,7 @@
                             </div>
                         )}
                     </div>
+
                     <div className="p-4 md:p-6 max-w-4xl w-full mx-auto flex-1 h-full relative z-20">
                         {appModule === 'quoter' && renderQuoter()}
                         {appModule === 'pipeline' && pipelineView === 'active' && renderPipelineBoard()}
@@ -947,11 +1253,13 @@
                         {appModule === 'bookkeeping' && renderBookkeeping()}
                         {appModule === 'settings' && renderSettings()}
                     </div>
+
                     {renderModal()}
                     {renderHiddenPDF()}
                 </div>
             );
         }
+
         const root = ReactDOM.createRoot(document.getElementById('root'));
         root.render(<App />);
     </script>
