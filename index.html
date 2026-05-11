@@ -4,19 +4,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Triple One OS Pro</title>
-    
     <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-
     <style>
         input[type="text"], input[type="number"], input[type="date"], select, textarea { font-size: 16px !important; }
         .pt-safe { padding-top: env(safe-area-inset-top, 0px); }
         .pb-safe { padding-bottom: env(safe-area-inset-bottom, 0px); }
         .pb-content { padding-bottom: calc(env(safe-area-inset-bottom, 20px) + 90px); }
-        
         @media print {
             @page { margin: 0; }
             body { background-color: white !important; margin: 1cm !important; }
@@ -26,7 +23,6 @@
             .page-container { background: transparent !important; box-shadow: none !important; margin: 0 !important; padding: 0 !important; }
             * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
         }
-        
         input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
         .scrollbar-hide::-webkit-scrollbar { display: none; }
         .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
@@ -38,10 +34,8 @@
 </head>
 <body class="bg-slate-100 font-sans antialiased text-slate-900 selection:bg-indigo-100">
     <div id="root"></div>
-
     <script type="text/babel">
         const { useState, useEffect, useMemo, useRef } = React;
-
         const Icon = ({ name, size = 24, className = "" }) => {
             const icons = {
                 calculator: <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><rect width="16" height="20" x="4" y="2" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="16" y1="14" x2="16" y2="18"/><path d="M16 10h.01"/><path d="M12 10h.01"/><path d="M8 10h.01"/><path d="M12 14h.01"/><path d="M8 14h.01"/><path d="M12 18h.01"/><path d="M8 18h.01"/></svg>,
@@ -61,13 +55,13 @@
                 tag: <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>,
                 percent: <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><line x1="19" y1="5" x2="5" y2="19"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/></svg>,
                 settings: <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>,
+                fileCheck: <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="m9 15 2 2 4-4"/></svg>,
                 building: <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><rect x="4" y="2" width="16" height="20" rx="2" ry="2"/><path d="M9 22v-4h6v4"/><path d="M8 6h.01"/><path d="M16 6h.01"/><path d="M12 6h.01"/><path d="M12 10h.01"/><path d="M12 14h.01"/><path d="M16 10h.01"/><path d="M16 14h.01"/><path d="M8 10h.01"/><path d="M8 14h.01"/></svg>,
                 activity: <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>,
                 alertTriangle: <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>,
                 target: <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>,
                 trendingUp: <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>,
-                trendingDown: <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polyline points="22 17 13.5 8.5 8.5 13.5 2 7"/><polyline points="16 17 22 17 22 11"/></svg>,
-                safe: <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><rect width="18" height="18" x="3" y="3" rx="2"/><circle cx="12" cy="12" r="3"/><path d="M12 9v-1"/><path d="M12 16v-1"/><path d="M15 12h1"/><path d="M8 12h1"/></svg>
+                trendingDown: <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polyline points="22 17 13.5 8.5 8.5 13.5 2 7"/><polyline points="16 17 22 17 22 11"/></svg>
             };
             return icons[name] || null;
         };
@@ -129,7 +123,6 @@
             const [pdfConfig, setPdfConfig] = useState(null); 
             const [editingOrderId, setEditingOrderId] = useState(null);
 
-            // Safe Local Storage
             const [orders, setOrders] = useState(() => {
                 try { return JSON.parse(localStorage.getItem('t1_orders')) || []; } catch(e) { return []; }
             });
@@ -151,7 +144,6 @@
             const [orderData, setOrderData] = useState(defaultOrderData);
             const [items, setItems] = useState([defaultItem]);
 
-            // --- QUOTER LOGIC & MATH ---
             const updateBiz = (field, value) => setBusinessDetails(prev => ({ ...prev, [field]: value }));
             const updateOrder = (field, value) => setOrderData(prev => ({ ...prev, [field]: value }));
             const handleImageUpload = (e) => {
@@ -170,28 +162,24 @@
 
             const calc = useMemo(() => {
                 let orderGarmentCostTotal = 0, orderGarmentRetailTotal = 0, orderDecoRetailTotal = 0, orderDecoCostTotal = 0;
-                
                 const processedItems = items.map(item => {
                     const sizeSum = SIZES_LIST.reduce((sum, size) => sum + Math.max(0, parseInt(item.sizes?.[size]) || 0), 0);
                     const calculatedQty = sizeSum > 0 ? sizeSum : Math.max(1, parseInt(item.qty) || 1);
                     const rawCost = parseFloat(item.rawCost) || 0;
                     const shipping = parseFloat(item.shippingCost) || 0;
                     const margin = parseFloat(item.margin) || 0;
-                    
                     const explicitDecoDiscount = Math.abs(parseFloat(item.decoDiscount) || 0);
-
                     const landedCost = rawCost + shipping;
                     const effectiveMargin = Math.min(margin, 99.9);
                     const clientGarmentPrice = landedCost / (1 - (effectiveMargin / 100));
                     
                     let dtfCount = 0, itemDecoPerPiece = 0, itemDecoCostPerPiece = 0;
-                    
                     const processedLocations = item.locations.map(loc => {
                         let baseCost = 0, matCost = 0;
                         if (loc.type === 'embroidery') {
                             baseCost = getEmbroideryCostPerPiece(parseInt(loc.stitches) || 0, calculatedQty);
                             if (loc.isPuff) baseCost += parseFloat(loc.puffMarkup) || 0;
-                            matCost = 1.00 + ((parseInt(loc.stitches) || 0) / 2500); // Stab + Thread
+                            matCost = 1.00 + ((parseInt(loc.stitches) || 0) / 2500); 
                         } else if (loc.type === 'dtf') {
                             dtfCount++;
                             baseCost = dtfCount === 1 ? (DTF_PRIMARY_FEES[loc.dtfSize] || 0) : (DTF_SECONDARY_FEES[loc.dtfSize] || 0);
@@ -202,7 +190,6 @@
                         itemDecoCostPerPiece += matCost;
                         return { ...loc, baseCost, cost, materialCost: matCost, isFirstDtf: loc.type === 'dtf' && dtfCount === 1 };
                     });
-                    
                     itemDecoPerPiece = Math.max(0, itemDecoPerPiece - explicitDecoDiscount);
 
                     const totalGarmentCost = landedCost * calculatedQty;
@@ -224,28 +211,24 @@
                 const discount = Math.abs(parseFloat(orderData.discount) || 0);
                 const taxRate = parseFloat(orderData.taxRate) || 0;
                 
+                const totalDecoDiscount = processedItems.reduce((sum, item) => sum + (item.decoDiscountTotal || 0), 0);
                 const subtotal = orderGarmentRetailTotal + orderDecoRetailTotal + setup + digitizing;
+                const grossSubtotal = subtotal + totalDecoDiscount; 
                 const discountedSubtotal = Math.max(0, subtotal - discount);
                 const tax = discountedSubtotal * (taxRate / 100);
                 const grandTotal = discountedSubtotal + tax;
                 
                 const grossProfit = discountedSubtotal - orderGarmentCostTotal;
-                const netProfit = grossProfit - orderDecoCostTotal - digitizingCost; // True absolute profit before savings splits
+                const netProfit = grossProfit - orderDecoCostTotal - digitizingCost;
                 const totalMarginPercent = discountedSubtotal > 0 ? (netProfit / discountedSubtotal) * 100 : 0;
                 const deposit = Math.ceil(grandTotal) / 2;
 
-                // Profit First Allocations based on Gross Revenue (Discounted Subtotal)
                 const taxFundAlloc = discountedSubtotal * ((parseFloat(businessDetails.taxPct) || 15) / 100);
                 const machineFundAlloc = discountedSubtotal * ((parseFloat(businessDetails.machinePct) || 5) / 100);
                 const consumableFundAlloc = discountedSubtotal * ((parseFloat(businessDetails.consumablePct) || 20) / 100);
-                
-                // Op Cash is what's left over from the Revenue after filling the buckets and paying the exact cost of goods.
                 const operatingCash = discountedSubtotal - taxFundAlloc - machineFundAlloc - consumableFundAlloc - orderGarmentCostTotal - orderDecoCostTotal - digitizingCost;
 
-                return { 
-                    items: processedItems, orderGarmentCostTotal, orderDecoCostTotal, setup, digitizing, digitizingCost, discount, subtotal, discountedSubtotal, tax, grandTotal, netProfit, deposit, totalMarginPercent,
-                    allocations: { tax: taxFundAlloc, machine: machineFundAlloc, consumables: consumableFundAlloc, opCash: operatingCash }
-                };
+                return { items: processedItems, orderGarmentCostTotal, orderDecoCostTotal, setup, digitizing, digitizingCost, discount, subtotal, grossSubtotal, discountedSubtotal, tax, grandTotal, netProfit, deposit, totalMarginPercent, totalDiscount: totalDecoDiscount + discount, allocations: { tax: taxFundAlloc, machine: machineFundAlloc, consumables: consumableFundAlloc, opCash: operatingCash } };
             }, [items, orderData, businessDetails]);
 
             const getSizeString = (item) => {
@@ -256,7 +239,6 @@
 
             const imageInputRef = useRef(null);
 
-            // --- PIPELINE & MODAL ACTIONS ---
             const handleSendToPipeline = () => {
                 if(!orderData.customerName) return alert("Please add a Customer Name before sending to the Pipeline.");
                 const currentStage = editingOrderId ? (orders.find(o=>o.id===editingOrderId)?.stage || 'quote') : 'quote';
@@ -338,20 +320,12 @@
                 }
             };
 
-            // --- PDF ENGINE ---
             useEffect(() => {
                 if (pdfConfig && pdfGenRef.current) {
                     const { order, type } = pdfConfig;
                     const safeName = order.customer ? order.customer.replace(/[^a-z0-9]/gi, '_') : 'Customer';
                     const suffix = type === 'proposal' ? 'Proposal' : type === 'invoice' ? 'Invoice' : 'Receipt';
-                    const opt = { 
-                        margin: 0.5, 
-                        filename: `${safeName}_${suffix}.pdf`, 
-                        image: { type: 'jpeg', quality: 0.98 }, 
-                        html2canvas: { scale: 2, useCORS: true, letterRendering: true }, 
-                        jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' } 
-                    };
-                    
+                    const opt = { margin: 0.5, filename: `${safeName}_${suffix}.pdf`, image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2, useCORS: true, letterRendering: true }, jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' } };
                     pdfGenRef.current.style.display = 'block';
                     setTimeout(() => {
                         window.html2pdf().set(opt).from(pdfGenRef.current).save().then(() => {
@@ -362,7 +336,6 @@
                 }
             }, [pdfConfig]);
 
-            // --- BOOKKEEPING & KPI LOGIC ---
             const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
             const ledCats = {
                 income: ['Product Sales', 'Service Income', 'Online Sales', 'Consulting / Freelance', 'Other Business Income'],
@@ -370,7 +343,6 @@
             };
 
             const filteredByYear = useMemo(() => transactions.filter(t => new Date(t.date).getFullYear() === parseInt(selectedYear)), [transactions, selectedYear]);
-            
             const calculateTotals = (data) => {
                 const income = data.filter(t => t.type === 'income').reduce((sum, t) => sum + (parseFloat(t.netAmount) || 0), 0);
                 const expenses = data.filter(t => t.type === 'expense').reduce((sum, t) => sum + (parseFloat(t.netAmount) || 0), 0);
@@ -380,22 +352,15 @@
             };
             const annualTotals = useMemo(() => calculateTotals(filteredByYear), [filteredByYear]);
             
-            // Advanced KPIs & Virtual Buckets
             const kpiData = useMemo(() => {
                 const activeOrders = orders.filter(o => o.stage !== 'quote' && o.stage !== 'archived');
                 const pipelineValue = activeOrders.reduce((sum, o) => sum + (o.total || 0), 0);
-                
                 const convertedOrders = orders.filter(o => o.stage !== 'quote');
                 const aov = convertedOrders.length > 0 ? convertedOrders.reduce((sum, o) => sum + (o.total || 0), 0) / convertedOrders.length : 0;
-                
                 const spoilageTotal = filteredByYear.filter(t => t.category === 'Spoilage / Machine Error' && t.type === 'expense').reduce((sum, t) => sum + t.netAmount, 0);
                 const spoilageRate = annualTotals.expenses > 0 ? (spoilageTotal / annualTotals.expenses) * 100 : 0;
+                const expenseBreakdown = ledCats.expense.map(cat => ({ name: cat, value: filteredByYear.filter(t => t.category === cat && t.type === 'expense').reduce((sum, t) => sum + t.netAmount, 0) })).filter(c => c.value > 0).sort((a, b) => b.value - a.value);
 
-                const expenseBreakdown = ledCats.expense.map(cat => {
-                    return { name: cat, value: filteredByYear.filter(t => t.category === cat && t.type === 'expense').reduce((sum, t) => sum + t.netAmount, 0) };
-                }).filter(c => c.value > 0).sort((a, b) => b.value - a.value);
-
-                // Virtual Bucket Math (All Time)
                 const allTimeIn = transactions.filter(t => t.type === 'income').reduce((sum, t) => sum + t.netAmount, 0);
                 const taxSpent = transactions.filter(t => t.type === 'expense' && t.category === 'Taxes Paid').reduce((sum, t) => sum + t.netAmount, 0);
                 const machineSpent = transactions.filter(t => t.type === 'expense' && (t.category === 'Repairs / Maintenance' || t.category === 'Equipment Purchase')).reduce((sum, t) => sum + t.netAmount, 0);
@@ -415,10 +380,7 @@
                 e.preventDefault();
                 const formData = new FormData(e.target);
                 const amount = parseFloat(formData.get('amount')) || 0;
-                const newTx = {
-                    id: Date.now(), type: formData.get('type'), date: formData.get('date'), category: formData.get('category'),
-                    amount, netAmount: amount, description: formData.get('description')
-                };
+                const newTx = { id: Date.now(), type: formData.get('type'), date: formData.get('date'), category: formData.get('category'), amount, netAmount: amount, description: formData.get('description') };
                 setTransactions([newTx, ...transactions]);
                 e.target.reset();
             };
@@ -427,11 +389,7 @@
                 <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex flex-col relative overflow-hidden group">
                     <div className={`absolute -right-2 -top-2 p-6 opacity-[0.03] transition-transform group-hover:scale-110 text-${color}-600`}><IconCmp size={80} /></div>
                     <span className="text-slate-400 text-[10px] font-black uppercase tracking-widest">{title}</span>
-                    <div className="mt-2">
-                        <span className={`text-2xl md:text-3xl font-black text-slate-800`}>
-                            {typeof value === 'number' && title !== 'Profit Margin' && title !== 'Spoilage Rate' ? formatCurrency(value) : value}
-                        </span>
-                    </div>
+                    <div className="mt-2"><span className={`text-2xl md:text-3xl font-black text-slate-800`}>{typeof value === 'number' && title !== 'Profit Margin' && title !== 'Spoilage Rate' ? formatCurrency(value) : value}</span></div>
                     {subtext && <span className="text-[10px] text-slate-400 mt-2 font-bold uppercase">{subtext}</span>}
                 </div>
             );
@@ -460,7 +418,7 @@
 
                     <div className="bg-white rounded-2xl shadow-sm p-6 md:p-8 border border-slate-200">
                         <div className="flex items-start gap-4 mb-6 border-b border-slate-100 pb-6">
-                            <div className="p-3 bg-emerald-50 rounded-xl text-emerald-600"><Icon name="safe" size={24}/></div>
+                            <div className="p-3 bg-emerald-50 rounded-xl text-emerald-600"><Icon name="wallet" size={24}/></div>
                             <div>
                                 <h2 className="text-lg font-black text-slate-800 uppercase tracking-widest">Global Fund Allocations</h2>
                                 <p className="text-xs text-slate-500 mt-1 leading-relaxed">Define how you want to split every incoming dollar. This builds your "Profit First" virtual buckets in the Ledger Dashboard.</p>
@@ -566,17 +524,17 @@
                                     <div>
                                         <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Decorations</p>
                                         {item.processedLocations.map((loc, lIdx) => (
-                                            <div key={loc.id} className="bg-white border border-slate-200 rounded-lg p-3 mb-2 flex flex-col md:flex-row gap-3 items-center relative pr-8">
+                                            <div key={loc.id} className="bg-white border border-slate-200 rounded-lg p-3 mb-2 flex flex-col lg:flex-row gap-3 items-center relative pr-8">
                                                 {item.locations.length > 1 && <button onClick={() => removeLocation(item.id, loc.id)} className="absolute right-2 top-2 text-slate-300 hover:text-red-500"><Icon name="x" size={14} /></button>}
                                                 
-                                                <select className="w-full md:w-auto flex-1 p-2 soft-input rounded-md text-xs font-bold shrink-0" value={loc.type} onChange={e => updateLocation(item.id, loc.id, 'type', e.target.value)}>
+                                                <select className="w-full lg:w-32 p-2 soft-input rounded-md text-xs font-bold shrink-0" value={loc.type} onChange={e => updateLocation(item.id, loc.id, 'type', e.target.value)}>
                                                     <option value="none">None</option>
                                                     <option value="embroidery">Embroidery</option>
                                                     <option value="dtf">DTF Print</option>
                                                 </select>
                                                 
                                                 {loc.type === 'embroidery' && (
-                                                    <div className="w-full md:w-auto flex items-center gap-2 shrink-0">
+                                                    <div className="w-full lg:w-auto flex items-center gap-2 shrink-0">
                                                         <input type="number" placeholder="Stitches" className="w-24 p-2 soft-input rounded-md text-xs" value={loc.stitches} onChange={e => updateLocation(item.id, loc.id, 'stitches', e.target.value)} />
                                                         <label className="flex items-center gap-1 text-[10px] font-bold text-slate-500 cursor-pointer whitespace-nowrap">
                                                             <input type="checkbox" checked={loc.isPuff} onChange={e => updateLocation(item.id, loc.id, 'isPuff', e.target.checked)} className="rounded text-indigo-600 focus:ring-indigo-500" />
@@ -587,23 +545,23 @@
                                                 )}
                                                 
                                                 {loc.type === 'dtf' && (
-                                                    <select className="w-full md:w-auto flex-1 p-2 soft-input rounded-md text-xs shrink-0" value={loc.dtfSize} onChange={e => updateLocation(item.id, loc.id, 'dtfSize', e.target.value)}>
+                                                    <select className="w-full lg:w-32 p-2 soft-input rounded-md text-xs shrink-0" value={loc.dtfSize} onChange={e => updateLocation(item.id, loc.id, 'dtfSize', e.target.value)}>
                                                         {DTF_SIZES.map(s => <option key={s.id} value={s.id}>{s.label}</option>)}
                                                     </select>
                                                 )}
                                                 
                                                 {loc.type !== 'none' && (
-                                                    <select className="w-full md:w-auto flex-1 p-2 soft-input rounded-md text-xs shrink-0" value={loc.placement} onChange={e => updateLocation(item.id, loc.id, 'placement', e.target.value)}>
+                                                    <select className="w-full lg:w-40 p-2 soft-input rounded-md text-xs shrink-0" value={loc.placement} onChange={e => updateLocation(item.id, loc.id, 'placement', e.target.value)}>
                                                         {PLACEMENTS.map(p => <option key={p.id} value={p.id}>{p.label}</option>)}
                                                     </select>
                                                 )}
                                                 
                                                 {loc.type !== 'none' && (
-                                                    <input type="text" placeholder="Custom notes..." className="w-full md:w-auto flex-[2] p-2 soft-input rounded-md text-xs" value={loc.desc} onChange={e => updateLocation(item.id, loc.id, 'desc', e.target.value)} />
+                                                    <input type="text" placeholder="Custom notes..." className="w-full flex-1 p-2 soft-input rounded-md text-xs min-w-[100px]" value={loc.desc} onChange={e => updateLocation(item.id, loc.id, 'desc', e.target.value)} />
                                                 )}
 
                                                 {loc.type !== 'none' && (
-                                                    <div className="w-full md:w-auto flex justify-end shrink-0">
+                                                    <div className="w-full lg:w-auto flex justify-end shrink-0">
                                                         <span className="text-xs font-black text-indigo-700 bg-indigo-50 px-3 py-2 rounded-md border border-indigo-100 shadow-sm whitespace-nowrap">
                                                             +{formatCurrency(loc.baseCost)} / ea
                                                         </span>
@@ -867,7 +825,6 @@
                 </div>
             );
 
-            // --- THE PIPELINE MODAL ---
             const renderModal = () => {
                 if (!selectedOrder) return null;
                 const { fullData, customer, id, stage, balance, total } = selectedOrder;
@@ -922,38 +879,12 @@
                                             <div>
                                                 <p className="font-bold text-sm text-slate-800">{item.qty}x {item.name} {item.color ? `(${item.color})` : ''}</p>
                                                 {sizeStr && <p className="text-[10px] text-slate-500 mt-0.5">{sizeStr}</p>}
-                                                
-                                                <div className="mt-1 pl-2 border-l border-indigo-200">
-                                                    {item.locations.filter(l=>l.type!=='none').map((l, i) => {
-                                                        const pLabel = PLACEMENTS.find(p=>p.id===l.placement)?.label || 'Custom';
-                                                        return (
-                                                            <p key={i} className="text-[10px] text-slate-600">
-                                                                {l.type === 'embroidery' ? (l.isPuff ? '3D Puff Emb' : 'Embroidery') : 'DTF Print'} 
-                                                                {l.placement !== 'custom' && ` - ${pLabel}`} 
-                                                                {l.desc && ` - ${l.desc}`}
-                                                            </p>
-                                                        )
-                                                    })}
-                                                </div>
-
-                                                {item.decoDiscount > 0 && <p className="text-[10px] text-emerald-600 font-bold mt-1">- Item Discount Applied</p>}
+                                                <p className="text-[10px] text-slate-500 mt-0.5">{item.locations.filter(l=>l.type!=='none').map(l => l.type === 'embroidery' ? 'Embroidery' : 'DTF').join(', ')}</p>
                                             </div>
                                             <span className="font-bold text-sm text-slate-600">{orderCalc ? formatCurrency(orderCalc.items[idx].lineTotal) : ''}</span>
                                         </div>
                                     )})}
                                 </div>
-                                
-                                {orderCalc && (
-                                    <div>
-                                        <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-3 border-b border-slate-100 pb-2">Cash Allocation (Based on Settings)</h3>
-                                        <div className="grid grid-cols-2 gap-2 text-sm bg-slate-50 p-4 rounded-xl border border-slate-200">
-                                            <div className="flex justify-between"><span className="text-slate-500">Tax Reserve ({businessDetails.taxPct}%):</span><span className="font-bold text-rose-500">{formatCurrency(orderCalc.allocations.tax)}</span></div>
-                                            <div className="flex justify-between"><span className="text-slate-500">Machine/Growth ({businessDetails.machinePct}%):</span><span className="font-bold text-indigo-500">{formatCurrency(orderCalc.allocations.machine)}</span></div>
-                                            <div className="flex justify-between col-span-2"><span className="text-slate-500">Consumables/Restock ({businessDetails.consumablePct}%):</span><span className="font-bold text-amber-500">{formatCurrency(orderCalc.allocations.consumables)}</span></div>
-                                            <div className="flex justify-between col-span-2 mt-2 pt-2 border-t border-slate-200"><span className="text-slate-800 font-bold">True Op Profit:</span><span className="font-black text-emerald-600">{formatCurrency(orderCalc.allocations.opCash)}</span></div>
-                                        </div>
-                                    </div>
-                                )}
                             </div>
 
                             <div className="p-5 border-t border-slate-200 bg-slate-50 space-y-3">
