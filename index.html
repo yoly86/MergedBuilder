@@ -17,6 +17,16 @@
         .pb-safe { padding-bottom: env(safe-area-inset-bottom, 0px); }
         .pb-content { padding-bottom: calc(env(safe-area-inset-bottom, 20px) + 90px); }
         
+        @media print {
+            @page { margin: 0; }
+            body { background-color: white !important; margin: 1cm !important; }
+            .no-print { display: none !important; }
+            .print-full-width { max-width: 100% !important; margin: 0 !important; padding: 0 !important; }
+            .print-no-shadow { box-shadow: none !important; border: none !important; }
+            .page-container { background: transparent !important; box-shadow: none !important; margin: 0 !important; padding: 0 !important; }
+            * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+        }
+        
         input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
         .scrollbar-hide::-webkit-scrollbar { display: none; }
         .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
@@ -32,7 +42,6 @@
     <script type="text/babel">
         const { useState, useEffect, useMemo, useRef } = React;
 
-        // --- ICONS ---
         const Icon = ({ name, size = 24, className = "" }) => {
             const icons = {
                 calculator: <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><rect width="16" height="20" x="4" y="2" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="16" y1="14" x2="16" y2="18"/><path d="M16 10h.01"/><path d="M12 10h.01"/><path d="M8 10h.01"/><path d="M12 14h.01"/><path d="M8 14h.01"/><path d="M12 18h.01"/><path d="M8 18h.01"/></svg>,
@@ -43,7 +52,6 @@
                 plus: <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>,
                 trash: <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>,
                 copy: <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>,
-                check: <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polyline points="20 6 9 17 4 12"/></svg>,
                 x: <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>,
                 wallet: <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/><path d="M18 12a2 2 0 0 0 0 4h4v-4Z"/></svg>,
                 archive: <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg>,
@@ -54,12 +62,12 @@
                 percent: <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><line x1="19" y1="5" x2="5" y2="19"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/></svg>,
                 settings: <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>,
                 fileCheck: <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="m9 15 2 2 4-4"/></svg>,
-                building: <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><rect x="4" y="2" width="16" height="20" rx="2" ry="2"/><path d="M9 22v-4h6v4"/><path d="M8 6h.01"/><path d="M16 6h.01"/><path d="M12 6h.01"/><path d="M12 10h.01"/><path d="M12 14h.01"/><path d="M16 10h.01"/><path d="M16 14h.01"/><path d="M8 10h.01"/><path d="M8 14h.01"/></svg>
+                building: <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><rect x="4" y="2" width="16" height="20" rx="2" ry="2"/><path d="M9 22v-4h6v4"/><path d="M8 6h.01"/><path d="M16 6h.01"/><path d="M12 6h.01"/><path d="M12 10h.01"/><path d="M12 14h.01"/><path d="M16 10h.01"/><path d="M16 14h.01"/><path d="M8 10h.01"/><path d="M8 14h.01"/></svg>,
+                checkCircle: <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
             };
             return icons[name] || null;
         };
 
-        // --- CONSTANTS ---
         const STAGES = [
             { id: 'quote', label: '1. Quote Issued', color: 'bg-slate-200 text-slate-800' },
             { id: 'new', label: '2. Deposit Paid', color: 'bg-sky-100 text-sky-800' },
@@ -67,7 +75,8 @@
             { id: 'receiving', label: '4. Receiving Blanks', color: 'bg-orange-100 text-orange-800' },
             { id: 'prepping', label: '5. Prepping / DTF', color: 'bg-indigo-100 text-indigo-800' },
             { id: 'printing', label: '6. Emb / Print', color: 'bg-blue-100 text-blue-800' },
-            { id: 'pickup', label: '7. Ready for Pickup', color: 'bg-emerald-100 text-emerald-800' }
+            { id: 'pickup', label: '7. Ready for Pickup', color: 'bg-emerald-100 text-emerald-800' },
+            { id: 'archived', label: 'Archived', color: 'bg-slate-800 text-white' }
         ];
 
         const STITCH_MATRIX = [
@@ -97,7 +106,6 @@
         const formatCurrency = (val) => '$' + (val || 0).toFixed(2);
         const generateEmptySizes = () => SIZES_LIST.reduce((acc, size) => { acc[size] = ''; return acc; }, {});
 
-        // --- MAIN APP COMPONENT ---
         function App() {
             const [appModule, setAppModule] = useState('pipeline'); 
             const [pipelineView, setPipelineView] = useState('active'); 
@@ -109,7 +117,6 @@
             const [pdfConfig, setPdfConfig] = useState(null); 
             const [editingOrderId, setEditingOrderId] = useState(null);
 
-            // Safe Local Storage
             const [orders, setOrders] = useState(() => {
                 try { return JSON.parse(localStorage.getItem('t1_orders')) || []; } catch(e) { return []; }
             });
@@ -131,7 +138,6 @@
             const [orderData, setOrderData] = useState(defaultOrderData);
             const [items, setItems] = useState([defaultItem]);
 
-            // --- QUOTER LOGIC & MATH ---
             const updateBiz = (field, value) => setBusinessDetails(prev => ({ ...prev, [field]: value }));
             const updateOrder = (field, value) => setOrderData(prev => ({ ...prev, [field]: value }));
             const handleImageUpload = (e) => {
@@ -157,7 +163,8 @@
                     const rawCost = parseFloat(item.rawCost) || 0;
                     const shipping = parseFloat(item.shippingCost) || 0;
                     const margin = parseFloat(item.margin) || 0;
-                    const explicitDecoDiscount = parseFloat(item.decoDiscount) || 0;
+                    
+                    const explicitDecoDiscount = Math.abs(parseFloat(item.decoDiscount) || 0);
 
                     const landedCost = rawCost + shipping;
                     const effectiveMargin = Math.min(margin, 99.9);
@@ -195,19 +202,20 @@
                     const totalDecoMaterialCost = itemDecoCostPerPiece * calculatedQty;
                     const lineTotalPerPiece = clientGarmentPrice + itemDecoPerPiece;
                     const lineTotal = lineTotalPerPiece * calculatedQty;
+                    const decoDiscountTotal = explicitDecoDiscount * calculatedQty;
                     const undiscountedLineTotal = (clientGarmentPrice + itemDecoPerPiece + explicitDecoDiscount) * calculatedQty;
 
                     orderGarmentCostTotal += totalGarmentCost; orderGarmentRetailTotal += totalGarmentRetail;
                     orderDecoRetailTotal += totalDecoRetail; orderDecoCostTotal += totalDecoMaterialCost;
                     totalDtfCost += itemDtfCost * calculatedQty; totalThreadCost += itemThreadCost * calculatedQty; totalStabilizerCost += itemStabilizerCost * calculatedQty;
 
-                    return { ...item, calculatedQty, sizeSum, landedCost, clientGarmentPrice, processedLocations, itemDecoPerPiece, totalGarmentRetail, totalDecoRetail, lineTotalPerPiece, lineTotal, undiscountedLineTotal };
+                    return { ...item, calculatedQty, sizeSum, landedCost, clientGarmentPrice, processedLocations, itemDecoPerPiece, totalGarmentRetail, totalDecoRetail, lineTotalPerPiece, lineTotal, undiscountedLineTotal, explicitDecoDiscount, decoDiscountTotal };
                 });
 
                 const setup = parseFloat(orderData.setupFees) || 0;
                 const digitizing = parseFloat(orderData.digitizingFee) || 0;
                 const digitizingCost = parseFloat(orderData.digitizingCost) || 0;
-                const discount = parseFloat(orderData.discount) || 0;
+                const discount = Math.abs(parseFloat(orderData.discount) || 0);
                 const taxRate = parseFloat(orderData.taxRate) || 0;
                 
                 const subtotal = orderGarmentRetailTotal + orderDecoRetailTotal + setup + digitizing;
@@ -232,7 +240,6 @@
 
             const imageInputRef = useRef(null);
 
-            // --- PIPELINE & MODAL ACTIONS ---
             const handleSendToPipeline = () => {
                 if(!orderData.customerName) return alert("Please add a Customer Name before sending to the Pipeline.");
                 const currentStage = editingOrderId ? (orders.find(o=>o.id===editingOrderId)?.stage || 'quote') : 'quote';
@@ -314,13 +321,11 @@
                 }
             };
 
-            // --- PDF GENERATION ENGINE ---
             useEffect(() => {
                 if (pdfConfig && pdfGenRef.current) {
                     const { order, type } = pdfConfig;
                     const safeName = order.customer ? order.customer.replace(/[^a-z0-9]/gi, '_') : 'Customer';
                     const suffix = type === 'proposal' ? 'Proposal' : type === 'invoice' ? 'Invoice' : 'Receipt';
-                    
                     const opt = { margin: 0.5, filename: `${safeName}_${suffix}.pdf`, image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2, useCORS: true }, jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' } };
                     
                     pdfGenRef.current.style.display = 'block';
@@ -331,7 +336,6 @@
                 }
             }, [pdfConfig]);
 
-            // --- BOOKKEEPING LOGIC ---
             const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
             const ledCats = {
                 income: ['Product Sales', 'Service Income', 'Online Sales', 'Consulting / Freelance', 'Other Business Income'],
@@ -362,11 +366,9 @@
                 e.target.reset();
             };
 
-            // --- UI RENDERS ---
             const renderQuoter = () => (
                 <div className="space-y-6 pb-6 fade-in">
                     
-                    {/* Private Business Details */}
                     <div className="bg-indigo-50 border border-indigo-100 rounded-2xl p-6 shadow-sm">
                         <div className="flex items-start gap-3 mb-4">
                             <div className="p-2 bg-indigo-100 rounded-lg text-indigo-600"><Icon name="building" size={20}/></div>
@@ -384,12 +386,11 @@
                         </div>
                     </div>
 
-                    {/* Order Details */}
                     <div className="bg-white rounded-2xl shadow-sm p-6 border border-slate-200">
                         <div className="flex justify-between items-center mb-6">
                             <h2 className="text-sm font-bold text-slate-800 flex items-center gap-2 uppercase tracking-wider"><Icon name="calculator" size={18} className="text-indigo-500" /> Build Quote</h2>
                             <button onClick={() => setShowInternalBreakdown(!showInternalBreakdown)} className="text-xs font-bold text-indigo-600 bg-indigo-50 px-3 py-1.5 rounded-lg border border-indigo-100">
-                                {showInternalBreakdown ? 'Hide Math' : 'View Internal Breakdown'}
+                                {showInternalBreakdown ? 'Hide Math' : 'View Line Items & Math'}
                             </button>
                         </div>
                         
@@ -417,7 +418,6 @@
                             <div className="md:col-span-2"><label className="block text-xs font-semibold text-indigo-500 mb-1">Design Notes / Proofing Disclaimers</label><textarea placeholder="Visible on Proposal..." className="w-full p-3 bg-indigo-50 border border-indigo-100 rounded-xl focus:ring-2 focus:ring-indigo-400 outline-none text-sm resize-none" rows="2" value={orderData.designNotes} onChange={e => updateOrder('designNotes', e.target.value)}></textarea></div>
                         </div>
 
-                        {/* Garment Items */}
                         {items.map((item, index) => (
                             <div key={item.id} className="bg-slate-50 rounded-xl border border-slate-200 overflow-hidden mb-5">
                                 <div className="p-4 border-b border-slate-200 flex justify-between items-center bg-slate-100/50">
@@ -448,7 +448,13 @@
                                         <div><label className="block text-[10px] font-bold text-slate-500 mb-1">Wholesale $</label><input type="number" className="w-full p-2 soft-input rounded-md text-sm" value={item.rawCost} onChange={e => updateItem(item.id, 'rawCost', e.target.value)} /></div>
                                         <div><label className="block text-[10px] font-bold text-slate-500 mb-1">Freight $</label><input type="number" className="w-full p-2 soft-input rounded-md text-sm" value={item.shippingCost} onChange={e => updateItem(item.id, 'shippingCost', e.target.value)} /></div>
                                         <div><label className="block text-[10px] font-bold text-slate-500 mb-1">Margin %</label><input type="number" className="w-full p-2 soft-input rounded-md text-sm text-indigo-700 font-bold" value={item.margin} onChange={e => updateItem(item.id, 'margin', e.target.value)} /></div>
-                                        <div><label className="block text-[10px] font-bold text-emerald-600 mb-1">Deco Discount $</label><input type="number" placeholder="0.00" className="w-full p-2 soft-input border-emerald-200 rounded-md text-sm text-emerald-700 font-bold focus:ring-emerald-500" value={item.decoDiscount} onChange={e => updateItem(item.id, 'decoDiscount', e.target.value)} /></div>
+                                        <div>
+                                            <label className="block text-[10px] font-bold text-emerald-600 mb-1">Deco Discount $</label>
+                                            <div className="relative">
+                                                <span className="absolute left-3 top-2 text-emerald-600 font-bold">-$</span>
+                                                <input type="number" placeholder="0.00" className="w-full pl-8 p-2 soft-input border-emerald-200 rounded-md text-sm text-emerald-700 font-bold focus:ring-emerald-500" value={item.decoDiscount} onChange={e => updateItem(item.id, 'decoDiscount', e.target.value)} />
+                                            </div>
+                                        </div>
                                     </div>
                                     <div>
                                         <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Decorations</p>
@@ -469,30 +475,68 @@
                         <button onClick={addItem} className="w-full py-3 border-2 border-dashed border-slate-300 rounded-xl text-slate-500 font-bold text-sm hover:border-indigo-400 hover:text-indigo-600 hover:bg-indigo-50 transition-all">+ Add Garment Style</button>
                     </div>
 
-                    {/* Fees and Discounts */}
                     <div className="bg-white rounded-2xl shadow-sm p-6 border border-slate-200">
                         <h2 className="text-sm font-bold text-slate-800 mb-5 flex items-center gap-2 uppercase tracking-wider"><Icon name="settings" size={18} className="text-indigo-500" /> Fees & Discounts</h2>
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                             <div><label className="block text-[11px] font-semibold text-slate-500 mb-1.5 uppercase">Setup Fees</label><input type="number" className="w-full p-3 soft-input rounded-xl text-sm" value={orderData.setupFees} onFocus={(e) => e.target.select()} onChange={e => updateOrder('setupFees', e.target.value)} /></div>
                             <div><label className="block text-[11px] font-semibold text-slate-500 mb-1.5 uppercase">Digitizing Fee</label><input type="number" className="w-full p-3 soft-input rounded-xl text-sm" value={orderData.digitizingFee} onFocus={(e) => e.target.select()} onChange={e => updateOrder('digitizingFee', e.target.value)} /></div>
-                            <div><label className="block text-[11px] font-semibold text-slate-500 mb-1.5 uppercase flex items-center gap-1"><Icon name="tag" size={12}/> Order Discount ($)</label><input type="number" className="w-full p-3 soft-input rounded-xl text-sm text-emerald-600 font-bold" value={orderData.discount} onFocus={(e) => e.target.select()} onChange={e => updateOrder('discount', e.target.value)} /></div>
+                            <div>
+                                <label className="block text-[11px] font-semibold text-slate-500 mb-1.5 uppercase flex items-center gap-1"><Icon name="tag" size={12}/> Order Discount ($)</label>
+                                <div className="relative">
+                                    <span className="absolute left-3 top-3 text-emerald-600 font-bold">-$</span>
+                                    <input type="number" className="w-full pl-8 p-3 soft-input rounded-xl text-sm text-emerald-600 font-bold focus:ring-emerald-500" value={orderData.discount} onFocus={(e) => e.target.select()} onChange={e => updateOrder('discount', e.target.value)} />
+                                </div>
+                            </div>
                             <div><label className="block text-[11px] font-semibold text-slate-500 mb-1.5 uppercase flex items-center gap-1"><Icon name="percent" size={12}/> Tax Rate (%)</label><input type="number" className="w-full p-3 soft-input rounded-xl text-sm" value={orderData.taxRate} onFocus={(e) => e.target.select()} onChange={e => updateOrder('taxRate', e.target.value)} /></div>
                         </div>
                     </div>
 
-                    {/* Internal Breakdown Toggle */}
                     {showInternalBreakdown && (
-                        <div className="bg-slate-900 text-white rounded-2xl p-6 shadow-lg">
-                            <h3 className="text-sm font-bold border-b border-slate-700 pb-3 mb-4 text-indigo-300 uppercase tracking-widest">Internal Math</h3>
-                            <div className="grid grid-cols-2 gap-4 text-sm">
-                                <div className="flex justify-between"><span className="text-slate-400">Total Rev:</span><span className="font-bold">{formatCurrency(calc.discountedSubtotal)}</span></div>
-                                <div className="flex justify-between"><span className="text-slate-400">Garment Cost:</span><span className="font-bold text-rose-400">-{formatCurrency(calc.orderGarmentCostTotal)}</span></div>
-                                <div className="flex justify-between"><span className="text-slate-400">Consumables:</span><span className="font-bold text-rose-400">-{formatCurrency(calc.orderDecoCostTotal)}</span></div>
-                                <div className="flex justify-between"><span className="text-slate-400">Reserve/Savings:</span><span className="font-bold text-amber-400">-{formatCurrency(calc.machineReserve)}</span></div>
+                        <div className="bg-slate-900 text-white rounded-2xl p-6 shadow-lg space-y-6">
+                            <div>
+                                <h3 className="text-sm font-bold border-b border-slate-700 pb-3 mb-4 text-indigo-300 uppercase tracking-widest">Line Item Analysis</h3>
+                                <div className="space-y-4">
+                                    {calc.items.map((item, idx) => {
+                                        const sizeStr = getSizeString(item);
+                                        return (
+                                        <div key={item.id} className="bg-slate-800 border border-slate-700 rounded-xl p-4 shadow-sm">
+                                            <div className="flex justify-between items-start mb-3 border-b border-slate-700 pb-3">
+                                                <div>
+                                                    <h4 className="font-bold text-white">{idx + 1}. {item.name || 'Unnamed Item'} {item.color ? `(${item.color})` : ''} (Qty: {item.calculatedQty})</h4>
+                                                    {sizeStr && <p className="text-[10px] font-bold text-slate-400 mt-1">{sizeStr}</p>}
+                                                </div>
+                                                <span className="font-bold text-indigo-300 text-lg">{formatCurrency(item.lineTotal)}</span>
+                                            </div>
+                                            <div className="grid grid-cols-2 gap-x-6 gap-y-2 text-sm text-slate-300">
+                                                <div className="flex justify-between"><span>Landed Cost /ea:</span><span className="font-semibold">{formatCurrency(item.landedCost)}</span></div>
+                                                <div className="flex justify-between"><span>Garment Retail /ea:</span><span className="font-semibold">{formatCurrency(item.clientGarmentPrice)}</span></div>
+                                                <div className="flex justify-between"><span>Garment Profit /ea:</span><span className="font-bold text-emerald-400">{formatCurrency(item.clientGarmentPrice - item.landedCost)}</span></div>
+                                                <div className="flex justify-between"><span>Deco Revenue /ea (Net):</span><span className="font-bold text-indigo-300">{formatCurrency(item.itemDecoPerPiece)}</span></div>
+                                                
+                                                {item.explicitDecoDiscount > 0 && (
+                                                    <div className="col-span-2 flex justify-between bg-emerald-900/30 text-emerald-400 p-2 rounded-lg mt-1 border border-emerald-800">
+                                                        <span className="font-bold text-xs">Item Discount Applied</span>
+                                                        <span className="font-bold text-xs">-{formatCurrency(item.decoDiscountTotal)} (-{formatCurrency(item.explicitDecoDiscount)}/ea)</span>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    )})}
+                                </div>
                             </div>
-                            <div className="mt-4 pt-4 border-t border-slate-700 flex justify-between items-center">
-                                <span className="font-bold uppercase tracking-widest text-xs text-slate-300">Net Take-Home Profit</span>
-                                <span className="text-3xl font-black text-emerald-400">{formatCurrency(calc.netProfit)}</span>
+                            
+                            <div>
+                                <h3 className="text-sm font-bold border-b border-slate-700 pb-3 mb-4 text-amber-300 uppercase tracking-widest">Order Math</h3>
+                                <div className="grid grid-cols-2 gap-4 text-sm">
+                                    <div className="flex justify-between"><span className="text-slate-400">Total Rev:</span><span className="font-bold">{formatCurrency(calc.discountedSubtotal)}</span></div>
+                                    <div className="flex justify-between"><span className="text-slate-400">Garment Cost:</span><span className="font-bold text-rose-400">-{formatCurrency(calc.orderGarmentCostTotal)}</span></div>
+                                    <div className="flex justify-between"><span className="text-slate-400">Consumables:</span><span className="font-bold text-rose-400">-{formatCurrency(calc.orderDecoCostTotal)}</span></div>
+                                    <div className="flex justify-between"><span className="text-slate-400">Reserve/Savings:</span><span className="font-bold text-amber-400">-{formatCurrency(calc.machineReserve)}</span></div>
+                                </div>
+                                <div className="mt-4 pt-4 border-t border-slate-700 flex justify-between items-center">
+                                    <span className="font-bold uppercase tracking-widest text-xs text-slate-300">Net Take-Home Profit</span>
+                                    <span className="text-3xl font-black text-emerald-400">{formatCurrency(calc.netProfit)}</span>
+                                </div>
                             </div>
                         </div>
                     )}
@@ -523,7 +567,7 @@
 
             const renderPipelineBoard = () => (
                 <div className="flex overflow-x-auto hide-scrollbar gap-4 pb-4 -mx-4 px-4 snap-x h-full">
-                    {STAGES.map(stage => {
+                    {STAGES.filter(s => s.id !== 'archived').map(stage => {
                         const stageItems = orders.filter(o => o.stage === stage.id);
                         return (
                             <div key={stage.id} className="min-w-[280px] w-[280px] flex-shrink-0 snap-center bg-slate-100/50 rounded-2xl border border-slate-200 flex flex-col max-h-[75vh]">
@@ -644,7 +688,7 @@
                                     </div>
                                     {stage !== 'archived' && (
                                         <select value={stage} onChange={(e) => moveOrderStage(id, e.target.value)} className="text-xs font-bold text-indigo-700 bg-indigo-50 border border-indigo-100 rounded-md p-1 outline-none cursor-pointer">
-                                            {STAGES.map(s => <option key={s.id} value={s.id}>{s.label}</option>)}
+                                            {STAGES.filter(s => s.id !== 'archived').map(s => <option key={s.id} value={s.id}>{s.label}</option>)}
                                         </select>
                                     )}
                                 </div>
@@ -679,7 +723,7 @@
                                                 {sizeStr && <p className="text-[10px] text-slate-500 mt-0.5">{sizeStr}</p>}
                                                 <p className="text-[10px] text-slate-500 mt-0.5">{item.locations.filter(l=>l.type!=='none').map(l => l.type === 'embroidery' ? 'Embroidery' : 'DTF').join(', ')}</p>
                                             </div>
-                                            <span className="font-bold text-sm text-slate-600">{orderCalc ? formatCurrency(orderCalc.items[idx].undiscountedLineTotal) : ''}</span>
+                                            <span className="font-bold text-sm text-slate-600">{orderCalc ? formatCurrency(orderCalc.items[idx].lineTotal) : ''}</span>
                                         </div>
                                     )})}
                                 </div>
