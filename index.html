@@ -122,6 +122,7 @@
             const [selectedOrder, setSelectedOrder] = useState(null); 
             const pdfGenRef = useRef(null);
             const [pdfConfig, setPdfConfig] = useState(null); 
+            const [editingOrderId, setEditingOrderId] = useState(null);
 
             // Safe Local Storage
             const [orders, setOrders] = useState(() => {
@@ -140,14 +141,11 @@
             useEffect(() => { localStorage.setItem('t1_orders', JSON.stringify(orders)); }, [orders]);
             useEffect(() => { localStorage.setItem('t1_ledger', JSON.stringify(transactions)); }, [transactions]);
 
-            const [orderData, setOrderData] = useState({
-                customerName: '', orderName: '', dateRequired: '', orderDescription: '', designNotes: '', mockupImage: null,
-                setupFees: '', digitizingFee: '', digitizingCost: '', taxRate: 5, discount: '', machineReservePercent: '5'
-            });
-            const [items, setItems] = useState([{
-                id: genId(), name: '', color: '', qty: 1, rawCost: '', shippingCost: '1.00', margin: 35, sizes: generateEmptySizes(),
-                locations: [ { id: genId(), type: 'none', placement: 'custom', stitches: '', dtfSize: 'small', desc: '', isPuff: false, puffMarkup: 5, adjustment: '' } ]
-            }]);
+            const defaultOrderData = { customerName: '', orderName: '', dateRequired: '', orderDescription: '', designNotes: '', mockupImage: null, setupFees: '', digitizingFee: '', digitizingCost: '', taxRate: 5, discount: '', machineReservePercent: '5' };
+            const defaultItem = { id: genId(), name: '', color: '', qty: 1, rawCost: '', shippingCost: '1.00', margin: 35, decoDiscount: '', sizes: generateEmptySizes(), locations: [ { id: genId(), type: 'none', placement: 'custom', stitches: '', dtfSize: 'small', desc: '', isPuff: false, puffMarkup: 5, adjustment: '' } ] };
+
+            const [orderData, setOrderData] = useState(defaultOrderData);
+            const [items, setItems] = useState([defaultItem]);
 
             // --- QUOTER LOGIC & MATH ---
             const updateOrder = (field, value) => setOrderData(prev => ({ ...prev, [field]: value }));
@@ -161,7 +159,7 @@
             const addLocation = (itemId) => setItems(items.map(item => item.id === itemId ? { ...item, locations: [...item.locations, { id: genId(), type: 'none', placement: 'custom', stitches: '', dtfSize: 'small', desc: '', isPuff: false, puffMarkup: 5, adjustment: '' }] } : item));
             const updateLocation = (itemId, locId, field, value) => setItems(items.map(item => item.id === itemId ? { ...item, locations: item.locations.map(loc => loc.id === locId ? { ...loc, [field]: value } : loc) } : item));
             const removeLocation = (itemId, locId) => setItems(items.map(item => item.id === itemId ? { ...item, locations: item.locations.filter(loc => loc.id !== locId) } : item));
-            const addItem = () => setItems([...items, { id: genId(), name: '', color: '', qty: 1, rawCost: '', shippingCost: '1.00', margin: 35, sizes: generateEmptySizes(), locations: [ { id: genId(), type: 'none', placement: 'custom', stitches: '', dtfSize: 'small', desc: '', isPuff: false, puffMarkup: 5, adjustment: '' } ] }]);
+            const addItem = () => setItems([...items, { ...defaultItem, id: genId(), locations: [{...defaultItem.locations[0], id: genId()}] }]);
             const duplicateItem = (itemToCopy) => setItems([...items, { ...JSON.parse(JSON.stringify(itemToCopy)), id: genId(), locations: itemToCopy.locations.map(loc => ({ ...loc, id: genId() })) }]);
             const removeItem = (itemId) => { if(items.length > 1) setItems(items.filter(item => item.id !== itemId)); };
 
@@ -174,6 +172,8 @@
                     const rawCost = parseFloat(item.rawCost) || 0;
                     const shipping = parseFloat(item.shippingCost) || 0;
                     const margin = parseFloat(item.margin) || 0;
+                    const explicitDecoDiscount = parseFloat(item.decoDiscount) || 0;
+
                     const landedCost = rawCost + shipping;
                     const effectiveMargin = Math.min(margin, 99.9);
                     const clientGarmentPrice = landedCost / (1 - (effectiveMargin / 100));
@@ -197,27 +197,26 @@
                         }
                         let adjustmentCost = parseFloat(loc.adjustment) || 0;
                         let cost = Math.max(0, baseCost + adjustmentCost);
-                        let locDiscount = adjustmentCost < 0 ? Math.abs(adjustmentCost) : 0;
-                        itemDecoPerPiece += cost; itemDecoCostPerPiece += matCost;
-                        return { ...loc, baseCost, cost, materialCost: matCost, locDiscount, isFirstDtf: loc.type === 'dtf' && dtfCount === 1 };
+                        itemDecoPerPiece += cost; 
+                        itemDecoCostPerPiece += matCost;
+                        return { ...loc, baseCost, cost, materialCost: matCost, isFirstDtf: loc.type === 'dtf' && dtfCount === 1 };
                     });
                     
+                    itemDecoPerPiece = Math.max(0, itemDecoPerPiece - explicitDecoDiscount);
+
                     const totalGarmentCost = landedCost * calculatedQty;
                     const totalGarmentRetail = clientGarmentPrice * calculatedQty;
                     const totalDecoRetail = itemDecoPerPiece * calculatedQty;
                     const totalDecoMaterialCost = itemDecoCostPerPiece * calculatedQty;
-                    const itemDecoDiscountPerPiece = processedLocations.reduce((sum, l) => sum + l.locDiscount, 0);
-                    const itemTotalDecoDiscount = itemDecoDiscountPerPiece * calculatedQty;
                     const lineTotalPerPiece = clientGarmentPrice + itemDecoPerPiece;
                     const lineTotal = lineTotalPerPiece * calculatedQty;
-                    const undiscountedLineTotalPerPiece = clientGarmentPrice + itemDecoPerPiece + itemDecoDiscountPerPiece;
-                    const undiscountedLineTotal = undiscountedLineTotalPerPiece * calculatedQty;
+                    const undiscountedLineTotal = (clientGarmentPrice + itemDecoPerPiece + explicitDecoDiscount) * calculatedQty;
 
                     orderGarmentCostTotal += totalGarmentCost; orderGarmentRetailTotal += totalGarmentRetail;
                     orderDecoRetailTotal += totalDecoRetail; orderDecoCostTotal += totalDecoMaterialCost;
                     totalDtfCost += itemDtfCost * calculatedQty; totalThreadCost += itemThreadCost * calculatedQty; totalStabilizerCost += itemStabilizerCost * calculatedQty;
 
-                    return { ...item, calculatedQty, sizeSum, landedCost, clientGarmentPrice, processedLocations, itemDecoPerPiece, itemTotalDecoDiscount, totalGarmentRetail, totalDecoRetail, lineTotalPerPiece, lineTotal, undiscountedLineTotalPerPiece, undiscountedLineTotal };
+                    return { ...item, calculatedQty, sizeSum, landedCost, clientGarmentPrice, processedLocations, itemDecoPerPiece, totalGarmentRetail, totalDecoRetail, lineTotalPerPiece, lineTotal, undiscountedLineTotal };
                 });
 
                 const setup = parseFloat(orderData.setupFees) || 0;
@@ -225,22 +224,19 @@
                 const digitizingCost = parseFloat(orderData.digitizingCost) || 0;
                 const discount = parseFloat(orderData.discount) || 0;
                 const taxRate = parseFloat(orderData.taxRate) || 0;
-                const totalDecoDiscount = processedItems.reduce((sum, item) => sum + item.itemTotalDecoDiscount, 0);
-                const totalDiscount = totalDecoDiscount + discount;
+                
                 const subtotal = orderGarmentRetailTotal + orderDecoRetailTotal + setup + digitizing;
-                const grossSubtotal = subtotal + totalDecoDiscount;
                 const discountedSubtotal = Math.max(0, subtotal - discount);
                 const tax = discountedSubtotal * (taxRate / 100);
                 const grandTotal = discountedSubtotal + tax;
                 
                 let reservePercent = parseFloat(orderData.machineReservePercent) || 5;
                 const machineReserve = discountedSubtotal * (reservePercent / 100);
-                const totalOrderCost = orderGarmentCostTotal + orderDecoCostTotal + machineReserve + digitizingCost;
                 const grossProfit = discountedSubtotal - orderGarmentCostTotal;
                 const netProfit = grossProfit - orderDecoCostTotal - machineReserve - digitizingCost;
                 const deposit = Math.ceil(grandTotal) / 2;
 
-                return { items: processedItems, orderGarmentCostTotal, orderDecoCostTotal, setup, digitizing, digitizingCost, discount, machineReserve, subtotal, grossSubtotal, discountedSubtotal, tax, grandTotal, totalOrderCost, grossProfit, netProfit, deposit, totalDiscount };
+                return { items: processedItems, orderGarmentCostTotal, orderDecoCostTotal, setup, digitizing, digitizingCost, discount, machineReserve, subtotal, discountedSubtotal, tax, grandTotal, netProfit, deposit };
             }, [items, orderData]);
 
             const getSizeString = (item) => {
@@ -254,24 +250,39 @@
             // --- PIPELINE & MODAL ACTIONS ---
             const handleSendToPipeline = () => {
                 if(!orderData.customerName) return alert("Please add a Customer Name before sending to the Pipeline.");
+                const currentStage = editingOrderId ? (orders.find(o=>o.id===editingOrderId)?.stage || 'quote') : 'quote';
+                
                 const newOrder = {
-                    id: `JOB-${Date.now().toString().slice(-4)}`,
+                    id: editingOrderId || `JOB-${Date.now().toString().slice(-4)}`,
                     customer: orderData.customerName,
                     desc: orderData.orderName || `${calc.items.reduce((sum, item) => sum + item.calculatedQty, 0)}x Garments`,
-                    stage: 'quote',
+                    stage: currentStage,
                     total: calc.grandTotal,
-                    balance: calc.grandTotal,
+                    balance: calc.grandTotal, // Safely assume balance = total for quotes
                     depositAmount: calc.deposit,
                     fullData: { orderData, items, calc },
-                    dateAdded: new Date().toLocaleDateString()
+                    dateAdded: editingOrderId ? (orders.find(o=>o.id===editingOrderId)?.dateAdded || new Date().toLocaleDateString()) : new Date().toLocaleDateString()
                 };
-                setOrders([newOrder, ...orders]);
                 
-                // Reset Form
-                setOrderData({ customerName: '', orderName: '', dateRequired: '', orderDescription: '', designNotes: '', mockupImage: null, setupFees: '', digitizingFee: '', digitizingCost: '', taxRate: 5, discount: '', machineReservePercent: '5' });
-                setItems([{ id: genId(), name: '', color: '', qty: 1, rawCost: '', shippingCost: '1.00', margin: 35, sizes: generateEmptySizes(), locations: [ { id: genId(), type: 'none', placement: 'custom', stitches: '', dtfSize: 'small', desc: '', isPuff: false, puffMarkup: 5, adjustment: '' } ] }]);
+                if(editingOrderId) {
+                    setOrders(orders.map(o => o.id === editingOrderId ? newOrder : o));
+                    setEditingOrderId(null);
+                } else {
+                    setOrders([newOrder, ...orders]);
+                }
+                
+                setOrderData(defaultOrderData);
+                setItems([defaultItem]);
                 setAppModule('pipeline');
                 setPipelineView('active');
+            };
+
+            const editQuote = (order) => {
+                setOrderData(order.fullData.orderData);
+                setItems(order.fullData.items);
+                setEditingOrderId(order.id);
+                setSelectedOrder(null);
+                setAppModule('quoter');
             };
 
             const moveOrderStage = (orderId, newStage) => {
@@ -430,10 +441,11 @@
                                             ))}
                                         </div>
                                     </div>
-                                    <div className="grid grid-cols-3 gap-3 bg-white p-3 rounded-lg border border-slate-200">
+                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3 bg-white p-3 rounded-lg border border-slate-200">
                                         <div><label className="block text-[10px] font-bold text-slate-500 mb-1">Wholesale $</label><input type="number" className="w-full p-2 soft-input rounded-md text-sm" value={item.rawCost} onChange={e => updateItem(item.id, 'rawCost', e.target.value)} /></div>
                                         <div><label className="block text-[10px] font-bold text-slate-500 mb-1">Freight $</label><input type="number" className="w-full p-2 soft-input rounded-md text-sm" value={item.shippingCost} onChange={e => updateItem(item.id, 'shippingCost', e.target.value)} /></div>
                                         <div><label className="block text-[10px] font-bold text-slate-500 mb-1">Margin %</label><input type="number" className="w-full p-2 soft-input rounded-md text-sm text-indigo-700 font-bold" value={item.margin} onChange={e => updateItem(item.id, 'margin', e.target.value)} /></div>
+                                        <div><label className="block text-[10px] font-bold text-emerald-600 mb-1">Deco Discount $</label><input type="number" placeholder="0.00" className="w-full p-2 soft-input border-emerald-200 rounded-md text-sm text-emerald-700 font-bold focus:ring-emerald-500" value={item.decoDiscount} onChange={e => updateItem(item.id, 'decoDiscount', e.target.value)} /></div>
                                     </div>
                                     <div>
                                         <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Decorations</p>
@@ -460,7 +472,7 @@
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                             <div><label className="block text-[11px] font-semibold text-slate-500 mb-1.5 uppercase">Setup Fees</label><input type="number" className="w-full p-3 soft-input rounded-xl text-sm" value={orderData.setupFees} onFocus={(e) => e.target.select()} onChange={e => updateOrder('setupFees', e.target.value)} /></div>
                             <div><label className="block text-[11px] font-semibold text-slate-500 mb-1.5 uppercase">Digitizing Fee</label><input type="number" className="w-full p-3 soft-input rounded-xl text-sm" value={orderData.digitizingFee} onFocus={(e) => e.target.select()} onChange={e => updateOrder('digitizingFee', e.target.value)} /></div>
-                            <div><label className="block text-[11px] font-semibold text-slate-500 mb-1.5 uppercase flex items-center gap-1"><Icon name="tag" size={12}/> Discount ($)</label><input type="number" className="w-full p-3 soft-input rounded-xl text-sm text-emerald-600 font-bold" value={orderData.discount} onFocus={(e) => e.target.select()} onChange={e => updateOrder('discount', e.target.value)} /></div>
+                            <div><label className="block text-[11px] font-semibold text-slate-500 mb-1.5 uppercase flex items-center gap-1"><Icon name="tag" size={12}/> Order Discount ($)</label><input type="number" className="w-full p-3 soft-input rounded-xl text-sm text-emerald-600 font-bold" value={orderData.discount} onFocus={(e) => e.target.select()} onChange={e => updateOrder('discount', e.target.value)} /></div>
                             <div><label className="block text-[11px] font-semibold text-slate-500 mb-1.5 uppercase flex items-center gap-1"><Icon name="percent" size={12}/> Tax Rate (%)</label><input type="number" className="w-full p-3 soft-input rounded-xl text-sm" value={orderData.taxRate} onFocus={(e) => e.target.select()} onChange={e => updateOrder('taxRate', e.target.value)} /></div>
                         </div>
                     </div>
@@ -487,9 +499,21 @@
                             <span className="text-slate-500 font-bold uppercase tracking-widest text-sm">Order Total</span>
                             <span className="text-4xl font-black text-indigo-700">{formatCurrency(calc.grandTotal)}</span>
                         </div>
-                        <button onClick={handleSendToPipeline} className="w-full py-4 bg-emerald-600 text-white rounded-xl font-bold text-lg shadow-md hover:bg-emerald-700 active:scale-95 transition-all">
-                            Save & Send to Pipeline
-                        </button>
+                        <div className="flex flex-col md:flex-row gap-3">
+                            <button onClick={handleSendToPipeline} className="flex-1 py-4 bg-emerald-600 text-white rounded-xl font-bold text-lg shadow-md hover:bg-emerald-700 active:scale-95 transition-all">
+                                {editingOrderId ? 'Update Quote in Pipeline' : 'Save & Send to Pipeline'}
+                            </button>
+                            {editingOrderId && (
+                                <button onClick={() => {
+                                    setEditingOrderId(null);
+                                    setOrderData(defaultOrderData);
+                                    setItems([defaultItem]);
+                                    setAppModule('pipeline');
+                                }} className="px-8 bg-slate-200 text-slate-700 rounded-xl font-bold hover:bg-slate-300 active:scale-95 transition-all">
+                                    Cancel Edit
+                                </button>
+                            )}
+                        </div>
                     </div>
                 </div>
             );
@@ -659,6 +683,12 @@
                             </div>
 
                             <div className="p-5 border-t border-slate-200 bg-slate-50 space-y-3">
+                                {stage === 'quote' && (
+                                    <button onClick={() => editQuote(selectedOrder)} className="w-full bg-white text-slate-700 py-2.5 rounded-xl text-xs font-bold border border-slate-300 hover:bg-slate-100 active:scale-95 transition-all flex items-center justify-center gap-2">
+                                        <Icon name="settings" size={14} /> Edit Quote Details
+                                    </button>
+                                )}
+
                                 <div className="flex gap-2">
                                     {stage === 'quote' && <button onClick={() => setPdfConfig({ order: selectedOrder, type: 'proposal' })} className="flex-1 bg-white border border-slate-300 text-slate-700 py-2.5 rounded-xl text-xs font-bold hover:bg-slate-100 transition-colors flex justify-center items-center gap-1.5"><Icon name="fileText" size={14} /> Download Proposal</button>}
                                     {stage !== 'quote' && balance > 0 && <button onClick={() => setPdfConfig({ order: selectedOrder, type: 'invoice' })} className="flex-1 bg-white border border-slate-300 text-slate-700 py-2.5 rounded-xl text-xs font-bold hover:bg-slate-100 transition-colors flex justify-center items-center gap-1.5"><Icon name="fileText" size={14} /> Invoice PDF</button>}
@@ -738,7 +768,6 @@
                                 </div>
                             )}
 
-                            {/* MOCKUP IMAGE - CONSTRAINED TO 2 INCHES */}
                             {oData.mockupImage && (
                                 <div className="mb-8 border border-slate-200 rounded-xl p-4 bg-slate-50 text-center">
                                     <h3 className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-3">Approved Mockup</h3>
