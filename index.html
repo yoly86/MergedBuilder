@@ -12,18 +12,11 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
     <style>
-        /* Mobile Optimizations */
         input, select, textarea { font-size: 16px !important; }
         .pb-safe { padding-bottom: calc(env(safe-area-inset-bottom, 20px) + 80px); }
         .hide-scrollbar::-webkit-scrollbar { display: none; }
         .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-        
-        body { 
-            background-color: #f8fafc; 
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
-            -webkit-tap-highlight-color: transparent; 
-        }
-
+        body { background-color: #f8fafc; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; -webkit-tap-highlight-color: transparent; }
         .fade-in { animation: fadeIn 0.2s ease-in-out; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
@@ -34,14 +27,12 @@
     <script type="text/babel">
         const { useState, useEffect, useRef } = React;
 
-        // --- ICONS COMPONENT ---
         const Icon = ({ name, size = 24, className = "" }) => {
             const icons = {
                 calculator: <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><rect width="16" height="20" x="4" y="2" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="16" y1="14" x2="16" y2="18"/><path d="M16 10h.01"/><path d="M12 10h.01"/><path d="M8 10h.01"/><path d="M12 14h.01"/><path d="M8 14h.01"/><path d="M12 18h.01"/><path d="M8 18h.01"/></svg>,
                 layers: <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>,
                 pieChart: <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M21.21 15.89A10 10 0 1 1 8 2.83"/><path d="M22 12A10 10 0 0 0 12 2v10z"/></svg>,
                 check: <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polyline points="20 6 9 17 4 12"/></svg>,
-                bell: <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>,
                 trash: <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>,
                 download: <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
             };
@@ -49,7 +40,7 @@
         };
 
         // --- QUOTER MODULE ---
-        const QuoterModule = ({ onPushToPipeline }) => {
+        const QuoterModule = ({ onPushToPipeline, onDownloadProposal }) => {
             const [customer, setCustomer] = useState('');
             const [desc, setDesc] = useState('');
             const [qty, setQty] = useState(1);
@@ -66,7 +57,7 @@
                 { maxStitch: Infinity, prices: [50, 45, 43, 43, 40] }
             ];
             const QTY_TIERS = [{ max: 10, index: 0 }, { max: 49, index: 1 }, { max: 100, index: 2 }, { max: 299, index: 3 }, { max: Infinity, index: 4 }];
-            const DTF_FEES = { small: 11.33, medium: 16.00, large: 22.00 };
+            const DTF_FEES = { xs: 8.00, small: 11.33, medium: 16.00, sleeve: 19.50, large: 22.00, xlarge: 28.00, jumbo: 35.00 };
 
             const getEmbroideryCost = (s, q) => {
                 if (!s || s <= 0) return 0;
@@ -79,6 +70,18 @@
             const decoCost = decoType === 'dtf' ? (DTF_FEES[decoSize] || 0) : getEmbroideryCost(parseFloat(stitches), parseFloat(qty));
             const pricePerPiece = clientGarmentPrice + decoCost;
             const totalQuote = pricePerPiece * (parseFloat(qty) || 1);
+
+            const handleProposal = () => {
+                if(!customer) return alert("Please enter a customer name for the proposal.");
+                onDownloadProposal({
+                    date: new Date().toLocaleDateString(),
+                    customer,
+                    desc: `${qty}x ${desc || 'Custom Items'}`,
+                    total: totalQuote,
+                    pricePerPiece: pricePerPiece,
+                    qty: qty
+                });
+            };
 
             return (
                 <div className="space-y-6 fade-in">
@@ -102,9 +105,13 @@
                             </div>
                             {decoType === 'dtf' ? (
                                 <select className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm" value={decoSize} onChange={e => setDecoSize(e.target.value)}>
-                                    <option value="small">Small (Left Chest)</option>
-                                    <option value="medium">Medium (Youth)</option>
-                                    <option value="large">Large (Full Back)</option>
+                                    <option value="xs">Extra Small / Hat (2.5"x2.5")</option>
+                                    <option value="small">Small / Left Chest (4"x4")</option>
+                                    <option value="medium">Mid-size / Youth (8"x8")</option>
+                                    <option value="sleeve">Sleeve / Long Strip</option>
+                                    <option value="large">Standard Full Back (11"x11")</option>
+                                    <option value="xlarge">Oversized (13"x16")</option>
+                                    <option value="jumbo">Jumbo (16"x20")</option>
                                 </select>
                             ) : (
                                 <input type="number" placeholder="Est. Stitches" className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm" value={stitches} onChange={e => setStitches(e.target.value)} />
@@ -120,7 +127,16 @@
                             <span className="text-slate-300 text-sm font-black uppercase">Total Quote</span>
                             <span className="text-3xl font-black text-emerald-400">${totalQuote.toFixed(2)}</span>
                         </div>
-                        <button onClick={() => onPushToPipeline({ id: `JOB-${Date.now().toString().slice(-4)}`, customer, desc: `${qty}x ${desc}`, stage: 'new', balance: totalQuote/2, total: totalQuote })} className="w-full bg-indigo-600 py-4 rounded-xl font-bold active:scale-95 transition-all">Collect Deposit & Start</button>
+                        
+                        <div className="space-y-3">
+                            <button onClick={handleProposal} className="w-full bg-slate-700 hover:bg-slate-600 text-white py-3 rounded-xl font-bold active:scale-95 transition-all flex items-center justify-center gap-2">
+                                <Icon name="download" size={18} /> Download Proposal PDF
+                            </button>
+                            
+                            <button onClick={() => onPushToPipeline({ id: `JOB-${Date.now().toString().slice(-4)}`, customer, desc: `${qty}x ${desc}`, stage: 'new', balance: totalQuote/2, total: totalQuote })} className="w-full bg-indigo-600 hover:bg-indigo-500 py-4 rounded-xl font-bold shadow-md active:scale-95 transition-all">
+                                Collect Deposit & Start Job
+                            </button>
+                        </div>
                     </div>
                 </div>
             );
@@ -185,9 +201,11 @@
         function App() {
             const [activeTab, setActiveTab] = useState('pipeline');
             const receiptRef = useRef(null);
+            const proposalRef = useRef(null);
+            
             const [receiptData, setReceiptData] = useState(null);
+            const [proposalData, setProposalData] = useState(null);
 
-            // Persistence Logic
             const [orders, setOrders] = useState(() => {
                 const saved = localStorage.getItem('t1_orders');
                 return saved ? JSON.parse(saved) : [];
@@ -222,38 +240,28 @@
 
             const handleCompleteOrder = (order) => {
                 if (confirm(`Clear balance of $${order.balance.toFixed(2)} and issue receipt?`)) {
-                    // 1. Log final payment if there is a balance
                     if (order.balance > 0) {
                         setTransactions(prev => [{ id: Date.now(), amount: order.balance, category: 'Income: Product Sales', note: `Final Payment: ${order.customer}`, type: 'income', date: new Date().toLocaleDateString() }, ...prev]);
                     }
-                    
-                    // 2. Set Receipt Data to trigger the hidden render
-                    setReceiptData({
-                        ...order,
-                        date: new Date().toLocaleDateString(),
-                        paidInFull: true
-                    });
-
-                    // 3. Remove order from active pipeline
+                    setReceiptData({ ...order, date: new Date().toLocaleDateString(), paidInFull: true });
                     setOrders(orders.filter(o => o.id !== order.id));
                 }
             };
 
-            // Watch for receiptData changes to trigger PDF download
+            // Watch for PDF generation triggers
             useEffect(() => {
                 if (receiptData && receiptRef.current) {
-                    const opt = {
-                        margin: 0.5,
-                        filename: `Receipt_${receiptData.customer.replace(/[^a-z0-9]/gi, '_')}.pdf`,
-                        image: { type: 'jpeg', quality: 0.98 },
-                        html2canvas: { scale: 2 },
-                        jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
-                    };
-                    html2pdf().set(opt).from(receiptRef.current).save().then(() => {
-                        setReceiptData(null); // Cleanup after save
-                    });
+                    const opt = { margin: 0.5, filename: `Receipt_${receiptData.customer.replace(/[^a-z0-9]/gi, '_')}.pdf`, image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2 }, jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' } };
+                    html2pdf().set(opt).from(receiptRef.current).save().then(() => setReceiptData(null));
                 }
             }, [receiptData]);
+
+            useEffect(() => {
+                if (proposalData && proposalRef.current) {
+                    const opt = { margin: 0.5, filename: `Proposal_${proposalData.customer.replace(/[^a-z0-9]/gi, '_')}.pdf`, image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2 }, jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' } };
+                    html2pdf().set(opt).from(proposalRef.current).save().then(() => setProposalData(null));
+                }
+            }, [proposalData]);
 
             const renderPipeline = () => (
                 <div className="flex overflow-x-auto hide-scrollbar gap-4 pb-4 -mx-4 px-4 snap-x">
@@ -309,7 +317,7 @@
 
                     <div className="flex-1 max-w-7xl w-full mx-auto p-4 md:p-6">
                         {activeTab === 'pipeline' && renderPipeline()}
-                        {activeTab === 'quoter' && <QuoterModule onPushToPipeline={handlePushToPipeline} />}
+                        {activeTab === 'quoter' && <QuoterModule onPushToPipeline={handlePushToPipeline} onDownloadProposal={setProposalData} />}
                         {activeTab === 'ledger' && <LedgerModule transactions={transactions} onAddTransaction={(t) => setTransactions([t, ...transactions])} onDeleteTransaction={(id) => setTransactions(transactions.filter(tx => tx.id !== id))} />}
                     </div>
 
@@ -330,7 +338,59 @@
                         </div>
                     </div>
 
-                    {/* Hidden Receipt Template for PDF Generation */}
+                    {/* Hidden Proposal Template */}
+                    {proposalData && (
+                        <div style={{ position: 'absolute', left: '-9999px', top: 0 }}>
+                            <div ref={proposalRef} style={{ width: '8.5in', padding: '1in', backgroundColor: 'white', color: '#0f172a', fontFamily: 'sans-serif' }}>
+                                <div style={{ borderBottom: '2px solid #1e293b', paddingBottom: '20px', marginBottom: '30px', display: 'flex', justifyContent: 'space-between' }}>
+                                    <div>
+                                        <h1 style={{ fontSize: '36px', fontWeight: '900', margin: '0 0 10px 0', textTransform: 'uppercase', color: '#4f46e5' }}>Proposal</h1>
+                                        <h2 style={{ fontSize: '18px', fontWeight: 'bold', margin: '0' }}>Triple One Threads</h2>
+                                        <p style={{ margin: '5px 0 0 0', color: '#64748b' }}>Beaumont, AB</p>
+                                    </div>
+                                    <div style={{ textAlign: 'right' }}>
+                                        <p style={{ fontWeight: 'bold', fontSize: '16px', margin: '0 0 5px 0' }}>Date: {proposalData.date}</p>
+                                    </div>
+                                </div>
+                                
+                                <div style={{ marginBottom: '40px' }}>
+                                    <p style={{ color: '#64748b', fontSize: '12px', fontWeight: 'bold', textTransform: 'uppercase', marginBottom: '5px' }}>Prepared For:</p>
+                                    <p style={{ fontSize: '20px', fontWeight: 'bold', margin: '0' }}>{proposalData.customer}</p>
+                                </div>
+
+                                <div style={{ borderBottom: '1px solid #cbd5e1', paddingBottom: '10px', marginBottom: '10px', display: 'flex', justifyContent: 'space-between', fontWeight: 'bold', color: '#64748b', textTransform: 'uppercase', fontSize: '12px' }}>
+                                    <span style={{ width: '50%' }}>Description</span>
+                                    <span style={{ width: '15%', textAlign: 'center' }}>Qty</span>
+                                    <span style={{ width: '15%', textAlign: 'right' }}>Price/Ea</span>
+                                    <span style={{ width: '20%', textAlign: 'right' }}>Total</span>
+                                </div>
+                                
+                                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '16px', paddingBottom: '20px', borderBottom: '1px solid #cbd5e1' }}>
+                                    <span style={{ width: '50%' }}>{proposalData.desc}</span>
+                                    <span style={{ width: '15%', textAlign: 'center' }}>{proposalData.qty}</span>
+                                    <span style={{ width: '15%', textAlign: 'right' }}>${proposalData.pricePerPiece.toFixed(2)}</span>
+                                    <span style={{ width: '20%', textAlign: 'right', fontWeight: 'bold' }}>${proposalData.total.toFixed(2)}</span>
+                                </div>
+
+                                <div style={{ width: '300px', marginLeft: 'auto', marginTop: '20px' }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '10px', paddingTop: '20px', borderTop: '2px solid #0f172a', fontSize: '24px', fontWeight: '900' }}>
+                                        <span>Estimated Total</span>
+                                        <span style={{ color: '#4f46e5' }}>${proposalData.total.toFixed(2)}</span>
+                                    </div>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '15px', color: '#64748b', fontSize: '14px', fontWeight: 'bold' }}>
+                                        <span>Deposit Required to Start</span>
+                                        <span>${(proposalData.total / 2).toFixed(2)}</span>
+                                    </div>
+                                </div>
+
+                                <div style={{ marginTop: '60px', textAlign: 'center', color: '#64748b', fontSize: '14px' }}>
+                                    <p style={{ fontStyle: 'italic' }}>* This proposal is valid for 14 days from the date of issue.</p>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Hidden Receipt Template */}
                     {receiptData && (
                         <div style={{ position: 'absolute', left: '-9999px', top: 0 }}>
                             <div ref={receiptRef} style={{ width: '8.5in', padding: '1in', backgroundColor: 'white', color: '#0f172a', fontFamily: 'sans-serif' }}>
