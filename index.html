@@ -17,6 +17,16 @@
         .pb-safe { padding-bottom: env(safe-area-inset-bottom, 0px); }
         .pb-content { padding-bottom: calc(env(safe-area-inset-bottom, 20px) + 90px); }
         
+        @media print {
+            @page { margin: 0; }
+            body { background-color: white !important; margin: 1cm !important; }
+            .no-print { display: none !important; }
+            .print-full-width { max-width: 100% !important; margin: 0 !important; padding: 0 !important; }
+            .print-no-shadow { box-shadow: none !important; border: none !important; }
+            .page-container { background: transparent !important; box-shadow: none !important; margin: 0 !important; padding: 0 !important; }
+            * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+        }
+        
         input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
         .scrollbar-hide::-webkit-scrollbar { display: none; }
         .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
@@ -32,7 +42,6 @@
     <script type="text/babel">
         const { useState, useEffect, useMemo, useRef } = React;
 
-        // --- ICONS ---
         const Icon = ({ name, size = 24, className = "" }) => {
             const icons = {
                 calculator: <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><rect width="16" height="20" x="4" y="2" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="16" y1="14" x2="16" y2="18"/><path d="M16 10h.01"/><path d="M12 10h.01"/><path d="M8 10h.01"/><path d="M12 14h.01"/><path d="M8 14h.01"/><path d="M12 18h.01"/><path d="M8 18h.01"/></svg>,
@@ -43,7 +52,6 @@
                 plus: <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>,
                 trash: <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>,
                 copy: <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>,
-                check: <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polyline points="20 6 9 17 4 12"/></svg>,
                 x: <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>,
                 wallet: <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/><path d="M18 12a2 2 0 0 0 0 4h4v-4Z"/></svg>,
                 archive: <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg>,
@@ -67,6 +75,13 @@
             { id: 'printing', label: '6. Emb / Print', color: 'bg-blue-100 text-blue-800' },
             { id: 'pickup', label: '7. Ready for Pickup', color: 'bg-emerald-100 text-emerald-800' },
             { id: 'archived', label: 'Archived', color: 'bg-slate-800 text-white' }
+        ];
+
+        const PLACEMENTS = [
+            { id: 'custom', label: 'Custom / Other' }, { id: 'fc', label: 'Front - Center Chest' }, { id: 'lc', label: 'Front - Left Chest' }, { id: 'rc', label: 'Front - Right Chest' },
+            { id: 'bc', label: 'Back - Center' }, { id: 'yoke', label: 'Back - Yoke / Nape' }, { id: 'sleeve_l', label: 'Left Sleeve' }, { id: 'sleeve_r', label: 'Right Sleeve' }, 
+            { id: 'hat_front', label: 'Hat - Front Center' }, { id: 'hat_left', label: 'Hat - Left Panel' }, { id: 'hat_right', label: 'Hat - Right Panel' }, { id: 'hat_back', label: 'Hat - Back Arch' },
+            { id: 'pant_l', label: 'Left Leg / Thigh' }, { id: 'pant_r', label: 'Right Leg / Thigh' }
         ];
 
         const STITCH_MATRIX = [
@@ -96,7 +111,6 @@
         const formatCurrency = (val) => '$' + (val || 0).toFixed(2);
         const generateEmptySizes = () => SIZES_LIST.reduce((acc, size) => { acc[size] = ''; return acc; }, {});
 
-        // --- MAIN APP COMPONENT ---
         function App() {
             const [appModule, setAppModule] = useState('pipeline'); 
             const [pipelineView, setPipelineView] = useState('active'); 
@@ -108,7 +122,6 @@
             const [pdfConfig, setPdfConfig] = useState(null); 
             const [editingOrderId, setEditingOrderId] = useState(null);
 
-            // Safe Local Storage
             const [orders, setOrders] = useState(() => {
                 try { return JSON.parse(localStorage.getItem('t1_orders')) || []; } catch(e) { return []; }
             });
@@ -125,12 +138,11 @@
             useEffect(() => { localStorage.setItem('t1_biz', JSON.stringify(businessDetails)); }, [businessDetails]);
 
             const defaultOrderData = { customerName: '', orderName: '', dateRequired: '', orderDescription: '', designNotes: '', mockupImage: null, setupFees: '', digitizingFee: '', digitizingCost: '', taxRate: 5, discount: '', machineReservePercent: '5' };
-            const defaultItem = { id: genId(), name: '', color: '', qty: 1, rawCost: '', shippingCost: '1.00', margin: 35, decoDiscount: '', sizes: generateEmptySizes(), locations: [ { id: genId(), type: 'none', desc: '', stitches: '', dtfSize: 'small', isPuff: false, puffMarkup: 5, adjustment: '' } ] };
+            const defaultItem = { id: genId(), name: '', color: '', qty: 1, rawCost: '', shippingCost: '1.00', margin: 35, decoDiscount: '', sizes: generateEmptySizes(), locations: [ { id: genId(), type: 'none', placement: 'custom', desc: '', stitches: '', dtfSize: 'small', isPuff: false, puffMarkup: 5, adjustment: '' } ] };
 
             const [orderData, setOrderData] = useState(defaultOrderData);
             const [items, setItems] = useState([defaultItem]);
 
-            // --- QUOTER LOGIC & MATH ---
             const updateBiz = (field, value) => setBusinessDetails(prev => ({ ...prev, [field]: value }));
             const updateOrder = (field, value) => setOrderData(prev => ({ ...prev, [field]: value }));
             const handleImageUpload = (e) => {
@@ -140,7 +152,7 @@
             };
             const updateItem = (itemId, field, value) => setItems(items.map(item => item.id === itemId ? { ...item, [field]: value } : item));
             const updateSize = (itemId, sizeKey, value) => setItems(items.map(item => item.id === itemId ? { ...item, sizes: { ...item.sizes, [sizeKey]: value } } : item));
-            const addLocation = (itemId) => setItems(items.map(item => item.id === itemId ? { ...item, locations: [...item.locations, { id: genId(), type: 'none', desc: '', stitches: '', dtfSize: 'small', isPuff: false, puffMarkup: 5, adjustment: '' }] } : item));
+            const addLocation = (itemId) => setItems(items.map(item => item.id === itemId ? { ...item, locations: [...item.locations, { id: genId(), type: 'none', placement: 'custom', desc: '', stitches: '', dtfSize: 'small', isPuff: false, puffMarkup: 5, adjustment: '' }] } : item));
             const updateLocation = (itemId, locId, field, value) => setItems(items.map(item => item.id === itemId ? { ...item, locations: item.locations.map(loc => loc.id === locId ? { ...loc, [field]: value } : loc) } : item));
             const removeLocation = (itemId, locId) => setItems(items.map(item => item.id === itemId ? { ...item, locations: item.locations.filter(loc => loc.id !== locId) } : item));
             const addItem = () => setItems([...items, { ...defaultItem, id: genId(), locations: [{...defaultItem.locations[0], id: genId()}] }]);
@@ -233,7 +245,6 @@
 
             const imageInputRef = useRef(null);
 
-            // --- PIPELINE & MODAL ACTIONS ---
             const handleSendToPipeline = () => {
                 if(!orderData.customerName) return alert("Please add a Customer Name before sending to the Pipeline.");
                 const currentStage = editingOrderId ? (orders.find(o=>o.id===editingOrderId)?.stage || 'quote') : 'quote';
@@ -315,7 +326,6 @@
                 }
             };
 
-            // --- PDF ENGINE ---
             useEffect(() => {
                 if (pdfConfig && pdfGenRef.current) {
                     const { order, type } = pdfConfig;
@@ -329,7 +339,6 @@
                         jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' } 
                     };
                     
-                    // Small timeout to allow DOM to paint before capture
                     setTimeout(() => {
                         window.html2pdf().set(opt).from(pdfGenRef.current).save().then(() => {
                             setPdfConfig(null);
@@ -338,7 +347,6 @@
                 }
             }, [pdfConfig]);
 
-            // --- BOOKKEEPING LOGIC ---
             const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
             const ledCats = {
                 income: ['Product Sales', 'Service Income', 'Online Sales', 'Consulting / Freelance', 'Other Business Income'],
@@ -369,7 +377,6 @@
                 e.target.reset();
             };
 
-            // --- UI RENDERS ---
             const renderSettings = () => (
                 <div className="fade-in max-w-2xl mx-auto space-y-6">
                     <div className="bg-white rounded-2xl shadow-sm p-6 md:p-8 border border-slate-200">
@@ -395,7 +402,6 @@
 
             const renderQuoter = () => (
                 <div className="space-y-6 pb-6 fade-in">
-                    
                     <div className="bg-white rounded-2xl shadow-sm p-6 border border-slate-200">
                         <div className="flex justify-between items-center mb-6">
                             <h2 className="text-sm font-bold text-slate-800 flex items-center gap-2 uppercase tracking-wider"><Icon name="calculator" size={18} className="text-indigo-500" /> Build Quote</h2>
@@ -428,7 +434,7 @@
                             <div className="md:col-span-2"><label className="block text-xs font-semibold text-indigo-500 mb-1">Design Notes / Proofing Disclaimers</label><textarea placeholder="Visible on Proposal..." className="w-full p-3 bg-indigo-50 border border-indigo-100 rounded-xl focus:ring-2 focus:ring-indigo-400 outline-none text-sm resize-none" rows="2" value={orderData.designNotes} onChange={e => updateOrder('designNotes', e.target.value)}></textarea></div>
                         </div>
 
-                        {items.map((item, index) => (
+                        {calc.items.map((item, index) => (
                             <div key={item.id} className="bg-slate-50 rounded-xl border border-slate-200 overflow-hidden mb-5">
                                 <div className="p-4 border-b border-slate-200 flex justify-between items-center bg-slate-100/50">
                                     <h3 className="font-extrabold text-slate-700 text-xs uppercase tracking-wide flex items-center gap-2"><Icon name="shirt" size={16} className="text-indigo-500"/> Garment Style {index + 1}</h3>
@@ -468,13 +474,50 @@
                                     </div>
                                     <div>
                                         <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Decorations</p>
-                                        {item.locations.map(loc => (
-                                            <div key={loc.id} className="bg-white border border-slate-200 rounded-lg p-3 mb-2 flex flex-col md:flex-row gap-3 items-center relative pr-8">
+                                        {item.processedLocations.map((loc, lIdx) => (
+                                            <div key={loc.id} className="bg-white border border-slate-200 rounded-lg p-3 mb-2 flex flex-col lg:flex-row gap-3 items-center relative pr-8">
                                                 {item.locations.length > 1 && <button onClick={() => removeLocation(item.id, loc.id)} className="absolute right-2 top-2 text-slate-300 hover:text-red-500"><Icon name="x" size={14} /></button>}
-                                                <select className="w-full md:w-auto flex-1 p-2 soft-input rounded-md text-xs font-bold" value={loc.type} onChange={e => updateLocation(item.id, loc.id, 'type', e.target.value)}><option value="none">None</option><option value="embroidery">Embroidery</option><option value="dtf">DTF Print</option></select>
-                                                {loc.type === 'embroidery' && <input type="number" placeholder="Stitches" className="w-full md:w-auto flex-1 p-2 soft-input rounded-md text-xs" value={loc.stitches} onChange={e => updateLocation(item.id, loc.id, 'stitches', e.target.value)} />}
-                                                {loc.type === 'dtf' && <select className="w-full md:w-auto flex-1 p-2 soft-input rounded-md text-xs" value={loc.dtfSize} onChange={e => updateLocation(item.id, loc.id, 'dtfSize', e.target.value)}>{DTF_SIZES.map(s => <option key={s.id} value={s.id}>{s.label}</option>)}</select>}
-                                                {loc.type !== 'none' && <input type="text" placeholder="Notes (e.g. Left Chest)" className="w-full md:w-auto flex-[2] p-2 soft-input rounded-md text-xs" value={loc.desc} onChange={e => updateLocation(item.id, loc.id, 'desc', e.target.value)} />}
+                                                
+                                                <select className="w-full lg:w-32 p-2 soft-input rounded-md text-xs font-bold shrink-0" value={loc.type} onChange={e => updateLocation(item.id, loc.id, 'type', e.target.value)}>
+                                                    <option value="none">None</option>
+                                                    <option value="embroidery">Embroidery</option>
+                                                    <option value="dtf">DTF Print</option>
+                                                </select>
+                                                
+                                                {loc.type === 'embroidery' && (
+                                                    <div className="w-full lg:w-auto flex items-center gap-2 shrink-0">
+                                                        <input type="number" placeholder="Stitches" className="w-24 p-2 soft-input rounded-md text-xs" value={loc.stitches} onChange={e => updateLocation(item.id, loc.id, 'stitches', e.target.value)} />
+                                                        <label className="flex items-center gap-1 text-[10px] font-bold text-slate-500 cursor-pointer whitespace-nowrap">
+                                                            <input type="checkbox" checked={loc.isPuff} onChange={e => updateLocation(item.id, loc.id, 'isPuff', e.target.checked)} className="rounded text-indigo-600 focus:ring-indigo-500" />
+                                                            3D Puff
+                                                        </label>
+                                                        {loc.isPuff && <input type="number" className="w-16 p-2 soft-input rounded-md text-xs text-indigo-700 font-bold" value={loc.puffMarkup} onChange={e => updateLocation(item.id, loc.id, 'puffMarkup', e.target.value)} placeholder="+$" />}
+                                                    </div>
+                                                )}
+                                                
+                                                {loc.type === 'dtf' && (
+                                                    <select className="w-full lg:w-32 p-2 soft-input rounded-md text-xs shrink-0" value={loc.dtfSize} onChange={e => updateLocation(item.id, loc.id, 'dtfSize', e.target.value)}>
+                                                        {DTF_SIZES.map(s => <option key={s.id} value={s.id}>{s.label}</option>)}
+                                                    </select>
+                                                )}
+                                                
+                                                {loc.type !== 'none' && (
+                                                    <select className="w-full lg:w-40 p-2 soft-input rounded-md text-xs shrink-0" value={loc.placement} onChange={e => updateLocation(item.id, loc.id, 'placement', e.target.value)}>
+                                                        {PLACEMENTS.map(p => <option key={p.id} value={p.id}>{p.label}</option>)}
+                                                    </select>
+                                                )}
+                                                
+                                                {loc.type !== 'none' && (
+                                                    <input type="text" placeholder="Custom notes..." className="w-full flex-1 p-2 soft-input rounded-md text-xs min-w-[100px]" value={loc.desc} onChange={e => updateLocation(item.id, loc.id, 'desc', e.target.value)} />
+                                                )}
+
+                                                {loc.type !== 'none' && (
+                                                    <div className="w-full lg:w-auto flex justify-end shrink-0">
+                                                        <span className="text-xs font-black text-indigo-700 bg-indigo-50 px-3 py-2 rounded-md border border-indigo-100 shadow-sm whitespace-nowrap">
+                                                            +{formatCurrency(loc.baseCost)} / ea
+                                                        </span>
+                                                    </div>
+                                                )}
                                             </div>
                                         ))}
                                         <button onClick={() => addLocation(item.id)} className="text-[10px] font-bold text-indigo-600 bg-indigo-50 px-3 py-1.5 rounded-md mt-1">+ Add Decor</button>
@@ -731,7 +774,21 @@
                                             <div>
                                                 <p className="font-bold text-sm text-slate-800">{item.qty}x {item.name} {item.color ? `(${item.color})` : ''}</p>
                                                 {sizeStr && <p className="text-[10px] text-slate-500 mt-0.5">{sizeStr}</p>}
-                                                <p className="text-[10px] text-slate-500 mt-0.5">{item.locations.filter(l=>l.type!=='none').map(l => l.type === 'embroidery' ? 'Embroidery' : 'DTF').join(', ')}</p>
+                                                
+                                                <div className="mt-1 pl-2 border-l border-indigo-200">
+                                                    {item.locations.filter(l=>l.type!=='none').map((l, i) => {
+                                                        const pLabel = PLACEMENTS.find(p=>p.id===l.placement)?.label || 'Custom';
+                                                        return (
+                                                            <p key={i} className="text-[10px] text-slate-600">
+                                                                {l.type === 'embroidery' ? (l.isPuff ? '3D Puff Emb' : 'Embroidery') : 'DTF Print'} 
+                                                                {l.placement !== 'custom' && ` - ${pLabel}`} 
+                                                                {l.desc && ` - ${l.desc}`}
+                                                            </p>
+                                                        )
+                                                    })}
+                                                </div>
+
+                                                {item.decoDiscount > 0 && <p className="text-[10px] text-emerald-600 font-bold mt-1">- Item Discount Applied</p>}
                                             </div>
                                             <span className="font-bold text-sm text-slate-600">{orderCalc ? formatCurrency(orderCalc.items[idx].lineTotal) : ''}</span>
                                         </div>
@@ -864,13 +921,21 @@
                                             <p style={{ margin: '0 0 5px 0', fontSize: '16px', fontWeight: 'bold', color: '#0f172a' }}>{item.name} {item.color ? `- ${item.color}` : ''}</p>
                                             {sizeStr && <p style={{ margin: '0 0 8px 0', fontSize: '12px', color: '#64748b', fontWeight: 'bold' }}>{sizeStr}</p>}
                                             <div style={{ paddingLeft: '15px', borderLeft: '2px solid #c7d2fe' }}>
-                                                {item.locations.filter(l=>l.type!=='none').map((l, i) => (
-                                                    <p key={i} style={{ margin: '0 0 3px 0', fontSize: '12px', color: '#475569' }}>{l.type === 'embroidery' ? 'Embroidery' : 'DTF Print'} {l.desc ? `- ${l.desc}` : ''}</p>
-                                                ))}
+                                                {item.locations.filter(l=>l.type!=='none').map((l, i) => {
+                                                    const pLabel = PLACEMENTS.find(p=>p.id===l.placement)?.label || 'Custom';
+                                                    return (
+                                                        <p key={i} style={{ margin: '0 0 3px 0', fontSize: '12px', color: '#475569' }}>
+                                                            {l.type === 'embroidery' ? (l.isPuff ? '3D Puff Embroidery' : 'Standard Embroidery') : 'DTF Print'} 
+                                                            {l.placement !== 'custom' && ` - ${pLabel}`} 
+                                                            {l.desc && ` - ${l.desc}`}
+                                                        </p>
+                                                    )
+                                                })}
                                             </div>
+                                            {item.explicitDecoDiscount > 0 && <p style={{ margin: '5px 0 0 0', fontSize: '11px', color: '#059669', fontWeight: 'bold' }}>Includes Item Discount (-{formatCurrency(item.explicitDecoDiscount)}/ea)</p>}
                                         </div>
                                         <div style={{ width: '15%', textAlign: 'center', fontSize: '16px', fontWeight: 'bold', color: '#475569', paddingTop: '2px' }}>{item.calculatedQty}</div>
-                                        <div style={{ width: '25%', textAlign: 'right', fontSize: '18px', fontWeight: '900', color: '#0f172a', paddingTop: '2px' }}>{formatCurrency(item.undiscountedLineTotal)}</div>
+                                        <div style={{ width: '25%', textAlign: 'right', fontSize: '18px', fontWeight: '900', color: '#0f172a', paddingTop: '2px' }}>{formatCurrency(item.lineTotal)}</div>
                                     </div>
                                 )})}
                             </div>
