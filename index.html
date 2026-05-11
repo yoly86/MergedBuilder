@@ -10,7 +10,6 @@
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-    <script src="https://unpkg.com/recharts@2.1.12/umd/Recharts.js"></script>
 
     <style>
         input[type="text"], input[type="number"], input[type="date"], select, textarea { font-size: 16px !important; }
@@ -42,7 +41,6 @@
 
     <script type="text/babel">
         const { useState, useEffect, useMemo, useRef } = React;
-        const { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } = window.Recharts;
 
         // --- ICONS ---
         const Icon = ({ name, size = 24, className = "" }) => {
@@ -70,9 +68,7 @@
                 trendingUp: <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>,
                 trendingDown: <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polyline points="22 17 13.5 8.5 8.5 13.5 2 7"/><polyline points="16 17 22 17 22 11"/></svg>,
                 wallet: <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/><path d="M18 12a2 2 0 0 0 0 4h4v-4Z"/></svg>,
-                settings: <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>,
-                fileSpreadsheet: <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><path d="M8 13h2"/><path d="M8 17h2"/><path d="M14 13h2"/><path d="M14 17h2"/></svg>,
-                bookOpen: <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+                check: <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polyline points="20 6 9 17 4 12"/></svg>
             };
             return icons[name] || null;
         };
@@ -120,46 +116,44 @@
         const genId = () => Math.random().toString(36).substr(2, 9);
         const formatCurrency = (val) => '$' + (val || 0).toFixed(2);
         const generateEmptySizes = () => SIZES_LIST.reduce((acc, size) => { acc[size] = ''; return acc; }, {});
-        const CHART_COLORS = ['#6366f1', '#818cf8', '#a5b4fc', '#c7d2fe', '#8b5cf6', '#a855f7', '#d946ef'];
 
         // --- MAIN APP COMPONENT ---
         function App() {
-            // Main Navigation
             const [appModule, setAppModule] = useState('pipeline'); 
             const [quoterTab, setQuoterTab] = useState('build');
             const [bookTab, setBookTab] = useState('dashboard');
             
-            // Hidden Receipt Gen
             const receiptRef = useRef(null);
             const [receiptData, setReceiptData] = useState(null);
 
-            // Local Storage Persistence
+            // Safe Local Storage Persistence
             const [orders, setOrders] = useState(() => {
-                const saved = localStorage.getItem('t1_orders');
-                return saved ? JSON.parse(saved) : [];
+                try {
+                    const saved = localStorage.getItem('t1_orders');
+                    return saved ? JSON.parse(saved) : [];
+                } catch(e) { return []; }
             });
             const [transactions, setTransactions] = useState(() => {
-                const saved = localStorage.getItem('t1_ledger');
-                return saved ? JSON.parse(saved) : [];
+                try {
+                    const saved = localStorage.getItem('t1_ledger');
+                    return saved ? JSON.parse(saved) : [];
+                } catch(e) { return []; }
             });
 
             useEffect(() => { localStorage.setItem('t1_orders', JSON.stringify(orders)); }, [orders]);
             useEffect(() => { localStorage.setItem('t1_ledger', JSON.stringify(transactions)); }, [transactions]);
 
-            // Quoter State
             const [showBusinessDetails, setShowBusinessDetails] = useState(false);
             const [orderData, setOrderData] = useState({
                 businessName: '', businessAddress: '', businessPhone: '', businessEmail: '', businessWebsite: '',
                 customerName: '', orderName: '', dateRequired: '', orderDescription: '', designNotes: '', mockupImage: null,
-                setupFees: '', digitizingFee: '', digitizingCost: '', taxRate: 5, discount: '', machineReservePercent: '5', amountPaid: '', receiptNotes: '' 
+                setupFees: '', digitizingFee: '', digitizingCost: '', taxRate: 5, discount: '', machineReservePercent: '5'
             });
             const [items, setItems] = useState([{
-                id: genId(), name: '', color: '', qty: 1, rawCost: '', shippingCost: '1.00', margin: 35,
-                sizes: generateEmptySizes(),
+                id: genId(), name: '', color: '', qty: 1, rawCost: '', shippingCost: '1.00', margin: 35, sizes: generateEmptySizes(),
                 locations: [ { id: genId(), type: 'none', placement: 'custom', stitches: '', dtfSize: 'small', desc: '', isPuff: false, puffMarkup: 5, adjustment: '' } ]
             }]);
 
-            // Bookkeeping State
             const [dashView, setDashView] = useState('annual');
             const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
             const [accounts, setAccounts] = useState(['Primary Business Checking', 'PayPal', 'Stripe', 'Business Credit Card']);
@@ -291,6 +285,8 @@
                     else if (viewType === 'receipt') { elementId = 'receipt-view'; suffix = 'Receipt'; }
 
                     const element = document.getElementById(elementId);
+                    if(!element) return;
+                    
                     const noPrintElements = element.querySelectorAll('.no-print');
                     noPrintElements.forEach(el => el.style.display = 'none');
                     const safeCustomerName = orderData.customerName ? orderData.customerName.replace(/[^a-z0-9]/gi, '_') : 'Customer';
@@ -336,7 +332,7 @@
                 e.target.value = null; 
             };
 
-            // --- PIPELINE & WORKFLOW ACTIONS ---
+            // --- PIPELINE ACTIONS ---
             const handleSendToPipeline = () => {
                 if(!orderData.customerName) {
                     alert("Please add a Customer Name before sending to the Pipeline.");
@@ -357,21 +353,18 @@
 
             const handleApproveQuote = (order) => {
                 if (confirm(`Approve this quote and log a deposit of ${formatCurrency(order.depositAmount)}?`)) {
-                    // Log Deposit
                     const newTx = {
                         id: Date.now(), type: 'income', date: new Date().toISOString().split('T')[0], category: 'Product Sales',
                         amount: order.depositAmount, tax: 0, shipping: 0, fees: 0, netAmount: order.depositAmount, account: accounts[0],
                         description: `Deposit: ${order.customer} - ${order.desc}`
                     };
                     setTransactions(prev => [newTx, ...prev]);
-                    // Update Pipeline
                     setOrders(orders.map(o => o.id === order.id ? { ...o, balance: o.total - o.depositAmount, stage: 'new' } : o));
                 }
             };
 
             const handleCompleteOrder = (order) => {
                 if (confirm(`Clear remaining balance of ${formatCurrency(order.balance)} and generate receipt?`)) {
-                    // Log final payment
                     if (order.balance > 0) {
                         const newTx = {
                             id: Date.now(), type: 'income', date: new Date().toISOString().split('T')[0], category: 'Product Sales',
@@ -380,14 +373,11 @@
                         };
                         setTransactions(prev => [newTx, ...prev]);
                     }
-                    // Trigger PDF Receipt
                     setReceiptData({ ...order, date: new Date().toLocaleDateString() });
-                    // Archive Order
                     setOrders(orders.filter(o => o.id !== order.id));
                 }
             };
 
-            // Watch for receipt data to generate hidden PDF
             useEffect(() => {
                 if (receiptData && receiptRef.current) {
                     const opt = { margin: 0.5, filename: `Receipt_${receiptData.customer.replace(/[^a-z0-9]/gi, '_')}.pdf`, image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2 }, jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' } };
@@ -407,18 +397,8 @@
             const fiveYearTotals = useMemo(() => calculateTotals(transactions), [transactions]);
             const annualTotals = useMemo(() => calculateTotals(filteredByYear), [filteredByYear]);
             
-            const getChartData = (data, type) => {
-                const breakdown = {};
-                data.filter(t => t.type === type).forEach(t => { breakdown[t.category] = (breakdown[t.category] || 0) + (parseFloat(t.netAmount) || 0); });
-                return Object.keys(breakdown).map(name => ({ name, value: breakdown[name] }));
-            };
-            const chartDataSrc = dashView === 'annual' ? filteredByYear : transactions;
-            const incomeChartData = useMemo(() => getChartData(chartDataSrc, 'income'), [chartDataSrc]);
-            const expenseChartData = useMemo(() => getChartData(chartDataSrc, 'expense'), [chartDataSrc]);
-            
             const currentLedgerType = bookTab === 'expenses' ? 'expense' : 'income';
             const filteredLedgerTransactions = useMemo(() => transactions.filter(t => t.type === currentLedgerType), [transactions, currentLedgerType]);
-            const currentLedgerTotal = useMemo(() => calculateTotals(filteredLedgerTransactions)[currentLedgerType === 'income' ? 'income' : 'expenses'], [filteredLedgerTransactions, currentLedgerType]);
 
             const addBookTransaction = (e) => {
                 e.preventDefault();
@@ -439,18 +419,21 @@
 
             const deleteBookTransaction = (id) => { if (window.confirm("Delete this entry?")) setTransactions(transactions.filter(t => t.id !== id)); };
 
-            // --- RENDER PIPELINE ---
+            // --- UI RENDERS ---
+            const moveOrder = (id, newStage) => setOrders(orders.map(o => o.id === id ? { ...o, stage: newStage } : o));
+            const deleteOrder = (id) => confirm("Delete this order?") && setOrders(orders.filter(o => o.id !== id));
+
             const renderPipeline = () => (
                 <div className="flex overflow-x-auto hide-scrollbar gap-4 pb-4 -mx-4 px-4 snap-x">
                     {STAGES.map(stage => {
-                        const items = orders.filter(o => o.stage === stage.id);
+                        const stageItems = orders.filter(o => o.stage === stage.id);
                         return (
                             <div key={stage.id} className="min-w-[300px] w-80 flex-shrink-0 snap-center bg-white rounded-2xl shadow-sm border border-slate-200 flex flex-col max-h-[75vh]">
                                 <div className={`p-4 border-b border-slate-100 rounded-t-2xl font-black text-xs flex justify-between items-center uppercase tracking-widest ${stage.color}`}>
-                                    {stage.label} <span className="bg-white/50 px-2 py-0.5 rounded-full">{items.length}</span>
+                                    {stage.label} <span className="bg-white/50 px-2 py-0.5 rounded-full">{stageItems.length}</span>
                                 </div>
                                 <div className="p-4 overflow-y-auto space-y-4 flex-1 bg-slate-50/30">
-                                    {items.length === 0 ? <p className="text-[10px] text-slate-400 text-center py-10 font-bold uppercase">No Active Jobs</p> : items.map(order => (
+                                    {stageItems.length === 0 ? <p className="text-[10px] text-slate-400 text-center py-10 font-bold uppercase">No Active Jobs</p> : stageItems.map(order => (
                                         <div key={order.id} className="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 relative group">
                                             <div className="flex justify-between items-start mb-2">
                                                 <span className="text-[10px] font-black text-slate-400">{order.id}</span>
@@ -485,7 +468,6 @@
                 </div>
             );
 
-            // --- RENDER QUOTER MODULES ---
             const renderQuoterBuild = () => (
                 <div className="space-y-6 pb-6 no-print">
                     <div className="bg-white rounded-2xl shadow-sm p-6">
@@ -824,7 +806,6 @@
                 );
             };
 
-            // --- RENDER DASHBOARDS & APP ---
             const KPICard = ({ title, value, icon: IconCmp, color, subtext }) => (
                 <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex flex-col relative overflow-hidden group">
                     <div className={`absolute -right-2 -top-2 p-6 opacity-[0.03] transition-transform group-hover:scale-110 text-${color}-600`}><IconCmp size={80} /></div>
@@ -850,7 +831,7 @@
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
                         <KPICard title="Income" value={dashView === 'annual' ? annualTotals.income : fiveYearTotals.income} icon={(p) => <Icon name="trendingUp" {...p}/>} color="emerald" subtext={dashView === 'annual' ? 'Annual Gross' : 'Total 5-Year'} />
                         <KPICard title="Expenses" value={dashView === 'annual' ? annualTotals.expenses : fiveYearTotals.expenses} icon={(p) => <Icon name="trendingDown" {...p}/>} color="rose" subtext="Operational Costs" />
-                        <KPICard title="Profit" value={dashView === 'annual' ? annualTotals.profit : fiveYearTotals.profit} icon={(p) => <Icon name="dollarSign" {...p}/>} color="amber" subtext="Net Profit" />
+                        <KPICard title="Profit" value={dashView === 'annual' ? annualTotals.profit : fiveYearTotals.profit} icon={(p) => <Icon name="wallet" {...p}/>} color="amber" subtext="Net Profit" />
                         <KPICard title="Profit Margin" value={`${(dashView === 'annual' ? annualTotals.margin : fiveYearTotals.margin).toFixed(2)}%`} icon={(p) => <Icon name="pieChart" {...p}/>} color="indigo" subtext="Performance Ratio" />
                     </div>
                 </div>
@@ -892,12 +873,10 @@
 
             return (
                 <div className="min-h-screen pb-content flex flex-col">
-                    {/* Top Sticky Header */}
                     <div className="bg-white border-b border-slate-200 shadow-sm sticky top-0 z-30 pt-safe no-print">
                         <div className="max-w-4xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4 p-4">
                             <div><h1 className="text-2xl font-black flex items-center gap-2 tracking-tight text-slate-800"><Icon name="layers" size={28} className="text-indigo-600"/> HQB Pro</h1></div>
                             
-                            {/* Main App Module Switcher */}
                             <div className="flex bg-slate-100 p-1.5 rounded-xl border border-slate-200 overflow-x-auto hide-scrollbar">
                                 <button onClick={() => setAppModule('quoter')} className={`flex items-center gap-2 px-6 py-2 rounded-lg text-sm font-bold transition-all ${appModule === 'quoter' ? 'bg-white text-indigo-700 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}><Icon name="calculator" size={18} /> Quoter</button>
                                 <button onClick={() => setAppModule('pipeline')} className={`flex items-center gap-2 px-6 py-2 rounded-lg text-sm font-bold transition-all ${appModule === 'pipeline' ? 'bg-white text-emerald-700 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}><Icon name="layers" size={18} /> Pipeline</button>
@@ -906,7 +885,6 @@
                         </div>
                     </div>
 
-                    {/* Main Content Area */}
                     <div className="p-4 md:p-6 max-w-4xl w-full mx-auto flex-1">
                         <div className="fade-in">
                             {appModule === 'pipeline' && renderPipeline()}
@@ -929,7 +907,6 @@
                         </div>
                     </div>
 
-                    {/* Dynamic Sub-Navigation Bottom Bar */}
                     {appModule !== 'pipeline' && (
                         <div className="fixed bottom-0 w-full bg-white border-t border-slate-200 shadow-[0_-10px_20px_-5px_rgba(0,0,0,0.05)] z-30 no-print pb-safe">
                             <div className="max-w-4xl mx-auto flex h-16 md:h-20">
@@ -952,7 +929,6 @@
                         </div>
                     )}
 
-                    {/* Hidden Receipt Template */}
                     {receiptData && (
                         <div style={{ position: 'absolute', left: '-9999px', top: 0 }}>
                             <div ref={receiptRef} style={{ width: '8.5in', padding: '1in', backgroundColor: 'white', color: '#0f172a', fontFamily: 'sans-serif' }}>
