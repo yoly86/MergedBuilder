@@ -137,15 +137,15 @@
                 try { return JSON.parse(localStorage.getItem('t1_ledger')) || []; } catch(e) { return []; }
             });
             const [businessDetails, setBusinessDetails] = useState(() => {
-                try { return JSON.parse(localStorage.getItem('t1_biz')) || { name: '', address: '', phone: '', email: '', website: '', taxPct: 15, machinePct: 5, consumablePct: 20 }; } 
-                catch(e) { return { name: '', address: '', phone: '', email: '', website: '', taxPct: 15, machinePct: 5, consumablePct: 20 }; }
+                try { return JSON.parse(localStorage.getItem('t1_biz')) || { name: '', address: '', phone: '', email: '', website: '' }; } 
+                catch(e) { return { name: '', address: '', phone: '', email: '', website: '' }; }
             });
 
             useEffect(() => { localStorage.setItem('t1_orders', JSON.stringify(orders)); }, [orders]);
             useEffect(() => { localStorage.setItem('t1_ledger', JSON.stringify(transactions)); }, [transactions]);
             useEffect(() => { localStorage.setItem('t1_biz', JSON.stringify(businessDetails)); }, [businessDetails]);
 
-            const defaultOrderData = { customerName: '', orderName: '', dateRequired: '', orderDescription: '', designNotes: '', mockupImage: null, setupFees: '', digitizingFee: '', digitizingCost: '', taxRate: 5, discount: '' };
+            const defaultOrderData = { customerName: '', orderName: '', dateRequired: '', orderDescription: '', designNotes: '', mockupImage: null, setupFees: '', digitizingFee: '', digitizingCost: '', taxRate: 5, discount: '', machineReservePercent: '5' };
             const defaultItem = { id: genId(), name: '', color: '', qty: 1, rawCost: '', shippingCost: '1.00', margin: 35, decoDiscount: '', sizes: generateEmptySizes(), locations: [ { id: genId(), type: 'none', placement: 'custom', desc: '', stitches: '', dtfSize: 'small', isPuff: false, puffMarkup: 5, adjustment: '' } ] };
 
             const [orderData, setOrderData] = useState(defaultOrderData);
@@ -239,20 +239,14 @@
                 const tax = discountedSubtotal * (taxRate / 100);
                 const grandTotal = discountedSubtotal + tax;
                 
-                let reservePercent = parseFloat(businessDetails.machinePct) || 5;
+                let reservePercent = parseFloat(orderData.machineReservePercent) || 5;
                 const machineReserve = discountedSubtotal * (reservePercent / 100);
                 const grossProfit = discountedSubtotal - orderGarmentCostTotal;
                 const netProfit = grossProfit - orderDecoCostTotal - machineReserve - digitizingCost;
-                const totalMarginPercent = discountedSubtotal > 0 ? (netProfit / discountedSubtotal) * 100 : 0;
                 const deposit = Math.ceil(grandTotal) / 2;
 
-                const taxFundAlloc = discountedSubtotal * ((parseFloat(businessDetails.taxPct) || 15) / 100);
-                const machineFundAlloc = discountedSubtotal * ((parseFloat(businessDetails.machinePct) || 5) / 100);
-                const consumableFundAlloc = discountedSubtotal * ((parseFloat(businessDetails.consumablePct) || 20) / 100);
-                const operatingCash = discountedSubtotal - taxFundAlloc - machineFundAlloc - consumableFundAlloc - orderGarmentCostTotal - orderDecoCostTotal - digitizingCost;
-
-                return { items: processedItems, orderGarmentCostTotal, orderDecoCostTotal, setup, digitizing, digitizingCost, discount, machineReserve, subtotal, grossSubtotal, discountedSubtotal, tax, grandTotal, netProfit, deposit, totalMarginPercent, totalDiscount: totalDecoDiscount + discount, allocations: { tax: taxFundAlloc, machine: machineFundAlloc, consumables: consumableFundAlloc, opCash: operatingCash } };
-            }, [items, orderData, businessDetails]);
+                return { items: processedItems, orderGarmentCostTotal, orderDecoCostTotal, setup, digitizing, digitizingCost, discount, machineReserve, subtotal, grossSubtotal, discountedSubtotal, tax, grandTotal, netProfit, deposit, totalDiscount: totalDecoDiscount + discount };
+            }, [items, orderData]);
 
             const getSizeString = (item) => {
                 const activeSizes = SIZES_LIST.filter(s => (parseInt(item.sizes?.[s]) || 0) > 0);
@@ -262,6 +256,7 @@
 
             const imageInputRef = useRef(null);
 
+            // --- PIPELINE & MODAL ACTIONS ---
             const handleSendToPipeline = () => {
                 if(!orderData.customerName) return alert("Please add a Customer Name before sending to the Pipeline.");
                 const currentStage = editingOrderId ? (orders.find(o=>o.id===editingOrderId)?.stage || 'quote') : 'quote';
@@ -343,6 +338,7 @@
                 }
             };
 
+            // --- PDF ENGINE ---
             useEffect(() => {
                 if (pdfConfig && pdfGenRef.current) {
                     const { order, type } = pdfConfig;
@@ -366,10 +362,11 @@
                 }
             }, [pdfConfig]);
 
+            // --- BOOKKEEPING & KPI LOGIC ---
             const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
             const ledCats = {
                 income: ['Product Sales', 'Service Income', 'Online Sales', 'Consulting / Freelance', 'Other Business Income'],
-                expense: ['Garments / Blanks', 'Consumables (DTF/Thread)', 'Equipment Purchase', 'Repairs / Maintenance', 'Taxes Paid', 'Advertising & Marketing', 'Shipping & Packaging', 'Software & Subscriptions', 'Office Supplies', 'Travel', 'Rent', 'Professional Fees', 'Spoilage / Machine Error']
+                expense: ['Advertising & Marketing', 'Shipping & Packaging', 'Software & Subscriptions', 'Office Supplies', 'Travel', 'Rent', 'Professional Fees', 'Garments / Blanks', 'Consumables (DTF/Thread)', 'Spoilage / Machine Error']
             };
 
             const filteredByYear = useMemo(() => transactions.filter(t => new Date(t.date).getFullYear() === parseInt(selectedYear)), [transactions, selectedYear]);
@@ -383,26 +380,23 @@
             };
             const annualTotals = useMemo(() => calculateTotals(filteredByYear), [filteredByYear]);
             
+            // Advanced KPIs
             const kpiData = useMemo(() => {
                 const activeOrders = orders.filter(o => o.stage !== 'quote' && o.stage !== 'archived');
                 const pipelineValue = activeOrders.reduce((sum, o) => sum + (o.total || 0), 0);
+                
                 const convertedOrders = orders.filter(o => o.stage !== 'quote');
                 const aov = convertedOrders.length > 0 ? convertedOrders.reduce((sum, o) => sum + (o.total || 0), 0) / convertedOrders.length : 0;
+                
                 const spoilageTotal = filteredByYear.filter(t => t.category === 'Spoilage / Machine Error' && t.type === 'expense').reduce((sum, t) => sum + t.netAmount, 0);
                 const spoilageRate = annualTotals.expenses > 0 ? (spoilageTotal / annualTotals.expenses) * 100 : 0;
-                const expenseBreakdown = ledCats.expense.map(cat => ({ name: cat, value: filteredByYear.filter(t => t.category === cat && t.type === 'expense').reduce((sum, t) => sum + t.netAmount, 0) })).filter(c => c.value > 0).sort((a, b) => b.value - a.value);
 
-                const allTimeIn = transactions.filter(t => t.type === 'income').reduce((sum, t) => sum + t.netAmount, 0);
-                const taxSpent = transactions.filter(t => t.type === 'expense' && t.category === 'Taxes Paid').reduce((sum, t) => sum + t.netAmount, 0);
-                const machineSpent = transactions.filter(t => t.type === 'expense' && (t.category === 'Repairs / Maintenance' || t.category === 'Equipment Purchase')).reduce((sum, t) => sum + t.netAmount, 0);
-                const consumablesSpent = transactions.filter(t => t.type === 'expense' && (t.category === 'Garments / Blanks' || t.category === 'Consumables (DTF/Thread)')).reduce((sum, t) => sum + t.netAmount, 0);
+                const expenseBreakdown = ledCats.expense.map(cat => {
+                    return { name: cat, value: filteredByYear.filter(t => t.category === cat && t.type === 'expense').reduce((sum, t) => sum + t.netAmount, 0) };
+                }).filter(c => c.value > 0).sort((a, b) => b.value - a.value);
 
-                const taxFund = (allTimeIn * ((businessDetails.taxPct || 15) / 100)) - taxSpent;
-                const machineFund = (allTimeIn * ((businessDetails.machinePct || 5) / 100)) - machineSpent;
-                const consumablesFund = (allTimeIn * ((businessDetails.consumablePct || 20) / 100)) - consumablesSpent;
-
-                return { pipelineValue, aov, spoilageRate, spoilageTotal, activeJobsCount: activeOrders.length, expenseBreakdown, taxFund, machineFund, consumablesFund };
-            }, [orders, filteredByYear, annualTotals.expenses, transactions, businessDetails]);
+                return { pipelineValue, aov, spoilageRate, spoilageTotal, activeJobsCount: activeOrders.length, expenseBreakdown };
+            }, [orders, filteredByYear, annualTotals.expenses]);
 
             const currentLedgerType = bookTab === 'expenses' ? 'expense' : 'income';
             const filteredLedgerTransactions = useMemo(() => transactions.filter(t => t.type === currentLedgerType), [transactions, currentLedgerType]);
@@ -411,7 +405,10 @@
                 e.preventDefault();
                 const formData = new FormData(e.target);
                 const amount = parseFloat(formData.get('amount')) || 0;
-                const newTx = { id: Date.now(), type: formData.get('type'), date: formData.get('date'), category: formData.get('category'), amount, netAmount: amount, description: formData.get('description') };
+                const newTx = {
+                    id: Date.now(), type: formData.get('type'), date: formData.get('date'), category: formData.get('category'),
+                    amount, netAmount: amount, description: formData.get('description')
+                };
                 setTransactions([newTx, ...transactions]);
                 e.target.reset();
             };
@@ -420,19 +417,24 @@
                 <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex flex-col relative overflow-hidden group">
                     <div className={`absolute -right-2 -top-2 p-6 opacity-[0.03] transition-transform group-hover:scale-110 text-${color}-600`}><IconCmp size={80} /></div>
                     <span className="text-slate-400 text-[10px] font-black uppercase tracking-widest">{title}</span>
-                    <div className="mt-2"><span className={`text-2xl md:text-3xl font-black text-slate-800`}>{typeof value === 'number' && title !== 'Profit Margin' && title !== 'Spoilage Rate' ? formatCurrency(value) : value}</span></div>
+                    <div className="mt-2">
+                        <span className={`text-2xl md:text-3xl font-black text-slate-800`}>
+                            {typeof value === 'number' && title !== 'Profit Margin' && title !== 'Spoilage Rate' ? formatCurrency(value) : value}
+                        </span>
+                    </div>
                     {subtext && <span className="text-[10px] text-slate-400 mt-2 font-bold uppercase">{subtext}</span>}
                 </div>
             );
 
+            // --- UI RENDERS ---
             const renderSettings = () => (
-                <div className="fade-in max-w-4xl mx-auto space-y-6">
+                <div className="fade-in max-w-2xl mx-auto space-y-6">
                     <div className="bg-white rounded-2xl shadow-sm p-6 md:p-8 border border-slate-200">
                         <div className="flex items-start gap-4 mb-6 border-b border-slate-100 pb-6">
                             <div className="p-3 bg-indigo-50 rounded-xl text-indigo-600"><Icon name="building" size={24}/></div>
                             <div>
                                 <h2 className="text-lg font-black text-slate-800 uppercase tracking-widest">Business Profile</h2>
-                                <p className="text-xs text-slate-500 mt-1 leading-relaxed">These details appear on your customer-facing PDFs. They are securely saved only to this device.</p>
+                                <p className="text-xs text-slate-500 mt-1 leading-relaxed">These details appear on your customer-facing Proposals, Invoices, and Receipts. They are securely saved only to this device's local storage.</p>
                             </div>
                         </div>
                         <div className="space-y-5">
@@ -445,46 +447,15 @@
                             <div><label className="block text-[11px] font-bold text-slate-500 mb-1.5 uppercase">Website / Social URL</label><input type="text" placeholder="tripleonethreads.com" className="w-full p-3 soft-input rounded-xl text-sm text-indigo-600" value={businessDetails.website} onChange={e => updateBiz('website', e.target.value)} /></div>
                         </div>
                     </div>
-
-                    <div className="bg-white rounded-2xl shadow-sm p-6 md:p-8 border border-slate-200">
-                        <div className="flex items-start gap-4 mb-6 border-b border-slate-100 pb-6">
-                            <div className="p-3 bg-emerald-50 rounded-xl text-emerald-600"><Icon name="wallet" size={24}/></div>
-                            <div>
-                                <h2 className="text-lg font-black text-slate-800 uppercase tracking-widest">Global Fund Allocations</h2>
-                                <p className="text-xs text-slate-500 mt-1 leading-relaxed">Define how you want to split every incoming dollar. This builds your "Profit First" virtual buckets in the Ledger Dashboard.</p>
-                            </div>
-                        </div>
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                            <div className="bg-slate-50 p-4 rounded-xl border border-slate-200">
-                                <label className="block text-[11px] font-bold text-slate-500 mb-1.5 uppercase">Tax Reserve (%)</label>
-                                <input type="number" className="w-full p-3 soft-input rounded-lg text-lg font-bold text-rose-600 text-center" value={businessDetails.taxPct} onChange={e => updateBiz('taxPct', e.target.value)} />
-                                <p className="text-[10px] text-slate-400 mt-2 text-center">Set aside for government dues.</p>
-                            </div>
-                            <div className="bg-slate-50 p-4 rounded-xl border border-slate-200">
-                                <label className="block text-[11px] font-bold text-slate-500 mb-1.5 uppercase">Machine/Growth Fund (%)</label>
-                                <input type="number" className="w-full p-3 soft-input rounded-lg text-lg font-bold text-indigo-600 text-center" value={businessDetails.machinePct} onChange={e => updateBiz('machinePct', e.target.value)} />
-                                <p className="text-[10px] text-slate-400 mt-2 text-center">Set aside for repairs or new gear.</p>
-                            </div>
-                            <div className="bg-slate-50 p-4 rounded-xl border border-slate-200">
-                                <label className="block text-[11px] font-bold text-slate-500 mb-1.5 uppercase">Consumables Fund (%)</label>
-                                <input type="number" className="w-full p-3 soft-input rounded-lg text-lg font-bold text-emerald-600 text-center" value={businessDetails.consumablePct} onChange={e => updateBiz('consumablePct', e.target.value)} />
-                                <p className="text-[10px] text-slate-400 mt-2 text-center">Set aside to buy more blanks/DTF.</p>
-                            </div>
-                        </div>
-                    </div>
                 </div>
             );
 
-            const renderQuoter = () => {
-                const healthColor = calc.totalMarginPercent >= 45 ? 'emerald' : calc.totalMarginPercent >= 30 ? 'amber' : 'rose';
-                const healthText = calc.totalMarginPercent >= 45 ? 'Healthy Margin' : calc.totalMarginPercent >= 30 ? 'Acceptable Margin' : 'Low Margin Risk';
-
-                return (
+            const renderQuoter = () => (
                 <div className="space-y-6 pb-6 fade-in">
                     <div className="bg-white rounded-2xl shadow-sm p-6 border border-slate-200">
                         <div className="flex justify-between items-center mb-6">
                             <h2 className="text-sm font-bold text-slate-800 flex items-center gap-2 uppercase tracking-wider"><Icon name="calculator" size={18} className="text-indigo-500" /> Build Quote</h2>
-                            <button onClick={() => setShowInternalBreakdown(!showInternalBreakdown)} className="text-xs font-bold text-indigo-600 bg-indigo-50 px-3 py-1.5 rounded-lg border border-indigo-100 hover:bg-indigo-100 transition-colors">
+                            <button onClick={() => setShowInternalBreakdown(!showInternalBreakdown)} className="text-xs font-bold text-indigo-600 bg-indigo-50 px-3 py-1.5 rounded-lg border border-indigo-100">
                                 {showInternalBreakdown ? 'Hide Math' : 'View Line Items & Math'}
                             </button>
                         </div>
@@ -599,7 +570,7 @@
                                                 )}
                                             </div>
                                         ))}
-                                        <button onClick={() => addLocation(item.id)} className="text-[10px] font-bold text-indigo-600 bg-indigo-50 px-3 py-1.5 rounded-md mt-1 hover:bg-indigo-100 transition-colors">+ Add Decor</button>
+                                        <button onClick={() => addLocation(item.id)} className="text-[10px] font-bold text-indigo-600 bg-indigo-50 px-3 py-1.5 rounded-md mt-1">+ Add Decor</button>
                                     </div>
                                 </div>
                             </div>
@@ -626,12 +597,7 @@
                     {showInternalBreakdown && (
                         <div className="bg-slate-900 text-white rounded-2xl p-6 shadow-lg space-y-6">
                             <div>
-                                <div className="flex justify-between items-center border-b border-slate-700 pb-3 mb-4">
-                                    <h3 className="text-sm font-bold text-indigo-300 uppercase tracking-widest">Line Item Analysis</h3>
-                                    <span className={`px-2 py-1 rounded bg-${healthColor}-500/20 text-${healthColor}-400 text-[10px] font-bold border border-${healthColor}-500/30 uppercase tracking-wider`}>
-                                        {calc.totalMarginPercent.toFixed(1)}% - {healthText}
-                                    </span>
-                                </div>
+                                <h3 className="text-sm font-bold border-b border-slate-700 pb-3 mb-4 text-indigo-300 uppercase tracking-widest">Line Item Analysis</h3>
                                 <div className="space-y-4">
                                     {calc.items.map((item, idx) => {
                                         const sizeStr = getSizeString(item);
@@ -663,19 +629,16 @@
                             </div>
                             
                             <div>
-                                <h3 className="text-sm font-bold border-b border-slate-700 pb-3 mb-4 text-amber-300 uppercase tracking-widest">Profit First Fund Allocations</h3>
-                                <p className="text-[10px] text-slate-400 mb-4 leading-relaxed">Based on your Global Settings, this is exactly how this job's revenue will be split when paid. True Profit is what remains after all costs and funds are filled.</p>
+                                <h3 className="text-sm font-bold border-b border-slate-700 pb-3 mb-4 text-amber-300 uppercase tracking-widest">Order Math</h3>
                                 <div className="grid grid-cols-2 gap-4 text-sm">
                                     <div className="flex justify-between"><span className="text-slate-400">Total Rev:</span><span className="font-bold">{formatCurrency(calc.discountedSubtotal)}</span></div>
-                                    <div className="flex justify-between"><span className="text-slate-400">Garment Cost:</span><span className="font-bold text-slate-300">-{formatCurrency(calc.orderGarmentCostTotal)}</span></div>
-                                    <div className="flex justify-between"><span className="text-slate-400">Deco Consumables:</span><span className="font-bold text-slate-300">-{formatCurrency(calc.orderDecoCostTotal)}</span></div>
-                                    <div className="flex justify-between"><span className="text-slate-400">Tax Reserve ({businessDetails.taxPct}%):</span><span className="font-bold text-rose-400">-{formatCurrency(calc.allocations.tax)}</span></div>
-                                    <div className="flex justify-between"><span className="text-slate-400">Machine Fund ({businessDetails.machinePct}%):</span><span className="font-bold text-indigo-400">-{formatCurrency(calc.allocations.machine)}</span></div>
-                                    <div className="flex justify-between"><span className="text-slate-400">Restock Fund ({businessDetails.consumablePct}%):</span><span className="font-bold text-amber-400">-{formatCurrency(calc.allocations.consumables)}</span></div>
+                                    <div className="flex justify-between"><span className="text-slate-400">Garment Cost:</span><span className="font-bold text-rose-400">-{formatCurrency(calc.orderGarmentCostTotal)}</span></div>
+                                    <div className="flex justify-between"><span className="text-slate-400">Consumables:</span><span className="font-bold text-rose-400">-{formatCurrency(calc.orderDecoCostTotal)}</span></div>
+                                    <div className="flex justify-between"><span className="text-slate-400">Reserve/Savings:</span><span className="font-bold text-amber-400">-{formatCurrency(calc.machineReserve)}</span></div>
                                 </div>
                                 <div className="mt-4 pt-4 border-t border-slate-700 flex justify-between items-center">
-                                    <span className="font-bold uppercase tracking-widest text-xs text-slate-300">True Operating Profit</span>
-                                    <span className="text-3xl font-black text-emerald-400">{formatCurrency(calc.allocations.opCash)}</span>
+                                    <span className="font-bold uppercase tracking-widest text-xs text-slate-300">Net Take-Home Profit</span>
+                                    <span className="text-3xl font-black text-emerald-400">{formatCurrency(calc.netProfit)}</span>
                                 </div>
                             </div>
                         </div>
@@ -737,7 +700,7 @@
             const renderPipelineArchive = () => {
                 const archivedOrders = orders.filter(o => o.stage === 'archived');
                 return (
-                    <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden fade-in max-w-4xl mx-auto">
+                    <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden fade-in">
                         <div className="p-4 border-b border-slate-100 bg-slate-50"><h3 className="text-xs font-black text-slate-500 uppercase tracking-widest">Completed Jobs History</h3></div>
                         <div className="divide-y divide-slate-100">
                             {archivedOrders.length === 0 ? <p className="p-8 text-center text-slate-400 text-sm">No completed jobs yet.</p> : archivedOrders.map(order => (
@@ -758,7 +721,7 @@
             };
 
             const renderBookkeeping = () => (
-                <div className="fade-in space-y-6 max-w-5xl mx-auto">
+                <div className="fade-in space-y-6">
                     <div className="flex bg-slate-200 p-1.5 rounded-xl max-w-sm mx-auto">
                         <button onClick={() => setBookTab('dashboard')} className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${bookTab === 'dashboard' ? 'bg-white text-indigo-700 shadow-sm' : 'text-slate-600'}`}>Dashboard</button>
                         <button onClick={() => setBookTab('income')} className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${bookTab === 'income' ? 'bg-white text-emerald-700 shadow-sm' : 'text-slate-600'}`}>Income</button>
@@ -778,25 +741,6 @@
                                 <KPICard title="Total Expenses" value={annualTotals.expenses} icon={(p) => <Icon name="trendingDown" {...p}/>} color="rose" />
                                 <KPICard title="Net Profit" value={annualTotals.profit} icon={(p) => <Icon name="wallet" {...p}/>} color="amber" />
                                 <KPICard title="Profit Margin" value={`${annualTotals.margin.toFixed(1)}%`} icon={(p) => <Icon name="percent" {...p}/>} color="indigo" />
-                            </div>
-
-                            <h3 className="font-black text-slate-800 uppercase tracking-widest text-sm mb-4">Virtual Fund Balances (All Time)</h3>
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-                                <div className="bg-rose-50 p-6 rounded-2xl border border-rose-100 shadow-sm">
-                                    <span className="text-[10px] font-black text-rose-500 uppercase tracking-widest">Tax Reserve</span>
-                                    <p className="text-3xl font-black text-rose-600 mt-2">{formatCurrency(kpiData.taxFund)}</p>
-                                    <p className="text-[10px] text-rose-400 font-bold mt-2 uppercase">Target: {businessDetails.taxPct}% of Revenue</p>
-                                </div>
-                                <div className="bg-indigo-50 p-6 rounded-2xl border border-indigo-100 shadow-sm">
-                                    <span className="text-[10px] font-black text-indigo-500 uppercase tracking-widest">Machine / Growth Fund</span>
-                                    <p className="text-3xl font-black text-indigo-600 mt-2">{formatCurrency(kpiData.machineFund)}</p>
-                                    <p className="text-[10px] text-indigo-400 font-bold mt-2 uppercase">Target: {businessDetails.machinePct}% of Revenue</p>
-                                </div>
-                                <div className="bg-amber-50 p-6 rounded-2xl border border-amber-100 shadow-sm">
-                                    <span className="text-[10px] font-black text-amber-500 uppercase tracking-widest">Consumables Restock</span>
-                                    <p className="text-3xl font-black text-amber-600 mt-2">{formatCurrency(kpiData.consumablesFund)}</p>
-                                    <p className="text-[10px] text-amber-500 font-bold mt-2 uppercase">Target: {businessDetails.consumablePct}% of Revenue</p>
-                                </div>
                             </div>
 
                             <h3 className="font-black text-slate-800 uppercase tracking-widest text-sm mb-4">Operational KPIs</h3>
