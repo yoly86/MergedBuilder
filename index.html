@@ -17,16 +17,6 @@
         .pb-safe { padding-bottom: env(safe-area-inset-bottom, 0px); }
         .pb-content { padding-bottom: calc(env(safe-area-inset-bottom, 20px) + 90px); }
         
-        @media print {
-            @page { margin: 0; }
-            body { background-color: white !important; margin: 1cm !important; }
-            .no-print { display: none !important; }
-            .print-full-width { max-width: 100% !important; margin: 0 !important; padding: 0 !important; }
-            .print-no-shadow { box-shadow: none !important; border: none !important; }
-            .page-container { background: transparent !important; box-shadow: none !important; margin: 0 !important; padding: 0 !important; }
-            * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-        }
-        
         input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
         .scrollbar-hide::-webkit-scrollbar { display: none; }
         .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
@@ -52,7 +42,6 @@
                 layers: <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>,
                 plus: <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>,
                 trash: <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>,
-                download: <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>,
                 copy: <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>,
                 check: <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polyline points="20 6 9 17 4 12"/></svg>,
                 x: <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>,
@@ -64,7 +53,8 @@
                 tag: <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>,
                 percent: <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><line x1="19" y1="5" x2="5" y2="19"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/></svg>,
                 settings: <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>,
-                fileCheck: <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="m9 15 2 2 4-4"/></svg>
+                fileCheck: <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="m9 15 2 2 4-4"/></svg>,
+                building: <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><rect x="4" y="2" width="16" height="20" rx="2" ry="2"/><path d="M9 22v-4h6v4"/><path d="M8 6h.01"/><path d="M16 6h.01"/><path d="M12 6h.01"/><path d="M12 10h.01"/><path d="M12 14h.01"/><path d="M16 10h.01"/><path d="M16 14h.01"/><path d="M8 10h.01"/><path d="M8 14h.01"/></svg>
             };
             return icons[name] || null;
         };
@@ -98,11 +88,6 @@
             { id: 'xs', label: 'Extra Small / Hat (2.5"x2.5")' }, { id: 'small', label: 'Small / Left Chest (4"x4")' }, { id: 'medium', label: 'Mid-size / Youth (8"x8")' },
             { id: 'sleeve', label: 'Sleeve / Long Strip' }, { id: 'large', label: 'Standard Full Back (11"x11")' }, { id: 'xlarge', label: 'Oversized (13"x16")' }, { id: 'jumbo', label: 'Jumbo (16"x20")' }
         ];
-        const PLACEMENTS = [
-            { id: 'custom', label: 'Custom / Other' }, { id: 'fc', label: 'Front - Center Chest' }, { id: 'lc', label: 'Front - Left Chest' }, { id: 'rc', label: 'Front - Right Chest' },
-            { id: 'bc', label: 'Back - Center' }, { id: 'sleeve_l', label: 'Left Sleeve' }, { id: 'sleeve_r', label: 'Right Sleeve' }, { id: 'hat_front', label: 'Hat - Front Center' },
-            { id: 'hat_left', label: 'Hat - Left Panel' }, { id: 'hat_right', label: 'Hat - Right Panel' }, { id: 'hat_back', label: 'Hat - Back Arch' }
-        ];
         const SIZES_LIST = ['XS', 'S', 'M', 'L', 'XL', '2X', '3X', '4X', '5X'];
         const DTF_PRIMARY_FEES = { xs: 8.00, small: 11.33, medium: 16.00, sleeve: 19.50, large: 22.00, xlarge: 28.00, jumbo: 35.00 };
         const DTF_SECONDARY_FEES = { xs: 3.50, small: 4.50, medium: 8.00, sleeve: 10.50, large: 12.00, xlarge: 15.00, jumbo: 20.00 };
@@ -126,28 +111,28 @@
 
             // Safe Local Storage
             const [orders, setOrders] = useState(() => {
-                try {
-                    const saved = localStorage.getItem('t1_orders');
-                    return saved ? JSON.parse(saved) : [];
-                } catch(e) { return []; }
+                try { return JSON.parse(localStorage.getItem('t1_orders')) || []; } catch(e) { return []; }
             });
             const [transactions, setTransactions] = useState(() => {
-                try {
-                    const saved = localStorage.getItem('t1_ledger');
-                    return saved ? JSON.parse(saved) : [];
-                } catch(e) { return []; }
+                try { return JSON.parse(localStorage.getItem('t1_ledger')) || []; } catch(e) { return []; }
+            });
+            const [businessDetails, setBusinessDetails] = useState(() => {
+                try { return JSON.parse(localStorage.getItem('t1_biz')) || { name: '', address: '', phone: '', email: '', website: '' }; } 
+                catch(e) { return { name: '', address: '', phone: '', email: '', website: '' }; }
             });
 
             useEffect(() => { localStorage.setItem('t1_orders', JSON.stringify(orders)); }, [orders]);
             useEffect(() => { localStorage.setItem('t1_ledger', JSON.stringify(transactions)); }, [transactions]);
+            useEffect(() => { localStorage.setItem('t1_biz', JSON.stringify(businessDetails)); }, [businessDetails]);
 
             const defaultOrderData = { customerName: '', orderName: '', dateRequired: '', orderDescription: '', designNotes: '', mockupImage: null, setupFees: '', digitizingFee: '', digitizingCost: '', taxRate: 5, discount: '', machineReservePercent: '5' };
-            const defaultItem = { id: genId(), name: '', color: '', qty: 1, rawCost: '', shippingCost: '1.00', margin: 35, decoDiscount: '', sizes: generateEmptySizes(), locations: [ { id: genId(), type: 'none', placement: 'custom', stitches: '', dtfSize: 'small', desc: '', isPuff: false, puffMarkup: 5, adjustment: '' } ] };
+            const defaultItem = { id: genId(), name: '', color: '', qty: 1, rawCost: '', shippingCost: '1.00', margin: 35, decoDiscount: '', sizes: generateEmptySizes(), locations: [ { id: genId(), type: 'none', desc: '', stitches: '', dtfSize: 'small', isPuff: false, puffMarkup: 5, adjustment: '' } ] };
 
             const [orderData, setOrderData] = useState(defaultOrderData);
             const [items, setItems] = useState([defaultItem]);
 
             // --- QUOTER LOGIC & MATH ---
+            const updateBiz = (field, value) => setBusinessDetails(prev => ({ ...prev, [field]: value }));
             const updateOrder = (field, value) => setOrderData(prev => ({ ...prev, [field]: value }));
             const handleImageUpload = (e) => {
                 const file = e.target.files[0];
@@ -156,7 +141,7 @@
             };
             const updateItem = (itemId, field, value) => setItems(items.map(item => item.id === itemId ? { ...item, [field]: value } : item));
             const updateSize = (itemId, sizeKey, value) => setItems(items.map(item => item.id === itemId ? { ...item, sizes: { ...item.sizes, [sizeKey]: value } } : item));
-            const addLocation = (itemId) => setItems(items.map(item => item.id === itemId ? { ...item, locations: [...item.locations, { id: genId(), type: 'none', placement: 'custom', stitches: '', dtfSize: 'small', desc: '', isPuff: false, puffMarkup: 5, adjustment: '' }] } : item));
+            const addLocation = (itemId) => setItems(items.map(item => item.id === itemId ? { ...item, locations: [...item.locations, { id: genId(), type: 'none', desc: '', stitches: '', dtfSize: 'small', isPuff: false, puffMarkup: 5, adjustment: '' }] } : item));
             const updateLocation = (itemId, locId, field, value) => setItems(items.map(item => item.id === itemId ? { ...item, locations: item.locations.map(loc => loc.id === locId ? { ...loc, [field]: value } : loc) } : item));
             const removeLocation = (itemId, locId) => setItems(items.map(item => item.id === itemId ? { ...item, locations: item.locations.filter(loc => loc.id !== locId) } : item));
             const addItem = () => setItems([...items, { ...defaultItem, id: genId(), locations: [{...defaultItem.locations[0], id: genId()}] }]);
@@ -258,7 +243,7 @@
                     desc: orderData.orderName || `${calc.items.reduce((sum, item) => sum + item.calculatedQty, 0)}x Garments`,
                     stage: currentStage,
                     total: calc.grandTotal,
-                    balance: calc.grandTotal, // Safely assume balance = total for quotes
+                    balance: calc.grandTotal,
                     depositAmount: calc.deposit,
                     fullData: { orderData, items, calc },
                     dateAdded: editingOrderId ? (orders.find(o=>o.id===editingOrderId)?.dateAdded || new Date().toLocaleDateString()) : new Date().toLocaleDateString()
@@ -348,7 +333,7 @@
 
             // --- BOOKKEEPING LOGIC ---
             const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
-            const categories = {
+            const ledCats = {
                 income: ['Product Sales', 'Service Income', 'Online Sales', 'Consulting / Freelance', 'Other Business Income'],
                 expense: ['Advertising & Marketing', 'Shipping & Packaging', 'Software & Subscriptions', 'Office Supplies', 'Travel', 'Rent', 'Professional Fees', 'Garments / Blanks', 'Consumables (DTF/Thread)', 'Spoilage / Machine Error']
             };
@@ -381,6 +366,24 @@
             const renderQuoter = () => (
                 <div className="space-y-6 pb-6 fade-in">
                     
+                    {/* Private Business Details */}
+                    <div className="bg-indigo-50 border border-indigo-100 rounded-2xl p-6 shadow-sm">
+                        <div className="flex items-start gap-3 mb-4">
+                            <div className="p-2 bg-indigo-100 rounded-lg text-indigo-600"><Icon name="building" size={20}/></div>
+                            <div>
+                                <h3 className="text-sm font-bold text-indigo-900 uppercase tracking-widest">Your Business Details</h3>
+                                <p className="text-[10px] text-indigo-600 mt-0.5">These fields are saved ONLY to your device's memory for privacy. They will appear on your generated PDFs.</p>
+                            </div>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div><input type="text" placeholder="Business Name" className="w-full p-2.5 bg-white border border-indigo-200 rounded-xl text-sm" value={businessDetails.name} onChange={e => updateBiz('name', e.target.value)} /></div>
+                            <div><input type="text" placeholder="Address / City" className="w-full p-2.5 bg-white border border-indigo-200 rounded-xl text-sm" value={businessDetails.address} onChange={e => updateBiz('address', e.target.value)} /></div>
+                            <div><input type="text" placeholder="Phone Number" className="w-full p-2.5 bg-white border border-indigo-200 rounded-xl text-sm" value={businessDetails.phone} onChange={e => updateBiz('phone', e.target.value)} /></div>
+                            <div><input type="text" placeholder="Email Address" className="w-full p-2.5 bg-white border border-indigo-200 rounded-xl text-sm" value={businessDetails.email} onChange={e => updateBiz('email', e.target.value)} /></div>
+                            <div className="md:col-span-2"><input type="text" placeholder="Website" className="w-full p-2.5 bg-white border border-indigo-200 rounded-xl text-sm" value={businessDetails.website} onChange={e => updateBiz('website', e.target.value)} /></div>
+                        </div>
+                    </div>
+
                     {/* Order Details */}
                     <div className="bg-white rounded-2xl shadow-sm p-6 border border-slate-200">
                         <div className="flex justify-between items-center mb-6">
@@ -450,12 +453,12 @@
                                     <div>
                                         <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Decorations</p>
                                         {item.locations.map(loc => (
-                                            <div key={loc.id} className="bg-white border border-slate-200 rounded-lg p-3 mb-2 flex gap-3 items-center relative pr-8">
+                                            <div key={loc.id} className="bg-white border border-slate-200 rounded-lg p-3 mb-2 flex flex-col md:flex-row gap-3 items-center relative pr-8">
                                                 {item.locations.length > 1 && <button onClick={() => removeLocation(item.id, loc.id)} className="absolute right-2 top-2 text-slate-300 hover:text-red-500"><Icon name="x" size={14} /></button>}
-                                                <select className="flex-1 p-2 soft-input rounded-md text-xs font-bold" value={loc.type} onChange={e => updateLocation(item.id, loc.id, 'type', e.target.value)}><option value="none">None</option><option value="embroidery">Embroidery</option><option value="dtf">DTF Print</option></select>
-                                                {loc.type === 'embroidery' && <input type="number" placeholder="Stitches" className="flex-1 p-2 soft-input rounded-md text-xs" value={loc.stitches} onChange={e => updateLocation(item.id, loc.id, 'stitches', e.target.value)} />}
-                                                {loc.type === 'dtf' && <select className="flex-1 p-2 soft-input rounded-md text-xs" value={loc.dtfSize} onChange={e => updateLocation(item.id, loc.id, 'dtfSize', e.target.value)}>{DTF_SIZES.map(s => <option key={s.id} value={s.id}>{s.label}</option>)}</select>}
-                                                {loc.type !== 'none' && <input type="text" placeholder="Notes (e.g. Left Chest)" className="flex-[2] p-2 soft-input rounded-md text-xs" value={loc.desc} onChange={e => updateLocation(item.id, loc.id, 'desc', e.target.value)} />}
+                                                <select className="w-full md:w-auto flex-1 p-2 soft-input rounded-md text-xs font-bold" value={loc.type} onChange={e => updateLocation(item.id, loc.id, 'type', e.target.value)}><option value="none">None</option><option value="embroidery">Embroidery</option><option value="dtf">DTF Print</option></select>
+                                                {loc.type === 'embroidery' && <input type="number" placeholder="Stitches" className="w-full md:w-auto flex-1 p-2 soft-input rounded-md text-xs" value={loc.stitches} onChange={e => updateLocation(item.id, loc.id, 'stitches', e.target.value)} />}
+                                                {loc.type === 'dtf' && <select className="w-full md:w-auto flex-1 p-2 soft-input rounded-md text-xs" value={loc.dtfSize} onChange={e => updateLocation(item.id, loc.id, 'dtfSize', e.target.value)}>{DTF_SIZES.map(s => <option key={s.id} value={s.id}>{s.label}</option>)}</select>}
+                                                {loc.type !== 'none' && <input type="text" placeholder="Notes (e.g. Left Chest)" className="w-full md:w-auto flex-[2] p-2 soft-input rounded-md text-xs" value={loc.desc} onChange={e => updateLocation(item.id, loc.id, 'desc', e.target.value)} />}
                                             </div>
                                         ))}
                                         <button onClick={() => addLocation(item.id)} className="text-[10px] font-bold text-indigo-600 bg-indigo-50 px-3 py-1.5 rounded-md mt-1">+ Add Decor</button>
@@ -602,7 +605,7 @@
                                     <input type="hidden" name="type" value={currentLedgerType} />
                                     <div><input required type="number" step="0.01" name="amount" placeholder="Amount ($)" className="w-full p-3 soft-input rounded-xl text-sm font-bold" /></div>
                                     <div><input required type="date" name="date" defaultValue={new Date().toISOString().split('T')[0]} className="w-full p-3 soft-input rounded-xl text-sm" /></div>
-                                    <div><select name="category" className="w-full p-3 soft-input rounded-xl text-sm">{categories[currentLedgerType].map(cat => <option key={cat} value={cat}>{cat}</option>)}</select></div>
+                                    <div><select name="category" className="w-full p-3 soft-input rounded-xl text-sm">{ledCats[currentLedgerType].map(cat => <option key={cat} value={cat}>{cat}</option>)}</select></div>
                                     <div><input type="text" name="description" placeholder="Notes..." className="w-full p-3 soft-input rounded-xl text-sm" /></div>
                                     <div className="md:col-span-4"><button type="submit" className={`w-full py-3 ${bookTab === 'income' ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-rose-600 hover:bg-rose-700'} text-white rounded-xl font-bold active:scale-95 transition-all`}>Save Record</button></div>
                                 </form>
@@ -741,98 +744,147 @@
 
                 return (
                     <div style={{ position: 'absolute', left: '-9999px', top: 0 }}>
-                        <div ref={pdfGenRef} className="page-container print-no-shadow print-full-width p-12" style={{ width: '8.5in', backgroundColor: 'white', color: '#0f172a', fontFamily: 'sans-serif' }}>
-                            <div className="flex justify-between items-start mb-8 border-b-2 border-slate-800 pb-8">
+                        <div ref={pdfGenRef} className="page-container print-no-shadow print-full-width" style={{ width: '8.5in', padding: '1in', backgroundColor: 'white', color: '#0f172a', fontFamily: 'Helvetica, Arial, sans-serif' }}>
+                            
+                            <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '2px solid #cbd5e1', paddingBottom: '30px', marginBottom: '40px' }}>
                                 <div>
-                                    <h1 className="text-5xl font-black tracking-tighter text-slate-900">{title}</h1>
-                                    <p className="text-slate-500 font-semibold mt-2 tracking-wide">Date: {new Date().toLocaleDateString()}</p>
-                                    {type === 'proposal' && oData.dateRequired && <p className="text-indigo-600 text-sm font-bold mt-1">Due Date: {oData.dateRequired}</p>}
+                                    <h2 style={{ fontSize: '24px', fontWeight: 'bold', margin: '0 0 5px 0' }}>{businessDetails.name || 'Your Business Name'}</h2>
+                                    <p style={{ margin: '3px 0', fontSize: '14px', color: '#64748b' }}>{businessDetails.address}</p>
+                                    <p style={{ margin: '3px 0', fontSize: '14px', color: '#64748b' }}>{businessDetails.phone} | {businessDetails.email}</p>
+                                    <p style={{ margin: '3px 0', fontSize: '14px', color: '#4f46e5' }}>{businessDetails.website}</p>
                                 </div>
-                                <div className="text-right">
-                                    <h2 className="text-2xl font-bold text-slate-900 leading-tight">{order.customer}</h2>
-                                    {oData.orderName && <p className="text-slate-600 font-medium mt-1">{oData.orderName}</p>}
-                                    <p className="text-slate-400 font-medium mt-1">ID: {order.id}</p>
+                                <div style={{ textAlign: 'right' }}>
+                                    <h1 style={{ fontSize: '42px', fontWeight: '900', color: type === 'proposal' ? '#4f46e5' : '#0f172a', margin: '0 0 10px 0', letterSpacing: '2px' }}>{title}</h1>
+                                    <p style={{ margin: '0 0 5px 0', fontSize: '16px', fontWeight: 'bold' }}>Date: {new Date().toLocaleDateString()}</p>
+                                    <p style={{ margin: '0', fontSize: '14px', color: '#64748b' }}>Order ID: {order.id}</p>
                                 </div>
                             </div>
 
+                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '40px' }}>
+                                <div>
+                                    <p style={{ fontSize: '12px', fontWeight: 'bold', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '1px', margin: '0 0 5px 0' }}>Billed To:</p>
+                                    <h3 style={{ fontSize: '22px', fontWeight: 'bold', margin: '0 0 5px 0' }}>{order.customer}</h3>
+                                    {oData.orderName && <p style={{ margin: '0', fontSize: '16px', color: '#475569' }}>{oData.orderName}</p>}
+                                </div>
+                                {type === 'proposal' && oData.dateRequired && (
+                                    <div style={{ textAlign: 'right' }}>
+                                        <p style={{ fontSize: '12px', fontWeight: 'bold', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '1px', margin: '0 0 5px 0' }}>Required By:</p>
+                                        <p style={{ margin: '0', fontSize: '18px', fontWeight: 'bold', color: '#4f46e5' }}>{oData.dateRequired}</p>
+                                    </div>
+                                )}
+                            </div>
+
                             {oData.orderDescription && (
-                                <div className="mb-6 p-5 bg-slate-50 rounded-xl border border-slate-200">
-                                    <p className="text-sm text-slate-700 whitespace-pre-wrap">{oData.orderDescription}</p>
+                                <div style={{ marginBottom: '30px', padding: '20px', backgroundColor: '#f8fafc', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+                                    <p style={{ margin: 0, fontSize: '14px', color: '#334155', lineHeight: '1.6' }}>{oData.orderDescription}</p>
                                 </div>
                             )}
 
                             {(type === 'proposal' && oData.designNotes) && (
-                                <div className="mb-6 p-5 bg-indigo-50 rounded-xl border border-indigo-100">
-                                    <h3 className="text-xs font-bold uppercase tracking-widest text-indigo-800 mb-2">Design Notes</h3>
-                                    <p className="text-sm text-indigo-900 whitespace-pre-wrap leading-relaxed">{oData.designNotes}</p>
+                                <div style={{ marginBottom: '30px', padding: '20px', backgroundColor: '#eef2ff', borderRadius: '12px', border: '1px solid #e0e7ff' }}>
+                                    <h4 style={{ margin: '0 0 10px 0', fontSize: '12px', fontWeight: 'bold', color: '#3730a3', textTransform: 'uppercase', letterSpacing: '1px' }}>Design Notes</h4>
+                                    <p style={{ margin: 0, fontSize: '14px', color: '#312e81', lineHeight: '1.6' }}>{oData.designNotes}</p>
                                 </div>
                             )}
 
                             {oData.mockupImage && (
-                                <div className="mb-8 border border-slate-200 rounded-xl p-4 bg-slate-50 text-center">
-                                    <h3 className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-3">Approved Mockup</h3>
-                                    <img src={oData.mockupImage} alt="Mockup" style={{ maxHeight: '2in', width: 'auto', display: 'block', margin: '0 auto' }} className="rounded-md shadow-sm" />
+                                <div style={{ marginBottom: '40px', padding: '20px', backgroundColor: '#f8fafc', borderRadius: '12px', border: '1px solid #e2e8f0', textAlign: 'center', breakInside: 'avoid' }}>
+                                    <h4 style={{ margin: '0 0 15px 0', fontSize: '10px', fontWeight: 'bold', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '2px' }}>Approved Design Mockup</h4>
+                                    <img src={oData.mockupImage} alt="Mockup" style={{ maxHeight: '2in', width: 'auto', display: 'block', margin: '0 auto', borderRadius: '8px' }} />
                                 </div>
                             )}
 
-                            <div className="mb-10">
-                                <div className="grid grid-cols-12 gap-4 border-b-2 border-slate-300 pb-2 mb-4 text-xs font-bold text-slate-500 uppercase tracking-widest">
-                                    <div className="col-span-8">Description</div><div className="col-span-2 text-center">Qty</div><div className="col-span-2 text-right">Total</div>
+                            <div style={{ marginBottom: '40px', breakInside: 'avoid' }}>
+                                <div style={{ display: 'flex', borderBottom: '2px solid #cbd5e1', paddingBottom: '10px', marginBottom: '15px' }}>
+                                    <div style={{ width: '60%', fontSize: '12px', fontWeight: 'bold', color: '#64748b', textTransform: 'uppercase', letterSpacing: '1px' }}>Description</div>
+                                    <div style={{ width: '15%', fontSize: '12px', fontWeight: 'bold', color: '#64748b', textTransform: 'uppercase', letterSpacing: '1px', textAlign: 'center' }}>Qty</div>
+                                    <div style={{ width: '25%', fontSize: '12px', fontWeight: 'bold', color: '#64748b', textTransform: 'uppercase', letterSpacing: '1px', textAlign: 'right' }}>Total</div>
                                 </div>
+
                                 {oCalc.items && oCalc.items.map((item, idx) => {
                                     const activeSizes = SIZES_LIST.filter(s => (parseInt(item.sizes?.[s]) || 0) > 0);
                                     const sizeStr = activeSizes.length > 0 ? activeSizes.map(s => `${s}: ${item.sizes[s]}`).join(', ') : null;
                                     return (
-                                    <div key={idx} className="mb-4 pb-4 border-b border-slate-100 grid grid-cols-12 gap-4 items-start">
-                                        <div className="col-span-8">
-                                            <p className="font-bold text-slate-800 text-lg">{item.name} {item.color ? `- ${item.color}` : ''}</p>
-                                            {sizeStr && <p className="text-xs text-slate-500 mt-1 font-semibold">{sizeStr}</p>}
-                                            <div className="mt-2 pl-3 border-l-2 border-indigo-200">
-                                                {item.locations.filter(l=>l.type!=='none').map((l, i) => <p key={i} className="text-xs text-slate-600">{l.type === 'embroidery' ? 'Embroidery' : 'DTF Print'} {l.desc ? `- ${l.desc}` : ''}</p>)}
+                                    <div key={idx} style={{ display: 'flex', borderBottom: '1px solid #f1f5f9', paddingBottom: '15px', marginBottom: '15px' }}>
+                                        <div style={{ width: '60%' }}>
+                                            <p style={{ margin: '0 0 5px 0', fontSize: '16px', fontWeight: 'bold', color: '#0f172a' }}>{item.name} {item.color ? `- ${item.color}` : ''}</p>
+                                            {sizeStr && <p style={{ margin: '0 0 8px 0', fontSize: '12px', color: '#64748b', fontWeight: 'bold' }}>{sizeStr}</p>}
+                                            <div style={{ paddingLeft: '15px', borderLeft: '2px solid #c7d2fe' }}>
+                                                {item.locations.filter(l=>l.type!=='none').map((l, i) => (
+                                                    <p key={i} style={{ margin: '0 0 3px 0', fontSize: '12px', color: '#475569' }}>{l.type === 'embroidery' ? 'Embroidery' : 'DTF Print'} {l.desc ? `- ${l.desc}` : ''}</p>
+                                                ))}
                                             </div>
                                         </div>
-                                        <div className="col-span-2 text-center font-bold text-slate-600 pt-1">{item.calculatedQty}</div>
-                                        <div className="col-span-2 text-right font-black text-slate-900 pt-1 text-lg">{formatCurrency(item.undiscountedLineTotal)}</div>
+                                        <div style={{ width: '15%', textAlign: 'center', fontSize: '16px', fontWeight: 'bold', color: '#475569', paddingTop: '2px' }}>{item.calculatedQty}</div>
+                                        <div style={{ width: '25%', textAlign: 'right', fontSize: '18px', fontWeight: '900', color: '#0f172a', paddingTop: '2px' }}>{formatCurrency(item.undiscountedLineTotal)}</div>
                                     </div>
                                 )})}
                             </div>
 
-                            <div className="w-1/2 ml-auto space-y-3 text-sm">
-                                {(oCalc.setup > 0 || oCalc.digitizing > 0) && <div className="flex justify-between text-slate-600"><span>Setup / Fees</span><span>{formatCurrency(oCalc.setup + oCalc.digitizing)}</span></div>}
-                                <div className="flex justify-between text-slate-600 font-bold"><span>Subtotal</span><span>{formatCurrency(oCalc.grossSubtotal)}</span></div>
-                                {oCalc.totalDiscount > 0 && <div className="flex justify-between text-emerald-600 font-bold bg-emerald-50 p-2 rounded-lg"><span>Discount Applied</span><span>-{formatCurrency(oCalc.totalDiscount)}</span></div>}
-                                <div className="flex justify-between text-slate-600"><span>Tax ({oData.taxRate}%)</span><span>{formatCurrency(oCalc.tax)}</span></div>
+                            <div style={{ width: '50%', marginLeft: 'auto', breakInside: 'avoid' }}>
+                                {(oCalc.setup > 0 || oCalc.digitizing > 0) && (
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px', fontSize: '14px', color: '#64748b' }}>
+                                        <span>Setup / Fees</span><span>{formatCurrency(oCalc.setup + oCalc.digitizing)}</span>
+                                    </div>
+                                )}
+                                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px', fontSize: '14px', color: '#475569', fontWeight: 'bold' }}>
+                                    <span>Subtotal</span><span>{formatCurrency(oCalc.grossSubtotal)}</span>
+                                </div>
+                                {oCalc.totalDiscount > 0 && (
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px', fontSize: '14px', color: '#059669', fontWeight: 'bold', backgroundColor: '#ecfdf5', padding: '8px', borderRadius: '6px' }}>
+                                        <span>Discount Applied</span><span>-{formatCurrency(oCalc.totalDiscount)}</span>
+                                    </div>
+                                )}
+                                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '15px', fontSize: '14px', color: '#64748b' }}>
+                                    <span>Tax ({oData.taxRate}%)</span><span>{formatCurrency(oCalc.tax)}</span>
+                                </div>
                                 
-                                <div className="flex justify-between items-end pt-4 border-t-2 border-slate-900">
-                                    <span className="font-black text-slate-900 uppercase tracking-widest">Order Total</span>
-                                    <span className="font-black text-2xl text-indigo-700">{formatCurrency(order.total)}</span>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', paddingTop: '20px', borderTop: '2px solid #0f172a', marginBottom: '20px' }}>
+                                    <span style={{ fontSize: '14px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Order Total</span>
+                                    <span style={{ fontSize: '28px', fontWeight: '900', color: '#4f46e5' }}>{formatCurrency(order.total)}</span>
                                 </div>
                                 
                                 {type === 'proposal' && (
-                                    <div className="mt-8 bg-slate-50 p-6 rounded-xl text-center border border-slate-200">
-                                        <p className="text-slate-500 font-bold text-xs uppercase tracking-widest mb-1">Required Deposit to Begin</p>
-                                        <p className="text-3xl font-black text-slate-900">{formatCurrency(order.depositAmount || (order.total / 2))}</p>
-                                        <p className="text-[10px] text-slate-400 mt-2 font-medium">(*Or you may choose to pay the full balance upfront)</p>
+                                    <div style={{ marginTop: '30px', padding: '25px', backgroundColor: '#f8fafc', borderRadius: '12px', border: '1px solid #e2e8f0', textAlign: 'center' }}>
+                                        <p style={{ margin: '0 0 10px 0', fontSize: '11px', fontWeight: 'bold', color: '#64748b', textTransform: 'uppercase', letterSpacing: '1px' }}>Required Deposit to Begin</p>
+                                        <p style={{ margin: 0, fontSize: '32px', fontWeight: '900', color: '#0f172a' }}>{formatCurrency(order.depositAmount || (order.total / 2))}</p>
+                                        <p style={{ margin: '10px 0 0 0', fontSize: '11px', color: '#94a3b8', fontStyle: 'italic' }}>(*Or you may choose to pay the full balance upfront)</p>
                                     </div>
                                 )}
 
                                 {type !== 'proposal' && (
-                                    <div className="mt-4 pt-4 border-t border-slate-200">
-                                        <div className="flex justify-between text-emerald-600 font-bold mb-2"><span>Amount Paid</span><span>-{formatCurrency(order.total - order.balance)}</span></div>
-                                        <div className="flex justify-between items-end pt-2">
-                                            <span className="font-black text-slate-900 uppercase tracking-widest">Balance Due</span>
-                                            <span className="font-black text-xl text-rose-600">{formatCurrency(order.balance)}</span>
+                                    <div style={{ marginTop: '20px', paddingTop: '20px', borderTop: '1px solid #e2e8f0' }}>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px', fontSize: '16px', color: '#059669', fontWeight: 'bold' }}>
+                                            <span>Amount Paid</span><span>-{formatCurrency(order.total - order.balance)}</span>
+                                        </div>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', paddingTop: '10px' }}>
+                                            <span style={{ fontSize: '14px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Balance Due</span>
+                                            <span style={{ fontSize: '24px', fontWeight: '900', color: order.balance > 0 ? '#e11d48' : '#059669' }}>{formatCurrency(order.balance)}</span>
                                         </div>
                                     </div>
                                 )}
                             </div>
+
+                            {/* PAID IN FULL STAMP */}
+                            {(type === 'receipt' && order.balance === 0) && (
+                                <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%) rotate(-15deg)', color: 'rgba(16, 185, 129, 0.12)', fontSize: '110px', fontWeight: '900', border: '12px solid rgba(16, 185, 129, 0.12)', padding: '20px 40px', borderRadius: '30px', pointerEvents: 'none', zIndex: 0, whiteSpace: 'nowrap' }}>
+                                    PAID IN FULL
+                                </div>
+                            )}
+
+                            <div style={{ marginTop: '80px', paddingTop: '20px', borderTop: '1px solid #e2e8f0', textAlign: 'center' }}>
+                                <p style={{ margin: 0, fontSize: '12px', fontWeight: 'bold', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '2px' }}>
+                                    {type === 'proposal' ? '* Quotes are valid for 14 days from date of issue.' : 'Thank you for your business!'}
+                                </p>
+                            </div>
+
                         </div>
                     </div>
                 );
             };
 
             return (
-                <div className="min-h-screen pb-content flex flex-col">
+                <div className="min-h-screen pb-content flex flex-col relative z-10">
                     <div className="bg-white border-b border-slate-200 shadow-sm sticky top-0 z-30 pt-safe no-print">
                         <div className="max-w-4xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4 p-4">
                             <div><h1 className="text-2xl font-black flex items-center gap-2 tracking-tight text-slate-800"><Icon name="layers" size={28} className="text-indigo-600"/> Triple One OS</h1></div>
@@ -853,7 +905,7 @@
                         )}
                     </div>
 
-                    <div className="p-4 md:p-6 max-w-4xl w-full mx-auto flex-1 h-full">
+                    <div className="p-4 md:p-6 max-w-4xl w-full mx-auto flex-1 h-full relative z-20">
                         {appModule === 'quoter' && renderQuoter()}
                         {appModule === 'pipeline' && pipelineView === 'active' && renderPipelineBoard()}
                         {appModule === 'pipeline' && pipelineView === 'archive' && renderPipelineArchive()}
