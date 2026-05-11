@@ -165,6 +165,80 @@
                 </div>
             );
         };
+        // --- LEDGER COMPONENT ---
+        const LedgerModule = ({ transactions, onAddTransaction }) => {
+            const CATEGORIES = [
+                'Income: Product Sales', 'Expense: Blanks/Inventory', 'Expense: Consumables (Thread/DTF)', 
+                'Expense: Spoilage (Machine Error)', 'Expense: Repairs/Maintenance', 
+                'Expense: Vehicle/Fuel', 'Expense: Software/Subscribers', 'Expense: Shipping/Postage'
+            ];
+
+            const [amount, setAmount] = useState('');
+            const [cat, setCat] = useState(CATEGORIES[0]);
+            const [note, setNote] = useState('');
+
+            const totalIncome = transactions.filter(t => t.type === 'income').reduce((sum, t) => sum + t.amount, 0);
+            const totalExpense = transactions.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.amount, 0);
+
+            return (
+                <div className="space-y-6 pb-6">
+                    {/* KPI Dashboard */}
+                    <div className="grid grid-cols-2 gap-4">
+                        <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
+                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Total Income</span>
+                            <p className="text-xl font-black text-emerald-600 mt-1">${totalIncome.toFixed(2)}</p>
+                        </div>
+                        <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
+                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Net Profit</span>
+                            <p className="text-xl font-black text-indigo-600 mt-1">${(totalIncome - totalExpense).toFixed(2)}</p>
+                        </div>
+                    </div>
+
+                    {/* Quick Entry */}
+                    <div className="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
+                        <h2 className="text-sm font-black text-slate-800 uppercase tracking-widest mb-4 flex items-center gap-2">
+                            <Icon name="pieChart" size={18} className="text-indigo-600" /> Log Expense / Income
+                        </h2>
+                        <div className="space-y-4">
+                            <input type="number" placeholder="Amount ($)" className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold" value={amount} onChange={e => setAmount(e.target.value)} />
+                            <select className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm" value={cat} onChange={e => setCat(e.target.value)}>
+                                {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+                            </select>
+                            <input type="text" placeholder="Note (e.g. Thread restock)" className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm" value={note} onChange={e => setNote(e.target.value)} />
+                            <button onClick={() => {
+                                onAddTransaction({ 
+                                    id: Date.now(), 
+                                    amount: parseFloat(amount), 
+                                    category: cat, 
+                                    note: note, 
+                                    type: cat.startsWith('Income') ? 'income' : 'expense',
+                                    date: new Date().toLocaleDateString()
+                                });
+                                setAmount(''); setNote('');
+                            }} className="w-full bg-slate-900 text-white py-3 rounded-xl font-bold active:scale-95 transition-all">Save Record</button>
+                        </div>
+                    </div>
+
+                    {/* Recent Ledger */}
+                    <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                        <div className="p-4 border-b border-slate-100 bg-slate-50 font-bold text-xs text-slate-500 uppercase tracking-widest">Recent Transactions</div>
+                        <div className="divide-y divide-slate-100">
+                            {transactions.map(t => (
+                                <div key={t.id} className="p-4 flex justify-between items-center">
+                                    <div>
+                                        <p className="text-sm font-bold text-slate-800">{t.category.split(': ')[1]}</p>
+                                        <p className="text-[10px] text-slate-400 font-medium">{t.date} {t.note && `• ${t.note}`}</p>
+                                    </div>
+                                    <span className={`font-black text-sm ${t.type === 'income' ? 'text-emerald-600' : 'text-rose-600'}`}>
+                                        {t.type === 'income' ? '+' : '-'}${t.amount.toFixed(2)}
+                                    </span>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            );
+        };
         function App() {
             const [activeTab, setActiveTab] = useState('pipeline');
 
@@ -261,7 +335,12 @@
     setOrders([newOrder, ...orders]);
     setActiveTab('pipeline'); // Auto-switch to pipeline to see it
 }} />}
-                        {activeTab === 'ledger' && <div className="text-center py-20 text-slate-400 font-medium">Financial Controller (To Be Added Last)</div>}
+                        {activeTab === 'ledger' && (
+    <LedgerModule 
+        transactions={transactions} 
+        onAddTransaction={(tx) => setTransactions([tx, ...transactions])} 
+    />
+)}
                     </div>
 
                     {/* Mobile-First Bottom Nav */}
