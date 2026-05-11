@@ -61,9 +61,7 @@
                 tag: <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>,
                 percent: <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><line x1="19" y1="5" x2="5" y2="19"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/></svg>,
                 settings: <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>,
-                fileCheck: <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="m9 15 2 2 4-4"/></svg>,
-                building: <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><rect x="4" y="2" width="16" height="20" rx="2" ry="2"/><path d="M9 22v-4h6v4"/><path d="M8 6h.01"/><path d="M16 6h.01"/><path d="M12 6h.01"/><path d="M12 10h.01"/><path d="M12 14h.01"/><path d="M16 10h.01"/><path d="M16 14h.01"/><path d="M8 10h.01"/><path d="M8 14h.01"/></svg>,
-                checkCircle: <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                building: <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><rect x="4" y="2" width="16" height="20" rx="2" ry="2"/><path d="M9 22v-4h6v4"/><path d="M8 6h.01"/><path d="M16 6h.01"/><path d="M12 6h.01"/><path d="M12 10h.01"/><path d="M12 14h.01"/><path d="M16 10h.01"/><path d="M16 14h.01"/><path d="M8 10h.01"/><path d="M8 14h.01"/></svg>
             };
             return icons[name] || null;
         };
@@ -106,6 +104,7 @@
         const formatCurrency = (val) => '$' + (val || 0).toFixed(2);
         const generateEmptySizes = () => SIZES_LIST.reduce((acc, size) => { acc[size] = ''; return acc; }, {});
 
+        // --- MAIN APP COMPONENT ---
         function App() {
             const [appModule, setAppModule] = useState('pipeline'); 
             const [pipelineView, setPipelineView] = useState('active'); 
@@ -138,6 +137,7 @@
             const [orderData, setOrderData] = useState(defaultOrderData);
             const [items, setItems] = useState([defaultItem]);
 
+            // --- QUOTER LOGIC & MATH ---
             const updateBiz = (field, value) => setBusinessDetails(prev => ({ ...prev, [field]: value }));
             const updateOrder = (field, value) => setOrderData(prev => ({ ...prev, [field]: value }));
             const handleImageUpload = (e) => {
@@ -366,26 +366,31 @@
                 e.target.reset();
             };
 
-            const renderQuoter = () => (
-                <div className="space-y-6 pb-6 fade-in">
-                    
-                    <div className="bg-indigo-50 border border-indigo-100 rounded-2xl p-6 shadow-sm">
-                        <div className="flex items-start gap-3 mb-4">
-                            <div className="p-2 bg-indigo-100 rounded-lg text-indigo-600"><Icon name="building" size={20}/></div>
+            const renderSettings = () => (
+                <div className="fade-in max-w-2xl mx-auto space-y-6">
+                    <div className="bg-white rounded-2xl shadow-sm p-6 md:p-8 border border-slate-200">
+                        <div className="flex items-start gap-4 mb-6 border-b border-slate-100 pb-6">
+                            <div className="p-3 bg-indigo-50 rounded-xl text-indigo-600"><Icon name="building" size={24}/></div>
                             <div>
-                                <h3 className="text-sm font-bold text-indigo-900 uppercase tracking-widest">Your Business Details</h3>
-                                <p className="text-[10px] text-indigo-600 mt-0.5">These fields are saved ONLY to your device's memory for privacy. They will appear on your generated PDFs.</p>
+                                <h2 className="text-lg font-black text-slate-800 uppercase tracking-widest">Business Profile</h2>
+                                <p className="text-xs text-slate-500 mt-1 leading-relaxed">These details appear on your customer-facing Proposals, Invoices, and Receipts. They are securely saved only to this device's local storage.</p>
                             </div>
                         </div>
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <div><input type="text" placeholder="Business Name" className="w-full p-2.5 bg-white border border-indigo-200 rounded-xl text-sm" value={businessDetails.name} onChange={e => updateBiz('name', e.target.value)} /></div>
-                            <div><input type="text" placeholder="Address / City" className="w-full p-2.5 bg-white border border-indigo-200 rounded-xl text-sm" value={businessDetails.address} onChange={e => updateBiz('address', e.target.value)} /></div>
-                            <div><input type="text" placeholder="Phone Number" className="w-full p-2.5 bg-white border border-indigo-200 rounded-xl text-sm" value={businessDetails.phone} onChange={e => updateBiz('phone', e.target.value)} /></div>
-                            <div><input type="text" placeholder="Email Address" className="w-full p-2.5 bg-white border border-indigo-200 rounded-xl text-sm" value={businessDetails.email} onChange={e => updateBiz('email', e.target.value)} /></div>
-                            <div className="md:col-span-2"><input type="text" placeholder="Website" className="w-full p-2.5 bg-white border border-indigo-200 rounded-xl text-sm" value={businessDetails.website} onChange={e => updateBiz('website', e.target.value)} /></div>
+                        <div className="space-y-5">
+                            <div><label className="block text-[11px] font-bold text-slate-500 mb-1.5 uppercase">Business Name</label><input type="text" placeholder="e.g. Triple One Threads" className="w-full p-3 soft-input rounded-xl text-sm font-semibold text-slate-800" value={businessDetails.name} onChange={e => updateBiz('name', e.target.value)} /></div>
+                            <div><label className="block text-[11px] font-bold text-slate-500 mb-1.5 uppercase">Address / Location</label><input type="text" placeholder="e.g. Beaumont, AB" className="w-full p-3 soft-input rounded-xl text-sm" value={businessDetails.address} onChange={e => updateBiz('address', e.target.value)} /></div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                                <div><label className="block text-[11px] font-bold text-slate-500 mb-1.5 uppercase">Phone Number</label><input type="text" placeholder="(555) 123-4567" className="w-full p-3 soft-input rounded-xl text-sm" value={businessDetails.phone} onChange={e => updateBiz('phone', e.target.value)} /></div>
+                                <div><label className="block text-[11px] font-bold text-slate-500 mb-1.5 uppercase">Email Address</label><input type="text" placeholder="hello@tripleonethreads.com" className="w-full p-3 soft-input rounded-xl text-sm" value={businessDetails.email} onChange={e => updateBiz('email', e.target.value)} /></div>
+                            </div>
+                            <div><label className="block text-[11px] font-bold text-slate-500 mb-1.5 uppercase">Website / Social URL</label><input type="text" placeholder="tripleonethreads.com" className="w-full p-3 soft-input rounded-xl text-sm text-indigo-600" value={businessDetails.website} onChange={e => updateBiz('website', e.target.value)} /></div>
                         </div>
                     </div>
+                </div>
+            );
 
+            const renderQuoter = () => (
+                <div className="space-y-6 pb-6 fade-in">
                     <div className="bg-white rounded-2xl shadow-sm p-6 border border-slate-200">
                         <div className="flex justify-between items-center mb-6">
                             <h2 className="text-sm font-bold text-slate-800 flex items-center gap-2 uppercase tracking-wider"><Icon name="calculator" size={18} className="text-indigo-500" /> Build Quote</h2>
@@ -722,6 +727,7 @@
                                                 <p className="font-bold text-sm text-slate-800">{item.qty}x {item.name} {item.color ? `(${item.color})` : ''}</p>
                                                 {sizeStr && <p className="text-[10px] text-slate-500 mt-0.5">{sizeStr}</p>}
                                                 <p className="text-[10px] text-slate-500 mt-0.5">{item.locations.filter(l=>l.type!=='none').map(l => l.type === 'embroidery' ? 'Embroidery' : 'DTF').join(', ')}</p>
+                                                {item.decoDiscount > 0 && <p className="text-[10px] text-emerald-600 font-bold mt-0.5">- Discount Applied</p>}
                                             </div>
                                             <span className="font-bold text-sm text-slate-600">{orderCalc ? formatCurrency(orderCalc.items[idx].lineTotal) : ''}</span>
                                         </div>
@@ -858,9 +864,10 @@
                                                     <p key={i} style={{ margin: '0 0 3px 0', fontSize: '12px', color: '#475569' }}>{l.type === 'embroidery' ? 'Embroidery' : 'DTF Print'} {l.desc ? `- ${l.desc}` : ''}</p>
                                                 ))}
                                             </div>
+                                            {item.explicitDecoDiscount > 0 && <p style={{ margin: '5px 0 0 0', fontSize: '11px', color: '#059669', fontWeight: 'bold' }}>Includes Item Discount (-{formatCurrency(item.explicitDecoDiscount)}/ea)</p>}
                                         </div>
                                         <div style={{ width: '15%', textAlign: 'center', fontSize: '16px', fontWeight: 'bold', color: '#475569', paddingTop: '2px' }}>{item.calculatedQty}</div>
-                                        <div style={{ width: '25%', textAlign: 'right', fontSize: '18px', fontWeight: '900', color: '#0f172a', paddingTop: '2px' }}>{formatCurrency(item.undiscountedLineTotal)}</div>
+                                        <div style={{ width: '25%', textAlign: 'right', fontSize: '18px', fontWeight: '900', color: '#0f172a', paddingTop: '2px' }}>{formatCurrency(item.lineTotal)}</div>
                                     </div>
                                 )})}
                             </div>
@@ -876,7 +883,7 @@
                                 </div>
                                 {oCalc.totalDiscount > 0 && (
                                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px', fontSize: '14px', color: '#059669', fontWeight: 'bold', backgroundColor: '#ecfdf5', padding: '8px', borderRadius: '6px' }}>
-                                        <span>Discount Applied</span><span>-{formatCurrency(oCalc.totalDiscount)}</span>
+                                        <span>Order Discount</span><span>-{formatCurrency(oCalc.totalDiscount)}</span>
                                     </div>
                                 )}
                                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '15px', fontSize: '14px', color: '#64748b' }}>
@@ -933,10 +940,11 @@
                         <div className="max-w-4xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4 p-4">
                             <div><h1 className="text-2xl font-black flex items-center gap-2 tracking-tight text-slate-800"><Icon name="layers" size={28} className="text-indigo-600"/> Triple One OS</h1></div>
                             
-                            <div className="flex bg-slate-100 p-1.5 rounded-xl border border-slate-200 w-full md:w-auto">
-                                <button onClick={() => setAppModule('quoter')} className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-2 rounded-lg text-sm font-bold transition-all ${appModule === 'quoter' ? 'bg-white text-indigo-700 shadow-sm' : 'text-slate-500'}`}><Icon name="calculator" size={18} /> Quoter</button>
-                                <button onClick={() => setAppModule('pipeline')} className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-2 rounded-lg text-sm font-bold transition-all ${appModule === 'pipeline' ? 'bg-white text-emerald-700 shadow-sm' : 'text-slate-500'}`}><Icon name="layers" size={18} /> Pipeline</button>
-                                <button onClick={() => setAppModule('bookkeeping')} className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-2 rounded-lg text-sm font-bold transition-all ${appModule === 'bookkeeping' ? 'bg-white text-indigo-700 shadow-sm' : 'text-slate-500'}`}><Icon name="wallet" size={18} /> Ledger</button>
+                            <div className="flex bg-slate-100 p-1.5 rounded-xl border border-slate-200 w-full md:w-auto overflow-x-auto hide-scrollbar">
+                                <button onClick={() => setAppModule('quoter')} className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-5 py-2 rounded-lg text-sm font-bold transition-all ${appModule === 'quoter' ? 'bg-white text-indigo-700 shadow-sm' : 'text-slate-500'}`}><Icon name="calculator" size={18} /> Quoter</button>
+                                <button onClick={() => setAppModule('pipeline')} className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-5 py-2 rounded-lg text-sm font-bold transition-all ${appModule === 'pipeline' ? 'bg-white text-emerald-700 shadow-sm' : 'text-slate-500'}`}><Icon name="layers" size={18} /> Pipeline</button>
+                                <button onClick={() => setAppModule('bookkeeping')} className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-5 py-2 rounded-lg text-sm font-bold transition-all ${appModule === 'bookkeeping' ? 'bg-white text-indigo-700 shadow-sm' : 'text-slate-500'}`}><Icon name="wallet" size={18} /> Ledger</button>
+                                <button onClick={() => setAppModule('settings')} className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-5 py-2 rounded-lg text-sm font-bold transition-all ${appModule === 'settings' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500'}`}><Icon name="settings" size={18} /> Settings</button>
                             </div>
                         </div>
                         {appModule === 'pipeline' && (
@@ -954,6 +962,7 @@
                         {appModule === 'pipeline' && pipelineView === 'active' && renderPipelineBoard()}
                         {appModule === 'pipeline' && pipelineView === 'archive' && renderPipelineArchive()}
                         {appModule === 'bookkeeping' && renderBookkeeping()}
+                        {appModule === 'settings' && renderSettings()}
                     </div>
 
                     {renderModal()}
