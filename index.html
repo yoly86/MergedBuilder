@@ -1,0 +1,1599 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Hybrid Quoter & Bookkeeper Pro</title>
+    
+    <!-- React & ReactDOM -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+    
+    <!-- Babel for in-browser JSX compilation -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Utilities -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://unpkg.com/prop-types@15.8.1/prop-types.min.js"></script>
+    <script src="https://unpkg.com/recharts@2.1.12/umd/Recharts.js"></script>
+
+    <style>
+        /* Prevent auto-zoom on iOS Safari */
+        input[type="text"], input[type="number"], input[type="date"], select, textarea {
+            font-size: 16px !important;
+        }
+        
+        /* Padding for safe areas and fixed navigation */
+        .pt-safe { padding-top: env(safe-area-inset-top, 0px); }
+        .pb-safe { padding-bottom: env(safe-area-inset-bottom, 0px); }
+        .pb-content { padding-bottom: calc(env(safe-area-inset-bottom, 20px) + 90px); }
+        
+        /* Print Styles */
+        @media print {
+            @page { margin: 0; }
+            body { background-color: white !important; margin: 1cm !important; }
+            .no-print { display: none !important; }
+            .print-full-width { max-width: 100% !important; margin: 0 !important; padding: 0 !important; }
+            .print-no-shadow { box-shadow: none !important; border: none !important; }
+            .page-container { background: transparent !important; box-shadow: none !important; margin: 0 !important; padding: 0 !important; }
+            * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+        }
+        
+        /* Hide arrows on number inputs */
+        input[type=number]::-webkit-inner-spin-button, 
+        input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+
+        /* Custom Scrollbar */
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+
+        /* Document Wrapper for a premium feel */
+        .page-container {
+            background: white;
+            max-width: 8.5in;
+            margin: 0 auto;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.01);
+            border-radius: 0.75rem;
+        }
+
+        /* Smooth inputs */
+        .soft-input {
+            background-color: #f8fafc; /* slate-50 */
+            border: 1px solid #e2e8f0; /* slate-200 */
+            transition: all 0.2s ease;
+        }
+        .soft-input:focus {
+            background-color: #ffffff;
+            border-color: #818cf8; /* indigo-400 */
+            box-shadow: 0 0 0 3px #e0e7ff; /* indigo-100 */
+            outline: none;
+        }
+    </style>
+</head>
+<body class="bg-slate-100 font-sans antialiased text-slate-900 selection:bg-indigo-100">
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useMemo, useRef } = React;
+        const { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } = window.Recharts;
+
+        // --- ICONS ---
+        const Icon = ({ name, size = 24, className = "" }) => {
+            const icons = {
+                // Quoter Icons
+                scissors: <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><line x1="20" y1="4" x2="8.12" y2="15.88"/><line x1="14.47" y1="14.48" x2="20" y2="20"/><line x1="8.12" y1="8.12" x2="12" y2="12"/></svg>,
+                printer: <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>,
+                user: <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>,
+                shirt: <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M20.38 3.46 16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.47a1 1 0 0 0 .99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.47a2 2 0 0 0-1.34-2.23z"/></svg>,
+                calculator: <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><rect width="16" height="20" x="4" y="2" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="16" y1="14" x2="16" y2="18"/><path d="M16 10h.01"/><path d="M12 10h.01"/><path d="M8 10h.01"/><path d="M12 14h.01"/><path d="M8 14h.01"/><path d="M12 18h.01"/><path d="M8 18h.01"/></svg>,
+                fileText: <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M10 9H8"/><path d="M16 13H8"/><path d="M16 17H8"/></svg>,
+                receipt: <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1Z"/><path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"/><path d="M12 17V7"/></svg>,
+                fileCheck: <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="m9 15 2 2 4-4"/></svg>,
+                layers: <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>,
+                plus: <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>,
+                trash: <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>,
+                eye: <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>,
+                download: <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>,
+                save: <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>,
+                upload: <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>,
+                image: <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>,
+                copy: <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>,
+                chevronDown: <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polyline points="6 9 12 15 18 9"></polyline></svg>,
+                chevronUp: <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polyline points="18 15 12 9 6 15"></polyline></svg>,
+                checkCircle: <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>,
+                
+                // Bookkeeping Icons
+                layoutDashboard: <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg>,
+                trendingUp: <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>,
+                trendingDown: <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polyline points="22 17 13.5 8.5 8.5 13.5 2 7"/><polyline points="16 17 22 17 22 11"/></svg>,
+                wallet: <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/><path d="M18 12a2 2 0 0 0 0 4h4v-4Z"/></svg>,
+                pieChart: <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M21.21 15.89A10 10 0 1 1 8 2.83"/><path d="M22 12A10 10 0 0 0 12 2v10z"/></svg>,
+                settings: <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>,
+                calendar: <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>,
+                dollarSign: <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><line x1="12" y1="2" x2="12" y2="22"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>,
+                info: <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>,
+                fileSpreadsheet: <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><path d="M8 13h2"/><path d="M8 17h2"/><path d="M14 13h2"/><path d="M14 17h2"/></svg>,
+                bookOpen: <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>,
+                zap: <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>,
+                car: <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2"/><circle cx="7" cy="17" r="2"/><path d="M9 17h6"/><circle cx="17" cy="17" r="2"/></svg>,
+                shoppingBag: <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>,
+                landmark: <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polygon points="12 2 2 7 22 7 12 2"/><line x1="6" y1="22" x2="6" y2="11"/><line x1="10" y1="22" x2="10" y2="11"/><line x1="14" y1="22" x2="14" y2="11"/><line x1="18" y1="22" x2="18" y2="11"/><line x1="2" y1="22" x2="22" y2="22"/></svg>,
+                x: <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            };
+            return icons[name] || null;
+        };
+
+        // --- QUOTER CONSTANTS & LOGIC ---
+        const STITCH_MATRIX = [
+            { maxStitch: 8000, prices: [15, 15, 14.5, 14.5, 14] },
+            { maxStitch: 15000, prices: [22.5, 22, 21, 21, 20] },
+            { maxStitch: 20000, prices: [30, 28, 27, 27, 25] },
+            { maxStitch: Infinity, prices: [50, 45, 43, 43, 40] }
+        ];
+
+        const QTY_TIERS = [
+            { max: 10, index: 0 }, { max: 49, index: 1 }, { max: 100, index: 2 },
+            { max: 299, index: 3 }, { max: Infinity, index: 4 }
+        ];
+
+        const getEmbroideryCostPerPiece = (stitches, qty) => {
+            if (!stitches || stitches <= 0) return 0;
+            const sRow = STITCH_MATRIX.find(r => stitches <= r.maxStitch) || STITCH_MATRIX[STITCH_MATRIX.length - 1];
+            const qCol = QTY_TIERS.find(q => qty <= q.max) || QTY_TIERS[QTY_TIERS.length - 1];
+            return sRow.prices[qCol.index];
+        };
+
+        const DTF_SIZES = [
+            { id: 'xs', label: 'Extra Small / Hat (2.5"x2.5")' },
+            { id: 'small', label: 'Small / Left Chest (4"x4")' },
+            { id: 'medium', label: 'Mid-size / Youth (8"x8")' },
+            { id: 'sleeve', label: 'Sleeve / Long Strip' },
+            { id: 'large', label: 'Standard Full Back (11"x11")' },
+            { id: 'xlarge', label: 'Oversized (13"x16")' },
+            { id: 'jumbo', label: 'Jumbo (16"x20")' }
+        ];
+
+        const PLACEMENTS = [
+            { id: 'custom', label: 'Custom / Other' },
+            { id: 'fc', label: 'Front - Center Chest' },
+            { id: 'lc', label: 'Front - Left Chest (Wearer\'s Left)' },
+            { id: 'rc', label: 'Front - Right Chest' },
+            { id: 'bc', label: 'Back - Center' },
+            { id: 'sleeve_l', label: 'Left Sleeve' },
+            { id: 'sleeve_r', label: 'Right Sleeve' },
+            { id: 'hat_front', label: 'Hat - Front Center' },
+            { id: 'hat_left', label: 'Hat - Left Panel' },
+            { id: 'hat_right', label: 'Hat - Right Panel' },
+            { id: 'hat_back', label: 'Hat - Back Arch' }
+        ];
+
+        const SIZES_LIST = ['XS', 'S', 'M', 'L', 'XL', '2X', '3X', '4X', '5X'];
+        const DTF_PRIMARY_FEES = { xs: 8.00, small: 11.33, medium: 16.00, sleeve: 19.50, large: 22.00, xlarge: 28.00, jumbo: 35.00 };
+        const DTF_SECONDARY_FEES = { xs: 3.50, small: 4.50, medium: 8.00, sleeve: 10.50, large: 12.00, xlarge: 15.00, jumbo: 20.00 };
+        const DTF_MATERIAL_COSTS = { xs: 0.35, small: 0.67, medium: 2.67, sleeve: 1.75, large: 5.04, xlarge: 8.67, jumbo: 12.50 };
+
+        const genId = () => Math.random().toString(36).substr(2, 9);
+        const formatCurrency = (val) => '$' + (val || 0).toFixed(2);
+        const generateEmptySizes = () => SIZES_LIST.reduce((acc, size) => { acc[size] = ''; return acc; }, {});
+
+        // --- BOOKKEEPING CONSTANTS ---
+        const CHART_COLORS = ['#6366f1', '#818cf8', '#a5b4fc', '#c7d2fe', '#8b5cf6', '#a855f7', '#d946ef'];
+
+        const DEFAULT_ACCOUNTS = [
+            'Primary Business Checking',
+            'Personal Checking (Mixed Use)',
+            'Business Credit Card',
+            'Personal Credit Card (Mixed Use)',
+            'PayPal / Stripe Balance'
+        ];
+
+        const DEFAULT_CATEGORIES = {
+            income: [
+                'Product Sales', 
+                'Service Income', 
+                'Consulting / Freelance', 
+                'Loan / Financing Received',
+                'Other Business Income'
+            ],
+            expense: [
+                'Cost of Goods Sold (Garments/Materials)', 
+                'Contractors / Subcontractors', 
+                'Home Office Utilities (Electricity/Gas)', 
+                'Home Office Rent/Mortgage Int.',
+                'Inventory (Unsold Stock)',
+                'Vehicle / Mileage',
+                'Shipping & Packaging', 
+                'Damaged Goods / Write-offs',
+                'Advertising & Marketing', 
+                'Software & Subscriptions', 
+                'Office Supplies',
+                'Loan Repayment (Principal)',
+                'Loan Interest (Tax Deductible)'
+            ]
+        };
+
+        // --- MAIN APP COMPONENT ---
+        function App() {
+            // Module State
+            const [appModule, setAppModule] = useState('quoter'); // 'quoter' or 'bookkeeping'
+            const [quoterTab, setQuoterTab] = useState('build');
+            const [bookTab, setBookTab] = useState('dashboard'); // 'dashboard', 'quick', 'income', 'expenses', 'setup'
+
+            // --- QUOTER STATE ---
+            const [showBusinessDetails, setShowBusinessDetails] = useState(false);
+            const [orderData, setOrderData] = useState({
+                businessName: '', businessAddress: '', businessPhone: '', businessEmail: '', businessWebsite: '',
+                customerName: '', orderName: '', dateRequired: '', orderDescription: '', designNotes: '', mockupImage: null,
+                setupFees: '', digitizingFee: '', digitizingCost: '', taxRate: 5, discount: '', machineReservePercent: '5', amountPaid: '', receiptNotes: '' 
+            });
+            const [items, setItems] = useState([{
+                id: genId(), name: '', color: '', qty: 1, rawCost: '', shippingCost: '1.00', margin: 35,
+                sizes: generateEmptySizes(),
+                locations: [ { id: genId(), type: 'none', placement: 'custom', stitches: '', dtfSize: 'small', desc: '', isPuff: false, puffMarkup: 5, adjustment: '' } ]
+            }]);
+            
+            const [isLoggedToBookkeeping, setIsLoggedToBookkeeping] = useState(false);
+
+            // --- BOOKKEEPING STATE ---
+            const [dashView, setDashView] = useState('annual'); // 'annual' or '5year'
+            const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+            const [transactions, setTransactions] = useState([]);
+            
+            // Customizable Lists State
+            const [accounts, setAccounts] = useState(() => {
+                try { return JSON.parse(localStorage.getItem('hybrid_bk_accounts')) || DEFAULT_ACCOUNTS; }
+                catch { return DEFAULT_ACCOUNTS; }
+            });
+            const [categories, setCategories] = useState(() => {
+                try { return JSON.parse(localStorage.getItem('hybrid_bk_categories')) || DEFAULT_CATEGORIES; }
+                catch { return DEFAULT_CATEGORIES; }
+            });
+
+            // Modals & UI states
+            const [quickAction, setQuickAction] = useState(null); // 'sale', 'expense', 'drive', 'loan'
+            const [loanActionType, setLoanActionType] = useState('repayment');
+            const [itemToDelete, setItemToDelete] = useState(null);
+            
+            // Setup Inputs
+            const [newAccount, setNewAccount] = useState('');
+            const [newIncCat, setNewIncCat] = useState('');
+            const [newExpCat, setNewExpCat] = useState('');
+
+            // Load/Save Bookkeeping Data
+            useEffect(() => {
+                const savedData = localStorage.getItem('hybrid_bookkeeper_data');
+                if (savedData) {
+                    try { setTransactions(JSON.parse(savedData)); } 
+                    catch (e) { console.error("Failed to parse bookkeeping data", e); }
+                }
+
+                // Migrate returning users to have the new loan categories automatically
+                const savedCats = JSON.parse(localStorage.getItem('hybrid_bk_categories'));
+                if (savedCats) {
+                    let updated = false;
+                    if (!savedCats.income.includes('Loan / Financing Received')) { savedCats.income.push('Loan / Financing Received'); updated = true; }
+                    if (!savedCats.expense.includes('Loan Repayment (Principal)')) { savedCats.expense.push('Loan Repayment (Principal)'); updated = true; }
+                    if (!savedCats.expense.includes('Loan Interest (Tax Deductible)')) { savedCats.expense.push('Loan Interest (Tax Deductible)'); updated = true; }
+                    if (updated) {
+                        setCategories(savedCats);
+                        localStorage.setItem('hybrid_bk_categories', JSON.stringify(savedCats));
+                    }
+                }
+            }, []);
+
+            useEffect(() => { localStorage.setItem('hybrid_bookkeeper_data', JSON.stringify(transactions)); }, [transactions]);
+            useEffect(() => { localStorage.setItem('hybrid_bk_accounts', JSON.stringify(accounts)); }, [accounts]);
+            useEffect(() => { localStorage.setItem('hybrid_bk_categories', JSON.stringify(categories)); }, [categories]);
+
+
+            // --- QUOTER FUNCTIONS ---
+            const updateOrder = (field, value) => {
+                setOrderData(prev => ({ ...prev, [field]: value }));
+                // Reset logged state if pricing fields change
+                if(['taxRate', 'discount', 'amountPaid', 'setupFees', 'digitizingFee'].includes(field)) {
+                    setIsLoggedToBookkeeping(false);
+                }
+            };
+
+            const handleImageUpload = (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onloadend = () => { updateOrder('mockupImage', reader.result); };
+                    reader.readAsDataURL(file);
+                }
+                e.target.value = null;
+            };
+
+            const updateItem = (itemId, field, value) => {
+                setItems(items.map(item => item.id === itemId ? { ...item, [field]: value } : item));
+                setIsLoggedToBookkeeping(false);
+            };
+            const updateSize = (itemId, sizeKey, value) => {
+                setItems(items.map(item => item.id === itemId ? { ...item, sizes: { ...item.sizes, [sizeKey]: value } } : item));
+                setIsLoggedToBookkeeping(false);
+            };
+            const addLocation = (itemId) => {
+                setItems(items.map(item => item.id === itemId ? { ...item, locations: [...item.locations, { id: genId(), type: 'none', placement: 'custom', stitches: '', dtfSize: 'small', desc: '', isPuff: false, puffMarkup: 5, adjustment: '' }] } : item));
+                setIsLoggedToBookkeeping(false);
+            };
+            const updateLocation = (itemId, locId, field, value) => {
+                setItems(items.map(item => item.id === itemId ? { ...item, locations: item.locations.map(loc => loc.id === locId ? { ...loc, [field]: value } : loc) } : item));
+                setIsLoggedToBookkeeping(false);
+            };
+            const removeLocation = (itemId, locId) => {
+                setItems(items.map(item => item.id === itemId ? { ...item, locations: item.locations.filter(loc => loc.id !== locId) } : item));
+                setIsLoggedToBookkeeping(false);
+            };
+            const addItem = () => setItems([...items, { id: genId(), name: '', color: '', qty: 1, rawCost: '', shippingCost: '1.00', margin: 35, sizes: generateEmptySizes(), locations: [ { id: genId(), type: 'none', placement: 'custom', stitches: '', dtfSize: 'small', desc: '', isPuff: false, puffMarkup: 5, adjustment: '' } ] }]);
+            const duplicateItem = (itemToCopy) => {
+                setItems([...items, { ...JSON.parse(JSON.stringify(itemToCopy)), id: genId(), locations: itemToCopy.locations.map(loc => ({ ...loc, id: genId() })) }]);
+                setIsLoggedToBookkeeping(false);
+            };
+            const removeItem = (itemId) => { 
+                if(items.length > 1) setItems(items.filter(item => item.id !== itemId)); 
+                setIsLoggedToBookkeeping(false);
+            };
+
+            const calc = useMemo(() => {
+                let orderGarmentCostTotal = 0, orderGarmentRetailTotal = 0, orderDecoRetailTotal = 0, orderDecoCostTotal = 0;
+                let totalDtfCost = 0, totalThreadCost = 0, totalStabilizerCost = 0;
+                
+                const processedItems = items.map(item => {
+                    const sizeSum = SIZES_LIST.reduce((sum, size) => sum + Math.max(0, parseInt(item.sizes?.[size]) || 0), 0);
+                    const calculatedQty = sizeSum > 0 ? sizeSum : Math.max(1, parseInt(item.qty) || 1);
+                    const rawCost = parseFloat(item.rawCost) || 0;
+                    const shipping = parseFloat(item.shippingCost) || 0;
+                    const margin = parseFloat(item.margin) || 0;
+                    const landedCost = rawCost + shipping;
+                    const effectiveMargin = Math.min(margin, 99.9);
+                    const clientGarmentPrice = landedCost / (1 - (effectiveMargin / 100));
+                    
+                    let dtfCount = 0, itemDecoPerPiece = 0, itemDecoCostPerPiece = 0, itemDtfCost = 0, itemThreadCost = 0, itemStabilizerCost = 0;
+                    
+                    const processedLocations = item.locations.map(loc => {
+                        let baseCost = 0, matCost = 0;
+                        if (loc.type === 'embroidery') {
+                            baseCost = getEmbroideryCostPerPiece(parseInt(loc.stitches) || 0, calculatedQty);
+                            if (loc.isPuff) baseCost += parseFloat(loc.puffMarkup) || 0;
+                            let stabCost = 1.00;
+                            let threadCost = ((parseInt(loc.stitches) || 0) / 2500);
+                            matCost = stabCost + threadCost;
+                            itemStabilizerCost += stabCost; itemThreadCost += threadCost;
+                        } else if (loc.type === 'dtf') {
+                            dtfCount++;
+                            baseCost = dtfCount === 1 ? (DTF_PRIMARY_FEES[loc.dtfSize] || 0) : (DTF_SECONDARY_FEES[loc.dtfSize] || 0);
+                            matCost = DTF_MATERIAL_COSTS[loc.dtfSize] || 0;
+                            itemDtfCost += matCost;
+                        }
+                        let adjustmentCost = parseFloat(loc.adjustment) || 0;
+                        let cost = Math.max(0, baseCost + adjustmentCost);
+                        let locDiscount = adjustmentCost < 0 ? Math.abs(adjustmentCost) : 0;
+                        itemDecoPerPiece += cost; itemDecoCostPerPiece += matCost;
+                        return { ...loc, baseCost, cost, materialCost: matCost, locDiscount, isFirstDtf: loc.type === 'dtf' && dtfCount === 1 };
+                    });
+                    
+                    const totalGarmentCost = landedCost * calculatedQty;
+                    const totalGarmentRetail = clientGarmentPrice * calculatedQty;
+                    const totalDecoRetail = itemDecoPerPiece * calculatedQty;
+                    const totalDecoMaterialCost = itemDecoCostPerPiece * calculatedQty;
+                    const validPlacementCount = item.locations.filter(l => l.type !== 'none').length;
+                    const itemDecoDiscountPerPiece = processedLocations.reduce((sum, l) => sum + l.locDiscount, 0);
+                    const itemTotalDecoDiscount = itemDecoDiscountPerPiece * calculatedQty;
+                    const lineTotalPerPiece = clientGarmentPrice + itemDecoPerPiece;
+                    const lineTotal = lineTotalPerPiece * calculatedQty;
+                    const garmentProfit = totalGarmentRetail - totalGarmentCost;
+                    const undiscountedLineTotalPerPiece = clientGarmentPrice + itemDecoPerPiece + itemDecoDiscountPerPiece;
+                    const undiscountedLineTotal = undiscountedLineTotalPerPiece * calculatedQty;
+
+                    orderGarmentCostTotal += totalGarmentCost; orderGarmentRetailTotal += totalGarmentRetail;
+                    orderDecoRetailTotal += totalDecoRetail; orderDecoCostTotal += totalDecoMaterialCost;
+                    totalDtfCost += itemDtfCost * calculatedQty; totalThreadCost += itemThreadCost * calculatedQty; totalStabilizerCost += itemStabilizerCost * calculatedQty;
+
+                    return { ...item, calculatedQty, sizeSum, landedCost, clientGarmentPrice, processedLocations, validPlacementCount, itemDecoPerPiece, itemDecoCostPerPiece, itemTotalDecoDiscount, totalGarmentCost, totalGarmentRetail, totalDecoRetail, lineTotalPerPiece, lineTotal, garmentProfit, undiscountedLineTotalPerPiece, undiscountedLineTotal };
+                });
+
+                const setup = parseFloat(orderData.setupFees) || 0;
+                const digitizing = parseFloat(orderData.digitizingFee) || 0;
+                const digitizingCost = parseFloat(orderData.digitizingCost) || 0;
+                const discount = parseFloat(orderData.discount) || 0;
+                const taxRate = parseFloat(orderData.taxRate) || 0;
+                const totalDecoDiscount = processedItems.reduce((sum, item) => sum + item.itemTotalDecoDiscount, 0);
+                const totalDiscount = totalDecoDiscount + discount;
+                const subtotal = orderGarmentRetailTotal + orderDecoRetailTotal + setup + digitizing;
+                const grossSubtotal = subtotal + totalDecoDiscount;
+                const discountedSubtotal = Math.max(0, subtotal - discount);
+                const tax = discountedSubtotal * (taxRate / 100);
+                const grandTotal = discountedSubtotal + tax;
+                
+                let reservePercent = 5;
+                if (orderData.machineReservePercent !== undefined && orderData.machineReservePercent !== '') {
+                    reservePercent = parseFloat(orderData.machineReservePercent);
+                    if (isNaN(reservePercent)) reservePercent = 0;
+                }
+                const machineReserve = discountedSubtotal * (reservePercent / 100);
+                const totalRestockAndMachineFund = orderDecoCostTotal + machineReserve;
+                const totalOrderCost = orderGarmentCostTotal + totalRestockAndMachineFund + digitizingCost;
+                const grossProfit = discountedSubtotal - orderGarmentCostTotal;
+                const netProfit = grossProfit - orderDecoCostTotal - machineReserve - digitizingCost;
+                const totalMarginPercent = discountedSubtotal > 0 ? (netProfit / discountedSubtotal) * 100 : 0;
+                const isProfitable = netProfit > 0;
+                const deposit = Math.ceil(grandTotal) / 2;
+                const actualPaid = orderData.amountPaid !== '' && !isNaN(parseFloat(orderData.amountPaid)) ? parseFloat(orderData.amountPaid) : deposit; 
+                const balanceDue = Math.max(0, grandTotal - actualPaid);
+
+                return {
+                    items: processedItems, orderGarmentCostTotal, orderGarmentRetailTotal, orderDecoRetailTotal, orderDecoCostTotal,
+                    totalDtfCost, totalThreadCost, totalStabilizerCost, setup, digitizing, digitizingCost, discount, reservePercent, machineReserve, subtotal, grossSubtotal, discountedSubtotal, tax, grandTotal,
+                    totalRestockAndMachineFund, totalOrderCost, grossProfit, netProfit, totalMarginPercent, isProfitable, totalDiscount, deposit, actualPaid, balanceDue
+                };
+            }, [items, orderData]);
+
+            const getSizeString = (item) => {
+                const activeSizes = SIZES_LIST.filter(s => (parseInt(item.sizes?.[s]) || 0) > 0);
+                if (activeSizes.length === 0) return null;
+                return activeSizes.map(s => `${s}: ${item.sizes[s]}`).join(', ');
+            };
+
+            const handlePrint = (viewType) => {
+                if (window.html2pdf) {
+                    let elementId = 'proposal-view'; let suffix = 'Proposal';
+                    if (viewType === 'internal') { elementId = 'internal-view'; suffix = 'Internal_Breakdown'; } 
+                    else if (viewType === 'invoice') { elementId = 'invoice-view'; suffix = 'Final_Invoice'; } 
+                    else if (viewType === 'receipt') { elementId = 'receipt-view'; suffix = 'Receipt'; }
+
+                    const element = document.getElementById(elementId);
+                    const noPrintElements = element.querySelectorAll('.no-print');
+                    noPrintElements.forEach(el => el.style.display = 'none');
+
+                    const dateString = new Date().toLocaleDateString().replace(/\//g, '_');
+                    const safeCustomerName = orderData.customerName ? orderData.customerName.replace(/[^a-z0-9]/gi, '_') : 'Customer';
+                    const defaultFileName = `${dateString}_${safeCustomerName}_${suffix}.pdf`;
+                    let finalFileName = window.prompt("Enter a name to save this PDF:", defaultFileName);
+                    
+                    if (finalFileName === null) { noPrintElements.forEach(el => el.style.display = ''); return; }
+                    if (!finalFileName.toLowerCase().endsWith('.pdf')) finalFileName += '.pdf';
+                    
+                    const opt = { margin: 0.5, filename: finalFileName, image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2, useCORS: true }, jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' } };
+                    window.html2pdf().set(opt).from(element).save().then(() => { noPrintElements.forEach(el => el.style.display = ''); });
+                } else { window.print(); }
+            };
+
+            const fileInputRef = useRef(null);
+            const imageInputRef = useRef(null);
+            const bookFileInputRef = useRef(null);
+
+            const handleExportQuoter = () => {
+                const dateString = new Date().toLocaleDateString().replace(/\//g, '_');
+                const safeCustomerName = orderData.customerName ? orderData.customerName.replace(/[^a-z0-9]/gi, '_') : 'Quote';
+                let finalFileName = window.prompt("Enter a name to save this quote:", `${dateString}_${safeCustomerName}.json`);
+                if (finalFileName === null) return;
+                if (!finalFileName.endsWith('.json')) finalFileName += '.json';
+                const blob = new Blob([JSON.stringify({ orderData, items }, null, 2)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a'); a.href = url; a.download = finalFileName; a.click(); URL.revokeObjectURL(url);
+            };
+
+            const handleImportQuoter = (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = (ev) => {
+                    try {
+                        const importedData = JSON.parse(ev.target.result);
+                        if (importedData.orderData && importedData.items) {
+                            setOrderData({ ...orderData, ...importedData.orderData });
+                            setItems(importedData.items.map(item => {
+                                const fullSizes = generateEmptySizes();
+                                if (item.sizes) Object.keys(item.sizes).forEach(k => { if (fullSizes.hasOwnProperty(k)) fullSizes[k] = item.sizes[k]; });
+                                return { ...item, sizes: fullSizes };
+                            }));
+                            setIsLoggedToBookkeeping(false); // reset state on load
+                            alert('Quote loaded successfully!');
+                        } else alert('Invalid file format.');
+                    } catch (err) { alert('Error reading file.'); }
+                };
+                reader.readAsText(file);
+                e.target.value = null; 
+            };
+
+            // --- INTEGRATION: QUOTER TO BOOKKEEPER ---
+            const logPaymentToBookkeeping = () => {
+                const amountToLog = calc.grandTotal;
+                if(amountToLog <= 0) { alert("Order total is 0. Nothing to log."); return; }
+
+                const taxAmount = calc.tax || 0;
+                const netAmount = amountToLog - taxAmount;
+
+                const newTx = {
+                    id: Date.now(),
+                    type: 'income',
+                    date: new Date().toISOString().split('T')[0],
+                    category: 'Product Sales',
+                    amount: amountToLog,
+                    tax: taxAmount,
+                    shipping: 0,
+                    fees: 0,
+                    kms: null,
+                    netAmount: netAmount,
+                    account: accounts[0], // default to first account
+                    description: `Full Order Payment: ${orderData.customerName || 'Customer'} - ${orderData.orderName || 'Order'}`
+                };
+
+                setTransactions(prev => [newTx, ...prev]);
+                setIsLoggedToBookkeeping(true); // Provide visual feedback
+            };
+
+            // --- BOOKKEEPING FUNCTIONS ---
+            const filteredByYear = useMemo(() => transactions.filter(t => new Date(t.date).getFullYear() === parseInt(selectedYear)), [transactions, selectedYear]);
+
+            const calculateTotals = (data) => {
+                // Exclude Loan Principal & Loan Funds Received from Profit/Margin calculations, as they are balance sheet items
+                const income = data.filter(t => t.type === 'income' && t.category !== 'Loan / Financing Received').reduce((sum, t) => sum + (parseFloat(t.netAmount) || 0), 0);
+                const expenses = data.filter(t => t.type === 'expense' && t.category !== 'Loan Repayment (Principal)').reduce((sum, t) => sum + (parseFloat(t.netAmount) || 0), 0);
+                const profit = income - expenses;
+                const margin = income > 0 ? (profit / income) * 100 : 0;
+                return { income, expenses, profit, margin };
+            };
+
+            const fiveYearTotals = useMemo(() => calculateTotals(transactions), [transactions]);
+            const annualTotals = useMemo(() => calculateTotals(filteredByYear), [filteredByYear]);
+
+            const getChartData = (data, type) => {
+                const breakdown = {};
+                data.filter(t => t.type === type).forEach(t => { breakdown[t.category] = (breakdown[t.category] || 0) + (parseFloat(t.netAmount) || 0); });
+                return Object.keys(breakdown).map(name => ({ name, value: breakdown[name] }));
+            };
+
+            const chartDataSrc = dashView === 'annual' ? filteredByYear : transactions;
+            const incomeChartData = useMemo(() => getChartData(chartDataSrc, 'income'), [chartDataSrc]);
+            const expenseChartData = useMemo(() => getChartData(chartDataSrc, 'expense'), [chartDataSrc]);
+
+            const currentLedgerType = bookTab === 'expenses' ? 'expense' : 'income';
+            const filteredLedgerTransactions = useMemo(() => transactions.filter(t => t.type === currentLedgerType), [transactions, currentLedgerType]);
+            const currentLedgerTotal = useMemo(() => filteredLedgerTransactions.reduce((sum, t) => sum + (parseFloat(t.netAmount) || 0), 0), [filteredLedgerTransactions]);
+
+            const addBookTransaction = (e) => {
+                e.preventDefault();
+                const formData = new FormData(e.target);
+                const amount = parseFloat(formData.get('amount')) || 0;
+                const tax = parseFloat(formData.get('tax')) || 0;
+                const shipping = parseFloat(formData.get('shipping')) || 0;
+                const fees = parseFloat(formData.get('fees')) || 0;
+                
+                const kmsRaw = formData.get('kms');
+                const kms = kmsRaw ? parseFloat(kmsRaw) : null;
+                
+                const netAmount = amount - tax - shipping - fees;
+
+                const newTx = {
+                    id: Date.now(),
+                    type: formData.get('type'),
+                    date: formData.get('date'),
+                    category: formData.get('category'),
+                    amount, tax, shipping, fees, netAmount, kms,
+                    account: formData.get('account'),
+                    description: formData.get('description')
+                };
+                setTransactions([newTx, ...transactions]);
+                e.target.reset();
+            };
+
+            const handleQuickSubmit = (e, actionType) => {
+                e.preventDefault();
+                const formData = new FormData(e.target);
+                
+                let type, category, amount, tax, shipping, fees, kms, netAmount;
+                const date = formData.get('date');
+                const account = formData.get('account') || accounts[0];
+                const description = formData.get('description');
+                
+                if (actionType === 'loan') {
+                    const lType = formData.get('loanType'); // 'repayment' or 'received'
+                    
+                    if (lType === 'repayment') {
+                        const totalAmount = parseFloat(formData.get('amount')) || 0;
+                        const interestAmount = parseFloat(formData.get('interest')) || 0;
+                        const principalAmount = totalAmount - interestAmount;
+
+                        const newTxs = [];
+                        const baseId = Date.now();
+
+                        if (principalAmount > 0) {
+                            newTxs.push({
+                                id: baseId, type: 'expense', date,
+                                category: 'Loan Repayment (Principal)',
+                                amount: principalAmount, tax: 0, shipping: 0, fees: 0, netAmount: principalAmount, kms: null,
+                                account, description: description ? `${description} (Principal)` : 'Loan Principal Repayment'
+                            });
+                        }
+                        if (interestAmount > 0) {
+                            newTxs.push({
+                                id: baseId + 1, type: 'expense', date,
+                                category: 'Loan Interest (Tax Deductible)',
+                                amount: interestAmount, tax: 0, shipping: 0, fees: 0, netAmount: interestAmount, kms: null,
+                                account, description: description ? `${description} (Interest)` : 'Loan Interest Payment'
+                            });
+                        }
+                        
+                        setTransactions([...newTxs, ...transactions]);
+                        setQuickAction(null);
+                        setLoanActionType('repayment'); // reset
+                        return; // Skip normal single-push below
+                    } else {
+                        // received loan
+                        type = 'income'; category = 'Loan / Financing Received';
+                        amount = parseFloat(formData.get('amount')) || 0;
+                        tax = 0; shipping = 0; fees = 0; kms = null; netAmount = amount;
+                    }
+                } else if (actionType === 'drive') {
+                    type = 'expense'; category = 'Vehicle / Mileage';
+                    amount = 0; tax = 0; shipping = 0; fees = 0;
+                    kms = parseFloat(formData.get('kms')) || 0;
+                    netAmount = 0;
+                } else if (actionType === 'expense') {
+                    type = 'expense'; category = formData.get('category');
+                    amount = parseFloat(formData.get('amount')) || 0;
+                    tax = parseFloat(formData.get('tax')) || 0;
+                    shipping = 0; fees = 0; kms = null;
+                    netAmount = amount - tax; 
+                } else {
+                    // Sale
+                    type = 'income'; category = formData.get('category');
+                    amount = parseFloat(formData.get('amount')) || 0;
+                    tax = parseFloat(formData.get('tax')) || 0;
+                    shipping = parseFloat(formData.get('shipping')) || 0;
+                    fees = parseFloat(formData.get('fees')) || 0;
+                    kms = null;
+                    netAmount = amount - tax - shipping - fees;
+                }
+
+                const newTx = {
+                    id: Date.now(), type, date, category,
+                    amount, tax, shipping, fees, netAmount, kms,
+                    account, description
+                };
+
+                setTransactions([newTx, ...transactions]);
+                setQuickAction(null); // Go back to splash screen
+            };
+
+            const confirmDelete = () => {
+                setTransactions(transactions.filter(t => t.id !== itemToDelete));
+                setItemToDelete(null);
+            };
+
+            // Setup Tab Handlers
+            const handleAddListValue = (listType) => {
+                if (listType === 'account' && newAccount.trim() && !accounts.includes(newAccount.trim())) {
+                    setAccounts([...accounts, newAccount.trim()]);
+                    setNewAccount('');
+                } else if (listType === 'income' && newIncCat.trim() && !categories.income.includes(newIncCat.trim())) {
+                    setCategories({...categories, income: [...categories.income, newIncCat.trim()]});
+                    setNewIncCat('');
+                } else if (listType === 'expense' && newExpCat.trim() && !categories.expense.includes(newExpCat.trim())) {
+                    setCategories({...categories, expense: [...categories.expense, newExpCat.trim()]});
+                    setNewExpCat('');
+                }
+            };
+
+            const handleRemoveListValue = (listType, value) => {
+                if (listType === 'account') setAccounts(accounts.filter(a => a !== value));
+                else if (listType === 'income') setCategories({...categories, income: categories.income.filter(c => c !== value)});
+                else if (listType === 'expense') setCategories({...categories, expense: categories.expense.filter(c => c !== value)});
+            };
+
+            // Export Data Bundle
+            const exportBookData = () => {
+                const backupBundle = { transactions, accounts, categories };
+                const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(backupBundle));
+                const a = document.createElement('a'); a.href = dataStr; a.download = `bookkeeping_backup_${new Date().toISOString().split('T')[0]}.json`; a.click();
+            };
+
+            const handleImportBookkeeping = (event) => {
+                const file = event.target.files[0];
+                if (!file) return;
+
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    try {
+                        const data = JSON.parse(e.target.result);
+                        if (Array.isArray(data)) {
+                            setTransactions(data); // Legacy support
+                            alert("Transactions Restored successfully.");
+                        } else if (data.transactions) {
+                            setTransactions(data.transactions);
+                            if (data.accounts) setAccounts(data.accounts);
+                            if (data.categories) setCategories(data.categories);
+                            alert("Full Backup Restored successfully.");
+                        } else {
+                            alert("The selected file is not a valid backup.");
+                        }
+                    } catch (err) {
+                        alert("Could not read the JSON file.");
+                    }
+                    event.target.value = null;
+                };
+                reader.readAsText(file);
+            };
+
+            const exportBookCSV = () => {
+                if (transactions.length === 0) return;
+                const headers = ['Date', 'Type', 'Category', 'Gross Amount', 'Tax', 'Shipping', 'Fees', 'Net Amount', 'Mileage (KMs)', 'Account', 'Description'];
+                const csvRows = [headers.join(',')];
+                transactions.forEach(t => {
+                    csvRows.push([t.date, t.type, `"${t.category || ''}"`, t.amount, t.tax, t.shipping, t.fees, t.netAmount, t.kms || '', `"${t.account || ''}"`, `"${t.description || ''}"`].join(','));
+                });
+                const blob = new Blob([csvRows.join('\n')], { type: 'text/csv;charset=utf-8;' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a'); a.href = url; a.download = `bookkeeping_excel_export_${new Date().toISOString().split('T')[0]}.csv`; a.click(); URL.revokeObjectURL(url);
+            };
+
+            // --- QUOTER RENDER FUNCTIONS ---
+            const renderQuoterBuild = () => (
+                <div className="space-y-6 pb-20 no-print">
+                    <div className="bg-white rounded-2xl shadow-sm p-6">
+                        <button onClick={() => setShowBusinessDetails(!showBusinessDetails)} className="w-full flex items-center justify-between outline-none cursor-pointer group">
+                            <h2 className="text-sm font-bold text-slate-800 flex items-center gap-2 uppercase tracking-wider group-hover:text-indigo-600 transition-colors">
+                                <Icon name="fileText" size={18} className="text-indigo-500" /> Your Business Details
+                            </h2>
+                            <div className="text-slate-400 group-hover:text-indigo-500 transition-colors bg-slate-50 p-1.5 rounded-full">
+                                {showBusinessDetails ? <Icon name="chevronUp" size={16} /> : <Icon name="chevronDown" size={16} />}
+                            </div>
+                        </button>
+                        {showBusinessDetails && (
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6 pt-6 border-t border-slate-100">
+                                <div><label className="block text-xs font-semibold text-slate-500 mb-1">Business Name</label><input type="text" className="w-full p-3 soft-input rounded-xl text-sm" value={orderData.businessName} onChange={e => updateOrder('businessName', e.target.value)} /></div>
+                                <div><label className="block text-xs font-semibold text-slate-500 mb-1">Address / City</label><input type="text" className="w-full p-3 soft-input rounded-xl text-sm" value={orderData.businessAddress} onChange={e => updateOrder('businessAddress', e.target.value)} /></div>
+                                <div><label className="block text-xs font-semibold text-slate-500 mb-1">Phone Number</label><input type="text" className="w-full p-3 soft-input rounded-xl text-sm" value={orderData.businessPhone} onChange={e => updateOrder('businessPhone', e.target.value)} /></div>
+                                <div><label className="block text-xs font-semibold text-slate-500 mb-1">Email Address</label><input type="text" className="w-full p-3 soft-input rounded-xl text-sm" value={orderData.businessEmail} onChange={e => updateOrder('businessEmail', e.target.value)} /></div>
+                                <div className="md:col-span-2"><label className="block text-xs font-semibold text-slate-500 mb-1">Website</label><input type="text" className="w-full p-3 soft-input rounded-xl text-sm" value={orderData.businessWebsite} onChange={e => updateOrder('businessWebsite', e.target.value)} /></div>
+                            </div>
+                        )}
+                    </div>
+
+                    <div className="bg-white rounded-2xl shadow-sm p-6">
+                        <h2 className="text-sm font-bold text-slate-800 mb-6 flex items-center gap-2 uppercase tracking-wider"><Icon name="user" size={18} className="text-indigo-500" /> Order Details</h2>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                            <div><label className="block text-xs font-semibold text-slate-500 mb-1">Customer / Company</label><input type="text" className="w-full p-3 soft-input rounded-xl text-sm" value={orderData.customerName} onChange={e => updateOrder('customerName', e.target.value)} /></div>
+                            <div><label className="block text-xs font-semibold text-slate-500 mb-1">Order Name</label><input type="text" placeholder="e.g. Summer Staff Gear" className="w-full p-3 soft-input rounded-xl text-sm" value={orderData.orderName} onChange={e => updateOrder('orderName', e.target.value)} /></div>
+                            <div><label className="block text-xs font-semibold text-slate-500 mb-1">Date Required</label><input type="date" className="w-full p-3 soft-input rounded-xl text-sm text-slate-600" value={orderData.dateRequired} onChange={e => updateOrder('dateRequired', e.target.value)} /></div>
+                            
+                            <div>
+                                <label className="block text-xs font-semibold text-slate-500 mb-1">Mockup Image</label>
+                                <input type="file" accept="image/*" style={{ display: 'none' }} ref={imageInputRef} onChange={handleImageUpload} />
+                                <button onClick={() => imageInputRef.current && imageInputRef.current.click()} className="w-full p-3 bg-indigo-50 text-indigo-700 border border-indigo-200 border-dashed rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-sm font-bold flex items-center justify-center gap-2 hover:bg-indigo-100 transition-colors">
+                                    <Icon name="image" size={18} /> {orderData.mockupImage ? 'Replace Mockup' : 'Upload Mockup'}
+                                </button>
+                            </div>
+
+                            {orderData.mockupImage && (
+                                <div className="md:col-span-2 relative bg-slate-50 p-2 rounded-xl border border-slate-200 flex justify-center">
+                                    <img src={orderData.mockupImage} alt="Mockup" className="max-h-48 rounded-lg object-contain shadow-sm" />
+                                    <button onClick={() => updateOrder('mockupImage', null)} className="absolute top-4 right-4 bg-red-500 hover:bg-red-600 text-white p-2 rounded-full shadow-md transition-transform active:scale-95"><Icon name="trash" size={16} /></button>
+                                </div>
+                            )}
+
+                            <div className="md:col-span-2"><label className="block text-xs font-semibold text-slate-500 mb-1">Job Description / Overview</label><textarea placeholder="Visible on Proposal..." className="w-full p-3 soft-input rounded-xl text-sm resize-none" rows="2" value={orderData.orderDescription} onChange={e => updateOrder('orderDescription', e.target.value)}></textarea></div>
+                            <div className="md:col-span-2"><label className="block text-xs font-semibold text-indigo-500 mb-1">Design Notes / Proofing Disclaimers</label><textarea placeholder="Visible on Proposal..." className="w-full p-3 bg-indigo-50 border border-indigo-100 rounded-xl focus:ring-2 focus:ring-indigo-400 outline-none text-sm resize-none" rows="2" value={orderData.designNotes} onChange={e => updateOrder('designNotes', e.target.value)}></textarea></div>
+                        </div>
+                    </div>
+
+                    {calc.items.map((item, index) => (
+                        <div key={item.id} className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                            <div className="bg-slate-50 border-b border-slate-200 p-5 flex justify-between items-center">
+                                <h3 className="font-extrabold text-slate-800 flex items-center gap-2 uppercase tracking-wide text-sm"><Icon name="shirt" size={18} className="text-indigo-500" /> Garment Style {index + 1}</h3>
+                                <div className="flex items-center gap-2">
+                                    <button onClick={() => duplicateItem(item)} className="text-slate-400 hover:text-indigo-500 bg-white p-2 rounded-lg border border-slate-200 shadow-sm transition-all active:scale-95"><Icon name="copy" size={16} /></button>
+                                    {items.length > 1 && <button onClick={() => removeItem(item.id)} className="text-slate-400 hover:text-red-500 bg-white p-2 rounded-lg border border-slate-200 shadow-sm transition-all active:scale-95"><Icon name="trash" size={16} /></button>}
+                                </div>
+                            </div>
+                            <div className="p-6">
+                                <div className="flex flex-col gap-5 mb-6">
+                                    <div className="flex flex-col md:flex-row gap-5">
+                                        <div className="flex-[2]"><label className="block text-[11px] font-bold text-slate-500 mb-1.5 uppercase">Item Description</label><input type="text" placeholder="e.g. Gildan 5000" className="w-full p-3 soft-input rounded-xl text-sm font-medium" value={item.name} onChange={e => updateItem(item.id, 'name', e.target.value)} /></div>
+                                        <div className="flex-1"><label className="block text-[11px] font-bold text-slate-500 mb-1.5 uppercase">Color</label><input type="text" placeholder="e.g. Black" className="w-full p-3 soft-input rounded-xl text-sm font-medium" value={item.color || ''} onChange={e => updateItem(item.id, 'color', e.target.value)} /></div>
+                                        <div className="flex-1"><label className="block text-[11px] font-bold text-slate-500 mb-1.5 uppercase">Total Qty</label><input type="number" placeholder="1" className={`w-full p-3 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-sm font-bold text-center ${item.sizeSum > 0 ? 'bg-slate-100 text-slate-400 cursor-not-allowed border border-slate-200' : 'bg-white text-indigo-700 border-2 border-indigo-200'}`} value={item.sizeSum > 0 ? item.sizeSum : item.qty} readOnly={item.sizeSum > 0} onFocus={(e) => !item.sizeSum && e.target.select()} onChange={e => updateItem(item.id, 'qty', e.target.value)} /></div>
+                                    </div>
+                                    <div className="mt-1">
+                                        <label className="block text-[10px] font-bold text-slate-400 mb-2 uppercase tracking-wider">Size Breakdown (Overrides Total Qty)</label>
+                                        <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+                                            {SIZES_LIST.map(size => (
+                                                <div key={size} className="flex-1 min-w-[3rem]">
+                                                    <div className="text-[10px] text-center text-slate-500 font-bold mb-1.5">{size}</div>
+                                                    <input type="number" placeholder="-" className="w-full p-2 text-center soft-input rounded-lg text-sm font-semibold text-slate-700" value={item.sizes?.[size] || ''} onFocus={e => e.target.select()} onChange={e => updateSize(item.id, size, e.target.value)} />
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-3 gap-4 bg-slate-50 p-4 rounded-xl border border-slate-100 mb-6">
+                                    <div><label className="block text-[10px] font-bold text-slate-500 mb-1.5 uppercase">Wholesale ($)</label><input type="number" placeholder="0.00" className="w-full p-2.5 soft-input rounded-lg text-sm font-medium" value={item.rawCost} onFocus={(e) => e.target.select()} onChange={e => updateItem(item.id, 'rawCost', e.target.value)} /></div>
+                                    <div><label className="block text-[10px] font-bold text-slate-500 mb-1.5 uppercase">Freight ($)</label><input type="number" placeholder="1.00" className="w-full p-2.5 soft-input rounded-lg text-sm font-medium" value={item.shippingCost} onFocus={(e) => e.target.select()} onChange={e => updateItem(item.id, 'shippingCost', e.target.value)} /></div>
+                                    <div><label className="block text-[10px] font-bold text-slate-500 mb-1.5 uppercase">Margin (%)</label><input type="number" placeholder="35" className="w-full p-2.5 soft-input rounded-lg text-sm font-medium text-indigo-700" value={item.margin} onFocus={(e) => e.target.select()} onChange={e => updateItem(item.id, 'margin', e.target.value)} /></div>
+                                </div>
+
+                                <div className="pt-2">
+                                    <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4">Decoration Locations</h4>
+                                    {item.processedLocations.map((loc, lIdx) => (
+                                        <div key={loc.id} className="relative bg-white border border-slate-200 rounded-xl p-4 mb-4 shadow-sm hover:border-indigo-200 transition-colors">
+                                            {item.locations.length > 1 && <button onClick={() => removeLocation(item.id, loc.id)} className="absolute top-3 right-3 text-slate-300 hover:text-red-500 bg-slate-50 p-1.5 rounded-md"><Icon name="trash" size={14} /></button>}
+                                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-3 pr-8">
+                                                <div><label className="block text-[10px] font-semibold text-slate-500 mb-1">Type</label><select className="w-full p-2.5 soft-input rounded-lg text-sm" value={loc.type} onChange={e => updateLocation(item.id, loc.id, 'type', e.target.value)}><option value="none">None</option><option value="embroidery">🧵 Embroidery</option><option value="dtf">🖨️ DTF Print</option></select></div>
+                                                <div><label className="block text-[10px] font-semibold text-slate-500 mb-1">Placement</label><select className="w-full p-2.5 soft-input rounded-lg text-sm" value={loc.placement || 'custom'} onChange={e => updateLocation(item.id, loc.id, 'placement', e.target.value)}>{PLACEMENTS.map(p => <option key={p.id} value={p.id}>{p.label}</option>)}</select></div>
+                                                {loc.type === 'embroidery' && (<div><label className="block text-[10px] font-semibold text-slate-500 mb-1">Est. Stitches</label><input type="number" placeholder="10000" className="w-full p-2.5 soft-input rounded-lg text-sm" value={loc.stitches} onFocus={(e) => e.target.select()} onChange={e => updateLocation(item.id, loc.id, 'stitches', e.target.value)} />
+                                                    <div className="mt-2.5 flex items-center justify-between bg-slate-50 p-2 rounded-lg border border-slate-200"><div className="flex items-center gap-2"><input type="checkbox" id={`puff-${loc.id}`} checked={loc.isPuff} onChange={e => updateLocation(item.id, loc.id, 'isPuff', e.target.checked)} className="rounded text-indigo-600 focus:ring-indigo-500" /><label htmlFor={`puff-${loc.id}`} className="text-xs text-slate-700 font-semibold cursor-pointer">Puff / 3D</label></div>
+                                                    {loc.isPuff && (<div className="flex items-center gap-1"><span className="text-xs text-slate-500 font-medium">+$</span><input type="number" value={loc.puffMarkup} onFocus={(e) => e.target.select()} onChange={e => updateLocation(item.id, loc.id, 'puffMarkup', e.target.value)} className="w-14 p-1 pl-2 text-xs border border-slate-300 rounded outline-none focus:border-indigo-400" /></div>)}</div></div>
+                                                )}
+                                                {loc.type === 'dtf' && (<div><label className="block text-[10px] font-semibold text-slate-500 mb-1">Size {loc.isFirstDtf ? '(Primary)' : '(Secondary)'}</label><select className="w-full p-2.5 soft-input rounded-lg text-sm" value={loc.dtfSize} onChange={e => updateLocation(item.id, loc.id, 'dtfSize', e.target.value)}>{DTF_SIZES.map(s => <option key={s.id} value={s.id}>{s.label}</option>)}</select></div>)}
+                                            </div>
+                                            {loc.type !== 'none' && (
+                                                <div className="grid grid-cols-12 gap-4 mt-3">
+                                                    <div className="col-span-8 md:col-span-9"><label className="block text-[10px] font-semibold text-slate-500 mb-1">Description / Colors / Notes</label><input type="text" placeholder="e.g. Logo (Red/White)" className="w-full p-2.5 soft-input rounded-lg text-sm" value={loc.desc} onChange={e => updateLocation(item.id, loc.id, 'desc', e.target.value)} /></div>
+                                                    <div className="col-span-4 md:col-span-3"><label className="block text-[10px] font-semibold text-slate-500 mb-1">Adj (+/- $)</label><input type="number" placeholder="0.00" className="w-full p-2.5 soft-input rounded-lg text-sm text-center" value={loc.adjustment} onFocus={(e) => e.target.select()} onChange={e => updateLocation(item.id, loc.id, 'adjustment', e.target.value)} /></div>
+                                                </div>
+                                            )}
+                                            {loc.type !== 'none' && (
+                                                <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-end gap-3">
+                                                    {(parseFloat(loc.adjustment) !== 0 && !isNaN(parseFloat(loc.adjustment))) && <span className="text-[11px] font-medium text-slate-400 line-through">Base: {formatCurrency(loc.baseCost)}</span>}
+                                                    <span className="text-sm font-bold text-indigo-700 bg-indigo-50 px-3 py-1.5 rounded-lg border border-indigo-100 shadow-sm">+{formatCurrency(loc.cost)} / ea</span>
+                                                </div>
+                                            )}
+                                        </div>
+                                    ))}
+                                    <button onClick={() => addLocation(item.id)} className="w-full py-3 border-2 border-dashed border-slate-300 rounded-xl text-slate-500 font-bold text-sm hover:border-indigo-400 hover:text-indigo-600 hover:bg-indigo-50 transition-all flex items-center justify-center gap-2"><Icon name="plus" size={18} /> Add Location</button>
+                                </div>
+                                <div className="mt-6 bg-slate-900 text-white rounded-xl shadow-md overflow-hidden">
+                                    <div className="flex text-xs text-slate-300 bg-slate-800 p-4 border-b border-slate-700">
+                                        <div className="flex-1 text-center border-r border-slate-700"><div className="text-[10px] text-slate-400 uppercase font-bold tracking-wider mb-1">Garment</div><div className="font-semibold text-sm">{formatCurrency(item.landedCost)}</div></div>
+                                        <div className="flex flex-col justify-center px-3 text-slate-500 text-sm font-black">+</div>
+                                        <div className="flex-1 text-center border-r border-slate-700"><div className="text-[10px] text-slate-400 uppercase font-bold tracking-wider mb-1">Markup</div><div className="font-semibold text-sm">{formatCurrency(item.clientGarmentPrice - item.landedCost)}</div></div>
+                                        <div className="flex flex-col justify-center px-3 text-slate-500 text-sm font-black">+</div>
+                                        <div className="flex-1 text-center"><div className="text-[10px] text-slate-400 uppercase font-bold tracking-wider mb-1">Decoration</div><div className="font-semibold text-sm">{formatCurrency(item.itemDecoPerPiece)}</div></div>
+                                    </div>
+                                    <div className="p-4 flex justify-between items-center"><span className="text-slate-300 font-bold uppercase tracking-wider text-xs">Total Price Per Item</span><span className="text-emerald-400 font-black text-2xl">{formatCurrency(item.lineTotalPerPiece)}</span></div>
+                                </div>
+                            </div>
+                        </div>
+                    ))}
+
+                    <button onClick={addItem} className="w-full py-4 bg-indigo-600 text-white rounded-2xl font-bold hover:bg-indigo-700 transition-all flex items-center justify-center gap-2 shadow-md active:scale-95"><Icon name="plus" size={20} /> Add Another Garment Style</button>
+
+                    <div className="bg-white rounded-2xl shadow-sm p-6 border border-slate-200">
+                        <h2 className="text-sm font-bold text-slate-800 mb-5 flex items-center gap-2 uppercase tracking-wider"><Icon name="calculator" size={18} className="text-indigo-500" /> Fees & Discounts</h2>
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                            <div><label className="block text-[11px] font-semibold text-slate-500 mb-1.5 uppercase">Setup Fees</label><input type="number" className="w-full p-3 soft-input rounded-xl text-sm" value={orderData.setupFees} onFocus={(e) => e.target.select()} onChange={e => updateOrder('setupFees', e.target.value)} /></div>
+                            <div><label className="block text-[11px] font-semibold text-slate-500 mb-1.5 uppercase">Digitizing Fee</label><input type="number" className="w-full p-3 soft-input rounded-xl text-sm" value={orderData.digitizingFee} onFocus={(e) => e.target.select()} onChange={e => updateOrder('digitizingFee', e.target.value)} /></div>
+                            <div><label className="block text-[11px] font-bold text-rose-500 mb-1.5 uppercase">Outsourced Cost</label><input type="number" className="w-full p-3 bg-rose-50 border border-rose-200 rounded-xl focus:ring-2 focus:ring-rose-400 outline-none text-sm text-rose-900" value={orderData.digitizingCost} onFocus={(e) => e.target.select()} onChange={e => updateOrder('digitizingCost', e.target.value)} /></div>
+                            <div><label className="block text-[11px] font-semibold text-slate-500 mb-1.5 uppercase">Discount ($)</label><input type="number" className="w-full p-3 soft-input rounded-xl text-sm" value={orderData.discount} onFocus={(e) => e.target.select()} onChange={e => updateOrder('discount', e.target.value)} /></div>
+                            <div><label className="block text-[11px] font-semibold text-slate-500 mb-1.5 uppercase">Tax Rate (%)</label><input type="number" className="w-full p-3 soft-input rounded-xl text-sm" value={orderData.taxRate} onFocus={(e) => e.target.select()} onChange={e => updateOrder('taxRate', e.target.value)} /></div>
+                            <div><label className="block text-[11px] font-bold text-emerald-600 mb-1.5 uppercase">Amount Paid ($)</label><input type="number" placeholder="50%" className="w-full p-3 bg-emerald-50 border border-emerald-200 rounded-xl focus:ring-2 focus:ring-emerald-400 outline-none text-sm text-emerald-900 font-bold" value={orderData.amountPaid} onFocus={(e) => e.target.select()} onChange={e => updateOrder('amountPaid', e.target.value)} /></div>
+                            <div className="col-span-2"><label className="block text-[11px] font-semibold text-slate-500 mb-1.5 uppercase">Receipt Notes</label><input type="text" placeholder="e.g. E-Transfer" className="w-full p-3 soft-input rounded-xl text-sm" value={orderData.receiptNotes} onChange={e => updateOrder('receiptNotes', e.target.value)} /></div>
+                        </div>
+                    </div>
+                </div>
+            );
+
+            const renderQuoterInternal = () => (
+                <div id="internal-view" className="page-container print-no-shadow print-full-width">
+                    <div className="bg-slate-900 text-white p-8 rounded-t-xl relative">
+                        <div className="no-print absolute top-8 right-8 flex items-center gap-3">
+                            <input type="file" accept=".json,application/json" style={{ display: 'none' }} ref={fileInputRef} onChange={handleImportQuoter} />
+                            <button onClick={() => fileInputRef.current && fileInputRef.current.click()} className="flex items-center gap-2 bg-slate-700 hover:bg-slate-600 text-white px-4 py-2 rounded-lg text-xs font-bold transition-colors"><Icon name="upload" size={14} /> Load</button>
+                            <button onClick={handleExportQuoter} className="flex items-center gap-2 bg-slate-700 hover:bg-slate-600 text-white px-4 py-2 rounded-lg text-xs font-bold transition-colors"><Icon name="save" size={14} /> Save</button>
+                            <div className="w-px h-6 bg-slate-700 mx-1"></div>
+                            <button onClick={() => window.print()} className="flex items-center gap-2 bg-slate-700 hover:bg-slate-600 text-white px-4 py-2 rounded-lg text-xs font-bold transition-colors"><Icon name="printer" size={14} /> Print</button>
+                            <button onClick={() => handlePrint('internal')} className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-lg text-xs font-bold transition-colors shadow-md"><Icon name="download" size={14} /> PDF</button>
+                        </div>
+                        <h2 className="text-3xl font-black uppercase tracking-widest">Internal Breakdown</h2>
+                        <p className="text-indigo-300 text-sm mt-2 font-medium">{orderData.customerName || 'Customer'} - {orderData.orderName || 'Order'}</p>
+                    </div>
+                    <div className="p-8">
+                        <div className="bg-slate-900 rounded-2xl p-8 text-white shadow-xl relative overflow-hidden mb-8">
+                            <div className="absolute -right-10 -top-10 w-40 h-40 bg-emerald-500/10 rounded-full blur-3xl"></div>
+                            <div className="flex flex-col md:flex-row gap-8 items-center relative z-10">
+                                <div className="w-full md:w-1/2">
+                                    <p className="text-emerald-400 text-xs uppercase font-extrabold tracking-widest mb-2">Final Take-Home Profit</p>
+                                    <div className="flex items-center gap-3 mb-5">
+                                        <span className="text-5xl font-black tracking-tight">{formatCurrency(calc.netProfit)}</span>
+                                        {calc.isProfitable ? <span className="px-3 py-1 bg-emerald-500/20 text-emerald-400 text-xs rounded-full font-bold uppercase tracking-wider border border-emerald-500/30">Profitable</span> : <span className="px-3 py-1 bg-red-500/20 text-red-400 text-xs rounded-full font-bold uppercase tracking-wider border border-red-500/30">Loss</span>}
+                                    </div>
+                                    <div className="bg-slate-800/80 rounded-xl p-4 border border-slate-700/50 max-w-sm">
+                                        <div className="flex justify-between items-center mb-2"><span className="text-xs text-slate-400 font-semibold">Gross Profit</span><span className="text-sm font-bold text-white">{formatCurrency(calc.grossProfit)}</span></div>
+                                        <div className="flex justify-between items-center mb-2"><span className="text-xs text-amber-400/80 font-semibold">Recommended Savings</span><span className="text-sm font-bold text-amber-400/80">-{formatCurrency(calc.machineReserve)}</span></div>
+                                        <div className={`flex justify-between items-center ${calc.digitizingCost > 0 ? 'mb-2' : 'mb-3 pb-3 border-b border-slate-700'}`}><span className="text-xs text-rose-400/80 font-semibold">Consumable Cost</span><span className="text-sm font-bold text-rose-400/80">-{formatCurrency(calc.orderDecoCostTotal)}</span></div>
+                                        {calc.digitizingCost > 0 && <div className="flex justify-between items-center mb-3 pb-3 border-b border-slate-700"><span className="text-xs text-rose-400/80 font-semibold">Outsourced Digitizing</span><span className="text-sm font-bold text-rose-400/80">-{formatCurrency(calc.digitizingCost)}</span></div>}
+                                        <div className="flex justify-between items-center"><span className="text-xs text-emerald-400 uppercase tracking-wider font-bold">Profit After Savings</span><span className="text-sm font-black text-emerald-400">{formatCurrency(calc.netProfit)}</span></div>
+                                    </div>
+                                </div>
+                                <div className="w-full md:w-1/2 bg-slate-800/50 border border-slate-700 rounded-2xl p-6">
+                                    <div className="flex justify-between items-center mb-4"><p className="text-slate-400 text-xs uppercase font-bold tracking-wider">Total Margin</p><span className="text-2xl font-bold text-white">{calc.totalMarginPercent.toFixed(1)}%</span></div>
+                                    <div className="w-full bg-slate-900 rounded-full h-3 mb-5 border border-slate-700"><div className={`h-3 rounded-full shadow-inner ${calc.totalMarginPercent >= 40 ? 'bg-gradient-to-r from-emerald-500 to-emerald-400' : calc.totalMarginPercent > 20 ? 'bg-gradient-to-r from-amber-500 to-amber-400' : 'bg-gradient-to-r from-red-500 to-red-400'}`} style={{ width: `${Math.min(100, Math.max(0, calc.totalMarginPercent))}%` }}></div></div>
+                                    <div className="flex justify-between text-xs text-slate-400 font-bold bg-slate-900/50 p-3 rounded-lg border border-slate-800"><span>Rev: {formatCurrency(calc.discountedSubtotal)}</span><span>Cost: {formatCurrency(calc.totalOrderCost)}</span></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="bg-slate-50 rounded-2xl p-6 md:p-8 border border-slate-200 mb-8 shadow-sm">
+                            <h3 className="text-sm font-bold text-slate-800 border-b border-slate-200 pb-4 mb-5 uppercase tracking-wider flex items-center gap-2"><Icon name="calculator" size={18} className="text-indigo-500" /> Restock & Machine Fund</h3>
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                                <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between">
+                                    <div><p className="text-[10px] text-slate-500 uppercase font-bold tracking-wider mb-1">Consumables Cost</p><p className="text-2xl font-bold text-slate-800">{formatCurrency(calc.orderDecoCostTotal)}</p></div>
+                                    <div className="mt-4 pt-4 border-t border-slate-100 space-y-2">
+                                        <div className="flex justify-between items-center"><span className="text-xs font-semibold text-slate-500">DTF Transfers</span><span className="text-xs font-bold text-slate-700">{formatCurrency(calc.totalDtfCost)}</span></div>
+                                        <div className="flex justify-between items-center"><span className="text-xs font-semibold text-slate-500">Emb Thread</span><span className="text-xs font-bold text-slate-700">{formatCurrency(calc.totalThreadCost)}</span></div>
+                                        <div className="flex justify-between items-center"><span className="text-xs font-semibold text-slate-500">Emb Stabilizer</span><span className="text-xs font-bold text-slate-700">{formatCurrency(calc.totalStabilizerCost)}</span></div>
+                                    </div>
+                                </div>
+                                <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm border-l-4 border-l-indigo-500">
+                                    <div className="flex justify-between items-center mb-2"><p className="text-[10px] text-indigo-500 uppercase font-bold tracking-wider">Machine Reserve</p><span className="text-xs font-bold text-slate-400">{formatCurrency(calc.machineReserve)}</span></div>
+                                    <div className="relative mt-2">
+                                        <input type="number" placeholder="5" className="w-full pr-8 p-3 soft-input rounded-lg text-xl font-bold text-indigo-700" value={orderData.machineReservePercent} onFocus={(e) => e.target.select()} onChange={(e) => updateOrder('machineReservePercent', e.target.value)} />
+                                        <span className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold">%</span>
+                                    </div>
+                                    <p className="text-[10px] text-slate-400 mt-2">Applied to total subtotal.</p>
+                                </div>
+                                <div className="bg-slate-800 p-5 rounded-xl border border-slate-700 shadow-sm text-white">
+                                    <p className="text-[10px] text-slate-400 uppercase font-bold tracking-wider mb-2">Total to Set Aside</p>
+                                    <p className="text-3xl font-black text-amber-400">{formatCurrency(calc.totalRestockAndMachineFund)}</p>
+                                    <p className="text-[10px] text-slate-400 mt-3 leading-relaxed">Deducted directly from Net Profit to ensure sustainable operations.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <h3 className="text-sm font-bold text-slate-800 border-b border-slate-200 pb-3 mb-5 uppercase tracking-wider">Line Item Analysis</h3>
+                        <div className="space-y-4">
+                            {calc.items.map((item, idx) => {
+                                const sizeStr = getSizeString(item);
+                                return (
+                                <div key={item.id} className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm">
+                                    <div className="flex justify-between items-start mb-3 border-b border-slate-100 pb-3">
+                                        <div><h4 className="font-bold text-slate-800">{idx + 1}. {item.name || 'Unnamed Item'} {item.color ? `(${item.color})` : ''} (Qty: {item.calculatedQty})</h4>{sizeStr && <p className="text-[10px] font-bold text-slate-500 mt-1">{sizeStr}</p>}</div>
+                                        <span className="font-bold text-indigo-700 text-lg">{formatCurrency(item.lineTotal)}</span>
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-x-6 gap-y-3 text-sm">
+                                        <div className="flex justify-between"><span className="text-slate-500">Landed Cost /ea:</span><span className="font-semibold text-slate-800">{formatCurrency(item.landedCost)}</span></div>
+                                        <div className="flex justify-between"><span className="text-slate-500">Garment Retail /ea:</span><span className="font-semibold text-slate-800">{formatCurrency(item.clientGarmentPrice)}</span></div>
+                                        <div className="flex justify-between"><span className="text-slate-500">Garment Profit /ea:</span><span className="font-bold text-emerald-600">{formatCurrency(item.clientGarmentPrice - item.landedCost)}</span></div>
+                                        <div className="flex justify-between"><span className="text-slate-500">Deco Revenue /ea (Net):</span><span className="font-bold text-indigo-600">{formatCurrency(item.itemDecoPerPiece)}</span></div>
+                                    </div>
+                                </div>
+                            )})}
+                        </div>
+                    </div>
+                </div>
+            );
+
+            const renderQuoterDoc = (docType) => {
+                const title = docType === 'proposal' ? 'PROPOSAL' : docType === 'invoice' ? 'FINAL INVOICE' : 'RECEIPT';
+                return (
+                    <div id={`${docType}-view`} className="page-container print-no-shadow print-full-width">
+                        <div className="p-8 md:p-12 relative">
+                            {docType === 'receipt' && (
+                                <div className="absolute top-12 right-12 transform rotate-12 opacity-90 border-4 border-emerald-500 text-emerald-500 px-6 py-2 rounded-xl pointer-events-none break-inside-avoid shadow-sm"><p className="text-3xl font-black uppercase tracking-widest">Paid In Full</p></div>
+                            )}
+                            <div className="flex justify-between items-start mb-8 border-b-2 border-slate-800 pb-8">
+                                <div>
+                                    <h1 className="text-5xl font-black tracking-tighter text-slate-900">{title}</h1>
+                                    <p className="text-slate-500 font-semibold mt-2 tracking-wide">Date: {new Date().toLocaleDateString()}</p>
+                                    {(orderData.businessName || orderData.businessAddress || orderData.businessPhone || orderData.businessEmail || orderData.businessWebsite) && (
+                                        <div className="mt-6 pt-6 border-t border-slate-200 text-sm text-slate-600 space-y-1">
+                                            {orderData.businessName && <p className="font-bold text-slate-900 text-base">{orderData.businessName}</p>}
+                                            {orderData.businessAddress && <p>{orderData.businessAddress}</p>}
+                                            {orderData.businessPhone && <p>{orderData.businessPhone}</p>}
+                                            {orderData.businessEmail && <p>{orderData.businessEmail}</p>}
+                                            {orderData.businessWebsite && <p className="text-indigo-600">{orderData.businessWebsite}</p>}
+                                        </div>
+                                    )}
+                                </div>
+                                <div className="text-right max-w-xs">
+                                    <h2 className="text-2xl font-bold text-slate-900 leading-tight">{orderData.customerName || 'Customer Name'}</h2>
+                                    {orderData.orderName && <p className="text-slate-500 font-medium mt-1">{orderData.orderName}</p>}
+                                    {docType === 'proposal' && orderData.dateRequired && <p className="text-indigo-600 text-sm font-bold mt-3">Required By: {orderData.dateRequired}</p>}
+                                </div>
+                            </div>
+
+                            {(orderData.orderDescription || (docType === 'proposal' && orderData.designNotes)) && (
+                                <div className="mb-10 flex flex-col gap-5">
+                                    {orderData.orderDescription && <div className="p-5 bg-slate-50 rounded-xl border border-slate-200"><p className="text-sm text-slate-700 whitespace-pre-wrap leading-relaxed">{orderData.orderDescription}</p></div>}
+                                    {(docType === 'proposal' && orderData.designNotes) && <div className="p-5 bg-indigo-50 rounded-xl border border-indigo-100"><h3 className="text-xs font-bold uppercase tracking-widest text-indigo-800 mb-2">Design Notes</h3><p className="text-sm text-indigo-900 whitespace-pre-wrap leading-relaxed">{orderData.designNotes}</p></div>}
+                                </div>
+                            )}
+
+                            {(docType === 'proposal' && orderData.mockupImage) && (
+                                <div className="mb-10 break-inside-avoid">
+                                    <h3 className="text-xs font-bold uppercase tracking-widest text-slate-500 border-b border-slate-200 pb-2 mb-4">Design Mockup</h3>
+                                    <div className="bg-slate-50 p-2 rounded-xl border border-slate-200 text-center"><img src={orderData.mockupImage} alt="Mockup" className="max-h-64 mx-auto rounded-lg object-contain shadow-sm" /></div>
+                                </div>
+                            )}
+
+                            <div className="no-print flex flex-col md:flex-row gap-4 mb-10">
+                                <button onClick={() => handlePrint(docType)} className={`flex-1 ${docType === 'receipt' ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-indigo-600 hover:bg-indigo-700'} text-white font-bold py-3 rounded-xl shadow-md flex items-center justify-center gap-2 transition-all active:scale-95`}><Icon name="download" size={20} /> Save as PDF</button>
+                                <button onClick={() => window.print()} className="flex-1 bg-slate-800 hover:bg-slate-900 text-white font-bold py-3 rounded-xl shadow-md flex items-center justify-center gap-2 transition-all active:scale-95"><Icon name="printer" size={20} /> Mobile Print / Screenshot View</button>
+                                
+                                {docType === 'receipt' && (
+                                    isLoggedToBookkeeping ? (
+                                        <button disabled className="flex-1 bg-emerald-50 border border-emerald-200 text-emerald-700 font-bold py-3 rounded-xl flex items-center justify-center gap-2 cursor-not-allowed">
+                                            <Icon name="checkCircle" size={20} /> Payment Logged
+                                        </button>
+                                    ) : (
+                                        <button onClick={logPaymentToBookkeeping} className="flex-1 bg-amber-500 hover:bg-amber-600 text-white font-bold py-3 rounded-xl shadow-md flex items-center justify-center gap-2 transition-all active:scale-95">
+                                            <Icon name="wallet" size={20} /> Log to Bookkeeping
+                                        </button>
+                                    )
+                                )}
+                            </div>
+
+                            <div className="mb-10">
+                                <div className="grid grid-cols-12 gap-4 border-b-2 border-slate-300 pb-3 mb-5 text-xs font-bold text-slate-500 uppercase tracking-widest">
+                                    <div className="col-span-6">Description</div>
+                                    <div className="col-span-2 text-center">Qty</div>
+                                    <div className="col-span-2 text-right">Price</div>
+                                    <div className="col-span-2 text-right">Total</div>
+                                </div>
+                                {calc.items.map((item) => {
+                                    const sizeStr = getSizeString(item);
+                                    return (
+                                    <div key={item.id} className="mb-5 pb-5 border-b border-slate-100 last:border-0 break-inside-avoid">
+                                        <div className="grid grid-cols-12 gap-4 items-start">
+                                            <div className="col-span-6">
+                                                <p className="font-bold text-slate-900 text-lg">{item.name || 'Garment Item'} {item.color ? `- ${item.color}` : ''} {docType === 'proposal' && item.validPlacementCount > 0 && <span className="text-sm font-medium text-slate-500 ml-2">({item.validPlacementCount} Placement{item.validPlacementCount !== 1 ? 's' : ''})</span>}</p>
+                                                {sizeStr && <p className="mt-1.5"><span className="text-[10px] bg-slate-100 border border-slate-200 text-slate-600 px-3 py-1 rounded-full font-bold">{sizeStr}</span></p>}
+                                                <div className="mt-3 pl-4 border-l-2 border-indigo-200 space-y-1.5">
+                                                    {item.processedLocations.filter(l => l.type !== 'none').map((loc, i) => (
+                                                        <p key={i} className="text-sm text-slate-600"><span className="font-bold text-slate-800">{loc.type === 'embroidery' ? (loc.isPuff ? '3D Puff Embroidery' : 'Standard Embroidery') : 'DTF Print'}</span>{loc.placement && loc.placement !== 'custom' ? ` - ${PLACEMENTS.find(p => p.id === loc.placement)?.label}` : ''}{(docType === 'proposal' || docType === 'invoice') && loc.desc ? ` - ${loc.desc}` : ''}</p>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                            <div className="col-span-2 text-center font-bold text-slate-700 pt-1">{item.calculatedQty}</div>
+                                            <div className="col-span-2 text-right font-bold text-slate-700 pt-1">{formatCurrency(item.undiscountedLineTotalPerPiece)}</div>
+                                            <div className="col-span-2 text-right font-black text-slate-900 pt-1 text-lg">{formatCurrency(item.undiscountedLineTotal)}</div>
+                                        </div>
+                                    </div>
+                                )})}
+                            </div>
+
+                            <div className="w-full md:w-1/2 ml-auto space-y-4 text-base break-inside-avoid">
+                                {(calc.setup > 0 || calc.digitizing > 0) && <div className="flex justify-between text-slate-600"><span>Setup & Digitizing</span><span className="font-semibold">{formatCurrency(calc.setup + calc.digitizing)}</span></div>}
+                                <div className="flex justify-between text-slate-900 font-bold pt-3 border-t border-slate-200"><span>Subtotal</span><span>{formatCurrency(calc.grossSubtotal)}</span></div>
+                                {calc.totalDiscount > 0 && <div className="flex justify-between text-emerald-600 font-bold bg-emerald-50 p-2 rounded-lg"><span>Discount Applied</span><span>-{formatCurrency(calc.totalDiscount)}</span></div>}
+                                <div className="flex justify-between text-slate-600"><span>Tax ({orderData.taxRate}%)</span><span>{formatCurrency(calc.tax)}</span></div>
+
+                                <div className="flex justify-between items-end pt-5 border-t-2 border-slate-900">
+                                    <span className="font-black text-slate-900 uppercase tracking-widest">{docType === 'proposal' ? 'Total' : 'Order Total'}</span>
+                                    <span className={`font-black text-${docType === 'proposal' ? '4xl text-indigo-700' : '2xl text-slate-900'}`}>{formatCurrency(calc.grandTotal)}</span>
+                                </div>
+
+                                {docType === 'proposal' && (
+                                    <div className="mt-8 bg-slate-50 p-6 rounded-xl text-center border border-slate-200 shadow-sm">
+                                        <p className="text-slate-500 font-bold text-xs uppercase tracking-widest mb-2">Deposit Required to Begin</p>
+                                        <p className="text-3xl font-black text-slate-900">{formatCurrency(calc.deposit)}</p>
+                                    </div>
+                                )}
+
+                                {docType === 'invoice' && (
+                                    <>
+                                        <div className="flex justify-between text-emerald-600 font-bold pt-3"><span>Amount Paid (Deposit)</span><span>-{formatCurrency(calc.actualPaid)}</span></div>
+                                        <div className="flex justify-between items-end pt-5 border-t-2 border-slate-900 mt-3 bg-slate-50 p-5 rounded-xl border border-slate-200">
+                                            <span className="font-black text-slate-900 uppercase tracking-widest">Balance Due</span><span className="font-black text-4xl text-indigo-700">{formatCurrency(calc.balanceDue)}</span>
+                                        </div>
+                                    </>
+                                )}
+
+                                {docType === 'receipt' && (
+                                    <>
+                                        <div className="flex justify-between text-emerald-600 font-bold pt-3">
+                                            <div className="flex flex-col"><span>Total Amount Paid</span>{orderData.receiptNotes && <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider mt-1">Via {orderData.receiptNotes}</span>}</div>
+                                            <span className="text-xl">-{formatCurrency(calc.grandTotal)}</span>
+                                        </div>
+                                        <div className="flex justify-between items-end pt-5 border-t-2 border-emerald-500 mt-3 bg-emerald-50 p-5 rounded-xl border border-emerald-200">
+                                            <span className="font-black text-emerald-900 uppercase tracking-widest">Balance Due</span><span className="font-black text-4xl text-emerald-600">$0.00</span>
+                                        </div>
+                                    </>
+                                )}
+                            </div>
+                            
+                            <div className="mt-16 pt-8 border-t border-slate-200 text-center break-inside-avoid">
+                                <p className="text-slate-500 text-sm font-bold uppercase tracking-widest">{docType === 'proposal' ? '* Quotes are valid for 14 days.' : 'Thank you for your business!'}</p>
+                            </div>
+                        </div>
+                    </div>
+                );
+            };
+
+            // --- BOOKKEEPING RENDER FUNCTIONS ---
+            const KPICard = ({ title, value, icon: IconCmp, color, subtext }) => (
+                <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex flex-col relative overflow-hidden group">
+                    <div className={`absolute -right-2 -top-2 p-6 opacity-[0.03] transition-transform group-hover:scale-110 text-${color}-600`}><IconCmp size={80} /></div>
+                    <span className="text-slate-400 text-[10px] font-black uppercase tracking-widest">{title}</span>
+                    <div className="mt-3"><span className="text-3xl font-black text-slate-800">{typeof value === 'number' && title !== 'Profit Margin' ? `$${value.toLocaleString(undefined, { minimumFractionDigits: 2 })}` : value}</span></div>
+                    <span className="text-xs text-slate-400 mt-2 font-medium">{subtext}</span>
+                </div>
+            );
+
+            const renderBookQuickEntry = () => {
+                if (!quickAction) {
+                    return (
+                        <div className="max-w-5xl mx-auto mt-4 md:mt-8">
+                            <div className="space-y-6 md:space-y-8">
+                                <div className="text-center space-y-2 px-4">
+                                    <h2 className="text-3xl md:text-4xl font-black tracking-tight text-slate-800">What did you do today?</h2>
+                                    <p className="text-sm md:text-base text-slate-500 font-medium">Select an action below to quickly log your activity.</p>
+                                </div>
+                                
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mt-6 md:mt-10">
+                                    <button onClick={() => setQuickAction('sale')} className="flex flex-row sm:flex-col items-center sm:justify-center p-4 sm:p-8 bg-white border border-emerald-100 rounded-2xl sm:rounded-3xl shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all group text-left sm:text-center">
+                                        <div className="w-12 h-12 sm:w-16 sm:h-16 shrink-0 bg-emerald-50 rounded-full flex items-center justify-center text-emerald-600 sm:mb-6 mr-4 sm:mr-0 group-hover:scale-110 transition-transform"><Icon name="trendingUp" size={32} /></div>
+                                        <div>
+                                            <h3 className="text-md font-bold text-slate-800">Made a Sale</h3>
+                                            <p className="text-[11px] sm:text-xs text-slate-500 font-medium mt-1 sm:mt-2">Log income, taxes collected, and fees.</p>
+                                        </div>
+                                    </button>
+
+                                    <button onClick={() => setQuickAction('expense')} className="flex flex-row sm:flex-col items-center sm:justify-center p-4 sm:p-8 bg-white border border-rose-100 rounded-2xl sm:rounded-3xl shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all group text-left sm:text-center">
+                                        <div className="w-12 h-12 sm:w-16 sm:h-16 shrink-0 bg-rose-50 rounded-full flex items-center justify-center text-rose-600 sm:mb-6 mr-4 sm:mr-0 group-hover:scale-110 transition-transform"><Icon name="shoppingBag" size={32} /></div>
+                                        <div>
+                                            <h3 className="text-md font-bold text-slate-800">Bought Items</h3>
+                                            <p className="text-[11px] sm:text-xs text-slate-500 font-medium mt-1 sm:mt-2">Log supplies, inventory, and utility bills.</p>
+                                        </div>
+                                    </button>
+
+                                    <button onClick={() => setQuickAction('drive')} className="flex flex-row sm:flex-col items-center sm:justify-center p-4 sm:p-8 bg-white border border-blue-100 rounded-2xl sm:rounded-3xl shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all group text-left sm:text-center">
+                                        <div className="w-12 h-12 sm:w-16 sm:h-16 shrink-0 bg-blue-50 rounded-full flex items-center justify-center text-blue-600 sm:mb-6 mr-4 sm:mr-0 group-hover:scale-110 transition-transform"><Icon name="car" size={32} /></div>
+                                        <div>
+                                            <h3 className="text-md font-bold text-slate-800">Business Travel</h3>
+                                            <p className="text-[11px] sm:text-xs text-slate-500 font-medium mt-1 sm:mt-2">Log KMs for travel to suppliers or clients.</p>
+                                        </div>
+                                    </button>
+
+                                    <button onClick={() => setQuickAction('loan')} className="flex flex-row sm:flex-col items-center sm:justify-center p-4 sm:p-8 bg-white border border-purple-100 rounded-2xl sm:rounded-3xl shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all group text-left sm:text-center">
+                                        <div className="w-12 h-12 sm:w-16 sm:h-16 shrink-0 bg-purple-50 rounded-full flex items-center justify-center text-purple-600 sm:mb-6 mr-4 sm:mr-0 group-hover:scale-110 transition-transform"><Icon name="landmark" size={32} /></div>
+                                        <div>
+                                            <h3 className="text-md font-bold text-slate-800">Manage Loans</h3>
+                                            <p className="text-[11px] sm:text-xs text-slate-500 font-medium mt-1 sm:mt-2">Log loan payments, interest, or funds.</p>
+                                        </div>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    );
+                }
+
+                return (
+                    <div className="max-w-5xl mx-auto mt-4 md:mt-8">
+                        <div className="bg-white p-6 sm:p-10 rounded-3xl shadow-lg border border-slate-200 relative">
+                            <button onClick={() => setQuickAction(null)} className="absolute top-4 right-4 sm:top-6 sm:right-6 text-slate-400 hover:text-slate-800 font-bold text-sm bg-slate-50 px-3 py-1.5 rounded-full border border-slate-200 flex items-center gap-1"><Icon name="x" size={16} /> Close</button>
+                            
+                            <h3 className="text-2xl md:text-3xl font-black tracking-tight text-slate-800 mb-6 mt-8 sm:mt-0">
+                                {quickAction === 'sale' && 'Log a Sale'}
+                                {quickAction === 'expense' && 'Log an Expense'}
+                                {quickAction === 'drive' && 'Log Business Mileage'}
+                                {quickAction === 'loan' && 'Manage Loan Activity'}
+                            </h3>
+
+                            <form onSubmit={(e) => handleQuickSubmit(e, quickAction)} className="space-y-6">
+                                <div>
+                                    <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-2">Date</label>
+                                    <input required type="date" name="date" defaultValue={new Date().toISOString().split('T')[0]} className="w-full md:w-1/2 p-3 soft-input rounded-xl text-base md:text-sm" />
+                                </div>
+
+                                {quickAction === 'sale' && (
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 p-4 sm:p-6 bg-emerald-50/50 rounded-2xl border border-emerald-100">
+                                        <div><label className="block text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-2">Total Customer Paid ($)</label><input required type="number" step="0.01" name="amount" placeholder="0.00" className="w-full p-3 soft-input bg-white rounded-xl text-base md:text-sm focus:ring-emerald-400" /></div>
+                                        <div><label className="block text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-2">Tax Collected ($)</label><input type="number" step="0.01" name="tax" placeholder="0.00" className="w-full p-3 soft-input bg-white rounded-xl text-base md:text-sm focus:ring-emerald-400" /></div>
+                                        <div><label className="block text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-2">Shipping Charged ($)</label><input type="number" step="0.01" name="shipping" placeholder="0.00" className="w-full p-3 soft-input bg-white rounded-xl text-base md:text-sm focus:ring-emerald-400" /></div>
+                                        <div><label className="block text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-2">Platform Fees Paid ($)</label><input type="number" step="0.01" name="fees" placeholder="0.00" className="w-full p-3 soft-input bg-white rounded-xl text-base md:text-sm focus:ring-emerald-400" /></div>
+                                        <div><label className="block text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-2">Category</label><select name="category" className="w-full p-3 soft-input bg-white rounded-xl text-base md:text-sm focus:ring-emerald-400 appearance-none">{categories.income.map(cat => <option key={cat} value={cat}>{cat}</option>)}</select></div>
+                                        <div><label className="block text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-2">Deposited Into</label><select name="account" className="w-full p-3 soft-input bg-white rounded-xl text-base md:text-sm focus:ring-emerald-400 appearance-none">{accounts.map(acc => <option key={acc} value={acc}>{acc}</option>)}</select></div>
+                                    </div>
+                                )}
+
+                                {quickAction === 'expense' && (
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 p-4 sm:p-6 bg-rose-50/50 rounded-2xl border border-rose-100">
+                                        <div><label className="block text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-2">Total Amount Paid ($)</label><input required type="number" step="0.01" name="amount" placeholder="0.00" className="w-full p-3 soft-input bg-white rounded-xl text-base md:text-sm focus:ring-rose-400" /></div>
+                                        <div><label className="block text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-2">Tax Included ($)</label><input type="number" step="0.01" name="tax" placeholder="0.00" className="w-full p-3 soft-input bg-white rounded-xl text-base md:text-sm focus:ring-rose-400" /></div>
+                                        <div><label className="block text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-2">Category</label><select name="category" className="w-full p-3 soft-input bg-white rounded-xl text-base md:text-sm focus:ring-rose-400 appearance-none">{categories.expense.map(cat => <option key={cat} value={cat}>{cat}</option>)}</select></div>
+                                        <div><label className="block text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-2">Paid From</label><select name="account" className="w-full p-3 soft-input bg-white rounded-xl text-base md:text-sm focus:ring-rose-400 appearance-none">{accounts.map(acc => <option key={acc} value={acc}>{acc}</option>)}</select></div>
+                                    </div>
+                                )}
+
+                                {quickAction === 'drive' && (
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 p-4 sm:p-6 bg-blue-50/50 rounded-2xl border border-blue-100">
+                                        <div><label className="block text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-2">Total Kilometers Driven</label><input required type="number" step="0.1" name="kms" placeholder="0" className="w-full p-3 soft-input bg-white rounded-xl text-base md:text-sm focus:ring-blue-400" /></div>
+                                        <div className="hidden"><input type="text" name="account" value="N/A" readOnly /></div>
+                                    </div>
+                                )}
+
+                                {quickAction === 'loan' && (
+                                    <div className="space-y-6 p-4 sm:p-6 bg-purple-50/50 rounded-2xl border border-purple-100">
+                                        <div className="flex flex-col sm:flex-row gap-3 mb-4 bg-white p-2 rounded-xl shadow-sm border border-slate-100">
+                                            <label className={`flex-1 flex items-center justify-center gap-2 text-sm font-bold cursor-pointer px-4 py-3 sm:py-2 rounded-lg transition-colors ${loanActionType === 'repayment' ? 'bg-purple-100 text-purple-700' : 'text-slate-500 hover:bg-slate-50'}`}>
+                                                <input type="radio" name="loanType" value="repayment" checked={loanActionType === 'repayment'} onChange={() => setLoanActionType('repayment')} className="hidden" /> Paid a Loan
+                                            </label>
+                                            <label className={`flex-1 flex items-center justify-center gap-2 text-sm font-bold cursor-pointer px-4 py-3 sm:py-2 rounded-lg transition-colors ${loanActionType === 'received' ? 'bg-purple-100 text-purple-700' : 'text-slate-500 hover:bg-slate-50'}`}>
+                                                <input type="radio" name="loanType" value="received" checked={loanActionType === 'received'} onChange={() => setLoanActionType('received')} className="hidden" /> Received Loan Funds
+                                            </label>
+                                        </div>
+
+                                        {loanActionType === 'repayment' ? (
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+                                                <div><label className="block text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-2">Total Payment Amount ($)</label><input required type="number" step="0.01" name="amount" placeholder="0.00" className="w-full p-3 soft-input bg-white rounded-xl text-base md:text-sm focus:ring-purple-400" /></div>
+                                                <div><label className="block text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-2">Interest Portion ($) <span className="normal-case font-normal text-purple-500 ml-1">Tax Deductible</span></label><input type="number" step="0.01" name="interest" placeholder="0.00" className="w-full p-3 soft-input bg-white rounded-xl text-base md:text-sm focus:ring-purple-400" /></div>
+                                                <div className="md:col-span-2"><label className="block text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-2">Paid From Account</label><select name="account" className="w-full p-3 soft-input bg-white rounded-xl text-base md:text-sm focus:ring-purple-400 appearance-none">{accounts.map(acc => <option key={acc} value={acc}>{acc}</option>)}</select></div>
+                                            </div>
+                                        ) : (
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+                                                <div><label className="block text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-2">Amount Received ($)</label><input required type="number" step="0.01" name="amount" placeholder="0.00" className="w-full p-3 soft-input bg-white rounded-xl text-base md:text-sm focus:ring-purple-400" /></div>
+                                                <div><label className="block text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-2">Deposited Into Account</label><select name="account" className="w-full p-3 soft-input bg-white rounded-xl text-base md:text-sm focus:ring-purple-400 appearance-none">{accounts.map(acc => <option key={acc} value={acc}>{acc}</option>)}</select></div>
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+
+                                <div>
+                                    <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-2">Description / Notes</label>
+                                    <input type="text" name="description" placeholder={quickAction === 'drive' ? "Where did you drive to? (e.g., Post office, Supplier)" : "Brief description..."} className="w-full p-3 soft-input rounded-xl text-base md:text-sm" />
+                                </div>
+
+                                <div className="flex justify-end pt-4">
+                                    <button type="submit" className="w-full sm:w-auto px-12 py-4 bg-indigo-600 text-white rounded-xl font-bold shadow-md hover:bg-indigo-700 transition-all active:scale-95 text-lg">Save Record</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                );
+            };
+
+            const renderBookDashboard = () => (
+                <div className="space-y-6">
+                    <div className="flex justify-between items-center bg-white p-4 rounded-2xl shadow-sm border border-slate-200">
+                        <div className="flex gap-2 bg-slate-100 p-1.5 rounded-xl">
+                            <button onClick={() => setDashView('annual')} className={`px-5 py-2 rounded-lg text-sm font-bold transition-all ${dashView === 'annual' ? 'bg-white shadow-sm text-indigo-700' : 'text-slate-500 hover:text-slate-800'}`}>Annual</button>
+                            <button onClick={() => setDashView('5year')} className={`px-5 py-2 rounded-lg text-sm font-bold transition-all ${dashView === '5year' ? 'bg-white shadow-sm text-indigo-700' : 'text-slate-500 hover:text-slate-800'}`}>5-Year</button>
+                        </div>
+                        {dashView === 'annual' && (
+                            <select value={selectedYear} onChange={(e) => setSelectedYear(e.target.value)} className="soft-input rounded-xl px-5 py-2 text-sm font-bold text-indigo-700 cursor-pointer">
+                                {[2024, 2025, 2026, 2027, 2028, 2029].map(y => <option key={y} value={y}>{y}</option>)}
+                            </select>
+                        )}
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
+                        <KPICard title="Income" value={dashView === 'annual' ? annualTotals.income : fiveYearTotals.income} icon={(p) => <Icon name="trendingUp" {...p}/>} color="emerald" subtext={dashView === 'annual' ? 'Annual Gross (Excl. Loans)' : 'Total 5-Year (Excl. Loans)'} />
+                        <KPICard title="Expenses" value={dashView === 'annual' ? annualTotals.expenses : fiveYearTotals.expenses} icon={(p) => <Icon name="trendingDown" {...p}/>} color="rose" subtext="Operational Costs" />
+                        <KPICard title="Profit" value={dashView === 'annual' ? annualTotals.profit : fiveYearTotals.profit} icon={(p) => <Icon name="dollarSign" {...p}/>} color="amber" subtext="Net Profit" />
+                        <KPICard title="Profit Margin" value={`${(dashView === 'annual' ? annualTotals.margin : fiveYearTotals.margin).toFixed(2)}%`} icon={(p) => <Icon name="pieChart" {...p}/>} color="indigo" subtext="Performance Ratio" />
+                    </div>
+
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <div className="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm">
+                            <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-8 flex items-center gap-2"><span className="w-2.5 h-2.5 rounded-full bg-indigo-500"></span> Income Breakdown</h4>
+                            <div className="h-[280px]">
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <PieChart>
+                                        <Pie data={incomeChartData} innerRadius={70} outerRadius={100} paddingAngle={5} dataKey="value">
+                                            {incomeChartData.map((entry, index) => <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />)}
+                                        </Pie>
+                                        <Tooltip formatter={(value) => formatCurrency(value)} />
+                                        <Legend iconType="circle" />
+                                    </PieChart>
+                                </ResponsiveContainer>
+                            </div>
+                        </div>
+                        <div className="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm">
+                            <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-8 flex items-center gap-2"><span className="w-2.5 h-2.5 rounded-full bg-rose-400"></span> Expense Breakdown</h4>
+                            <div className="h-[280px]">
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <PieChart>
+                                        <Pie data={expenseChartData} innerRadius={70} outerRadius={100} paddingAngle={5} dataKey="value">
+                                            {expenseChartData.map((entry, index) => <Cell key={`cell-${index}`} fill={CHART_COLORS[(index + 3) % CHART_COLORS.length]} />)}
+                                        </Pie>
+                                        <Tooltip formatter={(value) => formatCurrency(value)} />
+                                        <Legend iconType="circle" />
+                                    </PieChart>
+                                </ResponsiveContainer>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+
+            const renderBookLedger = () => (
+                <div className="space-y-6">
+                    <div className="bg-white p-6 md:p-8 rounded-2xl border border-slate-200 shadow-sm">
+                        <h3 className={`text-lg font-black mb-6 flex items-center gap-2 ${bookTab === 'income' ? 'text-indigo-600' : 'text-rose-600'}`}>
+                            <Icon name="plus" size={24} /> Log New {bookTab.charAt(0).toUpperCase() + bookTab.slice(1)} (Manual Entry)
+                        </h3>
+                        <form onSubmit={addBookTransaction} className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-5">
+                            <input type="hidden" name="type" value={currentLedgerType} />
+                            <div className="space-y-1.5"><label className="text-[11px] font-bold text-slate-500 uppercase">Gross Amount ($)</label><input required type="number" step="0.01" name="amount" placeholder="0.00" className="w-full p-3 soft-input rounded-xl text-sm" /></div>
+                            <div className="space-y-1.5"><label className="text-[11px] font-bold text-slate-500 uppercase">Tax ($)</label><input type="number" step="0.01" name="tax" placeholder="0.00" className="w-full p-3 soft-input rounded-xl text-sm" /></div>
+                            <div className="space-y-1.5"><label className="text-[11px] font-bold text-slate-500 uppercase">Shipping ($)</label><input type="number" step="0.01" name="shipping" placeholder="0.00" className="w-full p-3 soft-input rounded-xl text-sm" /></div>
+                            <div className="space-y-1.5"><label className="text-[11px] font-bold text-slate-500 uppercase">Fees ($)</label><input type="number" step="0.01" name="fees" placeholder="0.00" className="w-full p-3 soft-input rounded-xl text-sm" /></div>
+                            <div className="space-y-1.5"><label className="text-[11px] font-bold text-slate-500 uppercase" title="Optional: For Tracking Vehicle Use">Mileage (KM)</label><input type="number" step="0.1" name="kms" placeholder="0" className="w-full p-3 soft-input rounded-xl text-sm" /></div>
+                            <div className="space-y-1.5"><label className="text-[11px] font-bold text-slate-500 uppercase">Date</label><input required type="date" name="date" defaultValue={new Date().toISOString().split('T')[0]} className="w-full p-3 soft-input rounded-xl text-sm text-slate-600" /></div>
+                            
+                            <div className="space-y-1.5 md:col-span-2"><label className="text-[11px] font-bold text-slate-500 uppercase">Category</label><select name="category" className="w-full p-3 soft-input rounded-xl text-sm">{categories[currentLedgerType].map(cat => <option key={cat} value={cat}>{cat}</option>)}</select></div>
+                            <div className="space-y-1.5 md:col-span-2"><label className="text-[11px] font-bold text-slate-500 uppercase">Account</label><select name="account" className="w-full p-3 soft-input rounded-xl text-sm">{accounts.map(acc => <option key={acc} value={acc}>{acc}</option>)}</select></div>
+                            <div className="space-y-1.5 md:col-span-2"><label className="text-[11px] font-bold text-slate-500 uppercase">Description / Notes</label><input type="text" name="description" placeholder="Notes..." className="w-full p-3 soft-input rounded-xl text-sm" /></div>
+                            
+                            <div className="lg:col-span-6 flex justify-end mt-4">
+                                <button type="submit" className={`px-8 py-3 w-full md:w-auto ${bookTab === 'income' ? 'bg-indigo-600 hover:bg-indigo-700' : 'bg-rose-600 hover:bg-rose-700'} text-white rounded-xl font-bold shadow-md transition-all active:scale-95`}>Save Record</button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                        <div className="p-6 border-b border-slate-100 bg-slate-50 flex justify-between items-center">
+                            <h3 className="text-xs font-black text-slate-500 uppercase tracking-widest">Transaction Ledger</h3>
+                            <div className="flex items-center gap-2 text-xs font-bold text-slate-700"><span className="px-4 py-1.5 bg-white border border-slate-200 rounded-lg shadow-sm">Total Net: ${ currentLedgerTotal.toLocaleString() }</span></div>
+                        </div>
+                        <div className="overflow-x-auto pb-2">
+                            <table className="w-full text-sm whitespace-nowrap min-w-[800px]">
+                                <thead className="bg-slate-800 text-white uppercase font-bold tracking-widest text-[10px]">
+                                    <tr>
+                                        <th className="px-5 py-4 text-left">Date</th>
+                                        <th className="px-5 py-4 text-left">Category</th>
+                                        <th className="px-5 py-4 text-right">Amount</th>
+                                        <th className="px-5 py-4 text-right">Tax</th>
+                                        <th className="px-5 py-4 text-right">Ship</th>
+                                        <th className="px-5 py-4 text-right">Fees</th>
+                                        <th className="px-5 py-4 text-right font-black bg-white/10 text-xs">Net Amount</th>
+                                        <th className="px-5 py-4 text-right bg-white/5">KMs</th>
+                                        <th className="px-5 py-4 text-left">Account</th>
+                                        <th className="px-5 py-4 text-left">Desc</th>
+                                        <th className="px-5 py-4 text-center"></th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-slate-100">
+                                    {filteredLedgerTransactions.length === 0 ? (
+                                        <tr><td colSpan="11" className="px-5 py-16 text-center text-slate-400 font-medium">No {bookTab} recorded yet.</td></tr>
+                                    ) : (
+                                        filteredLedgerTransactions.map(t => (
+                                            <tr key={t.id} className="hover:bg-slate-50 transition-colors group">
+                                                <td className="px-5 py-4 text-slate-500">{t.date}</td>
+                                                <td className="px-5 py-4 font-bold text-slate-800 truncate max-w-[150px]">{t.category}</td>
+                                                <td className="px-5 py-4 text-right text-slate-500">${t.amount.toLocaleString()}</td>
+                                                <td className="px-5 py-4 text-right text-slate-500">${t.tax.toLocaleString()}</td>
+                                                <td className="px-5 py-4 text-right text-slate-500">${t.shipping.toLocaleString()}</td>
+                                                <td className="px-5 py-4 text-right text-slate-500">${t.fees.toLocaleString()}</td>
+                                                <td className={`px-5 py-4 text-right font-black ${bookTab === 'income' ? 'text-emerald-600 bg-emerald-50/50' : 'text-rose-600 bg-rose-50/50'}`}>${t.netAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+                                                <td className="px-5 py-4 text-right text-slate-500 font-bold">{t.kms || '-'}</td>
+                                                <td className="px-5 py-4 text-slate-500 truncate max-w-[120px]">{t.account}</td>
+                                                <td className="px-5 py-4 text-slate-500 italic truncate max-w-[120px]">{t.description}</td>
+                                                <td className="px-5 py-4 text-center">
+                                                    <button onClick={() => setItemToDelete(t.id)} className="text-slate-300 hover:text-red-500 bg-white p-2 rounded-lg border border-transparent group-hover:border-slate-200 transition-all shadow-sm opacity-0 group-hover:opacity-100"><Icon name="trash" size={16} /></button>
+                                                </td>
+                                            </tr>
+                                        ))
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            );
+
+            const renderBookSetup = () => (
+                <div className="space-y-6">
+                    <div className="bg-white p-8 md:p-10 rounded-2xl border border-slate-200 shadow-sm">
+                        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 border-b border-slate-100 pb-6 gap-4">
+                            <div>
+                                <h3 className="text-2xl font-black text-slate-800 mb-2">Bookkeeping Setup & Exports</h3>
+                                <p className="text-sm text-slate-500 font-medium">Configure your accounts and backup your financial data.</p>
+                            </div>
+                            <div className="flex flex-row gap-3 w-full md:w-auto">
+                                <input type="file" accept=".json,application/json" style={{ display: 'none' }} ref={bookFileInputRef} onChange={handleImportBookkeeping} />
+                                <button onClick={() => bookFileInputRef.current && bookFileInputRef.current.click()} className="flex items-center justify-center gap-2 bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-3 rounded-xl text-xs md:text-sm font-bold transition-colors" title="Restore Data"><Icon name="upload" size={18} /></button>
+                                <button onClick={exportBookData} className="flex items-center justify-center gap-2 bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-3 rounded-xl text-xs md:text-sm font-bold transition-colors"><Icon name="download" size={18} /> Backup (JSON)</button>
+                                <button onClick={exportBookCSV} className="flex-1 md:flex-none flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-3 rounded-xl text-xs md:text-sm font-bold transition-colors shadow-md"><Icon name="fileSpreadsheet" size={18} /> Export Excel</button>
+                            </div>
+                        </div>
+                        
+                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
+                            {/* Manage Accounts */}
+                            <section className="space-y-4 bg-slate-50 p-4 md:p-6 rounded-xl border border-slate-200">
+                                <h4 className="text-[10px] font-black uppercase text-slate-500 tracking-[0.2em] flex items-center gap-2"><Icon name="wallet" size={14}/> Bank Accounts</h4>
+                                <div className="flex gap-2">
+                                    <input value={newAccount} onChange={e => setNewAccount(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleAddListValue('account')} placeholder="Add new account..." className="flex-1 p-2 soft-input rounded-lg text-sm" />
+                                    <button onClick={() => handleAddListValue('account')} className="px-4 py-2 bg-slate-800 text-white rounded-lg text-sm font-bold hover:bg-slate-900 transition-colors">Add</button>
+                                </div>
+                                <div className="space-y-2 max-h-[250px] overflow-y-auto pr-2">
+                                    {accounts.map(acc => (
+                                        <div key={acc} className="flex items-center justify-between p-3 bg-white rounded-lg border border-slate-100 text-sm font-medium shadow-sm">
+                                            <span className="truncate mr-2">{acc}</span>
+                                            <button onClick={() => handleRemoveListValue('account', acc)} className="text-slate-300 hover:text-red-500 transition-colors p-1"><Icon name="trash" size={16}/></button>
+                                        </div>
+                                    ))}
+                                </div>
+                            </section>
+
+                            {/* Manage Income Categories */}
+                            <section className="space-y-4 bg-slate-50 p-4 md:p-6 rounded-xl border border-slate-200">
+                                <h4 className="text-[10px] font-black uppercase text-emerald-600 tracking-[0.2em] flex items-center gap-2"><Icon name="trendingUp" size={14}/> Income Categories</h4>
+                                <div className="flex gap-2">
+                                    <input value={newIncCat} onChange={e => setNewIncCat(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleAddListValue('income')} placeholder="Add category..." className="flex-1 p-2 soft-input rounded-lg text-sm" />
+                                    <button onClick={() => handleAddListValue('income')} className="px-4 py-2 bg-emerald-600 text-white rounded-lg text-sm font-bold hover:bg-emerald-700 transition-colors">Add</button>
+                                </div>
+                                <div className="space-y-2 max-h-[250px] overflow-y-auto pr-2">
+                                    {categories.income.map(cat => (
+                                        <div key={cat} className="flex items-center justify-between p-3 bg-white rounded-lg border border-slate-100 text-sm font-medium shadow-sm">
+                                            <span className="truncate mr-2">{cat}</span>
+                                            <button onClick={() => handleRemoveListValue('income', cat)} className="text-slate-300 hover:text-red-500 transition-colors p-1"><Icon name="trash" size={16}/></button>
+                                        </div>
+                                    ))}
+                                </div>
+                            </section>
+
+                            {/* Manage Expense Categories */}
+                            <section className="space-y-4 bg-slate-50 p-4 md:p-6 rounded-xl border border-slate-200">
+                                <h4 className="text-[10px] font-black uppercase text-rose-500 tracking-[0.2em] flex items-center gap-2"><Icon name="trendingDown" size={14}/> Expense Categories</h4>
+                                <div className="flex gap-2">
+                                    <input value={newExpCat} onChange={e => setNewExpCat(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleAddListValue('expense')} placeholder="Add category..." className="flex-1 p-2 soft-input rounded-lg text-sm" />
+                                    <button onClick={() => handleAddListValue('expense')} className="px-4 py-2 bg-rose-500 text-white rounded-lg text-sm font-bold hover:bg-rose-600 transition-colors">Add</button>
+                                </div>
+                                <div className="space-y-2 max-h-[250px] overflow-y-auto pr-2">
+                                    {categories.expense.map(cat => (
+                                        <div key={cat} className="flex items-center justify-between p-3 bg-white rounded-lg border border-slate-100 text-sm font-medium shadow-sm">
+                                            <span className="truncate mr-2">{cat}</span>
+                                            <button onClick={() => handleRemoveListValue('expense', cat)} className="text-slate-300 hover:text-red-500 transition-colors p-1"><Icon name="trash" size={16}/></button>
+                                        </div>
+                                    ))}
+                                </div>
+                            </section>
+                        </div>
+
+                        {/* Extended Beginners Guide */}
+                        <section className="space-y-4 mt-8 md:mt-12 pt-6 border-t border-slate-100">
+                            <h4 className="text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] mb-4">Beginner's Guide to Bookkeeping</h4>
+                            <div className="bg-slate-50 border border-slate-200 p-6 md:p-8 rounded-2xl space-y-6 md:space-y-8">
+                                <div className="flex flex-col sm:flex-row items-start gap-4 sm:gap-6">
+                                    <div className="p-3 bg-emerald-100 text-emerald-600 rounded-xl shrink-0"><Icon name="bookOpen" size={24} /></div>
+                                    <div>
+                                        <h5 className="font-bold text-slate-800 text-sm">1. What is Gross Amount vs. Net Amount?</h5>
+                                        <p className="text-sm text-slate-600 mt-2 leading-relaxed">When you make a sale (Income), you might charge a customer $100 <strong>(Amount)</strong>. However, you might collect $5 in <strong>Tax</strong>, pay $10 for <strong>Shipping</strong>, and lose $3 to a credit card <strong>Fee</strong>. The system automatically subtracts those from the total to give you the <strong>Net Amount ($82)</strong>. This Net Amount is the *actual* money your business earned.</p>
+                                    </div>
+                                </div>
+                                <div className="flex flex-col sm:flex-row items-start gap-4 sm:gap-6">
+                                    <div className="p-3 bg-rose-100 text-rose-600 rounded-xl shrink-0"><Icon name="trendingDown" size={24} /></div>
+                                    <div>
+                                        <h5 className="font-bold text-slate-800 text-sm">2. Tracking Your Expenses</h5>
+                                        <p className="text-sm text-slate-600 mt-2 leading-relaxed">Go to the "Expenses" tab to log everything you spend money on for the business. This could be software subscriptions, shipping boxes, or advertising. Tracking this accurately is vital because it lowers your taxable income at the end of the year!</p>
+                                    </div>
+                                </div>
+                                <div className="flex flex-col sm:flex-row items-start gap-4 sm:gap-6">
+                                    <div className="p-3 bg-purple-100 text-purple-600 rounded-xl shrink-0"><Icon name="landmark" size={24} /></div>
+                                    <div>
+                                        <h5 className="font-bold text-slate-800 text-sm">3. How do Loans work?</h5>
+                                        <p className="text-sm text-slate-600 mt-2 leading-relaxed">When you repay a loan, only the <strong>Interest</strong> is tax-deductible (not the Principal). Our "Manage Loans" quick entry automatically splits your payment into two separate transactions in your ledger. This ensures your accountant sees exactly what can be written off at tax time! (Note: Loan principal does not affect your Profit dashboard since it is a balance sheet item, not an expense).</p>
+                                    </div>
+                                </div>
+                                <div className="flex flex-col sm:flex-row items-start gap-4 sm:gap-6">
+                                    <div className="p-3 bg-indigo-100 text-indigo-600 rounded-xl shrink-0"><Icon name="fileSpreadsheet" size={24} /></div>
+                                    <div>
+                                        <h5 className="font-bold text-slate-800 text-sm">4. Sending Data to an Accountant</h5>
+                                        <p className="text-sm text-slate-600 mt-2 leading-relaxed">Come tax time, simply click the solid blue <strong>"Export Excel"</strong> button on the top right. This generates a perfectly formatted `.csv` file containing every transaction you logged, which any accountant, CPA, or software (like Excel or Google Sheets) can open instantly.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+                    </div>
+                </div>
+            );
+
+            return (
+                <div className="min-h-screen pb-content flex flex-col relative">
+                    {/* Item Deletion Modal */}
+                    {itemToDelete && (
+                        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                            <div className="bg-white p-6 rounded-2xl max-w-sm w-full shadow-2xl border border-slate-100">
+                                <div className="w-12 h-12 rounded-full bg-rose-100 text-rose-500 flex items-center justify-center mb-4">
+                                    <Icon name="trash" size={24} />
+                                </div>
+                                <h3 className="text-lg font-bold text-slate-800 mb-2">Delete Transaction?</h3>
+                                <p className="text-sm text-slate-500 mb-8">Are you sure you want to delete this record? This action cannot be undone and will affect your dashboard totals.</p>
+                                <div className="flex justify-end gap-3">
+                                    <button onClick={() => setItemToDelete(null)} className="px-5 py-2.5 text-slate-600 hover:bg-slate-100 rounded-xl text-sm font-bold transition-all">Cancel</button>
+                                    <button onClick={confirmDelete} className="px-5 py-2.5 bg-rose-500 text-white hover:bg-rose-600 rounded-xl shadow-md text-sm font-bold transition-all">Yes, Delete</button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Top Sticky Header */}
+                    <div className="bg-white border-b border-slate-200 shadow-sm sticky top-0 z-30 pt-safe no-print">
+                        <div className="max-w-4xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4 p-4">
+                            <div>
+                                <h1 className="text-2xl font-black flex items-center gap-2 tracking-tight text-slate-800">
+                                    <Icon name="layers" size={28} className="text-indigo-600"/>
+                                    HQB Pro
+                                </h1>
+                            </div>
+
+                            {/* Module Switcher */}
+                            <div className="flex bg-slate-100 p-1.5 rounded-xl border border-slate-200">
+                                <button 
+                                    onClick={() => setAppModule('quoter')} 
+                                    className={`flex items-center gap-2 px-6 py-2 rounded-lg text-sm font-bold transition-all ${appModule === 'quoter' ? 'bg-white text-indigo-700 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                                >
+                                    <Icon name="calculator" size={18} /> Quoter
+                                </button>
+                                <button 
+                                    onClick={() => { setAppModule('bookkeeping'); if(bookTab === 'dashboard') setBookTab('quick'); }} 
+                                    className={`flex items-center gap-2 px-6 py-2 rounded-lg text-sm font-bold transition-all ${appModule === 'bookkeeping' ? 'bg-white text-emerald-700 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                                >
+                                    <Icon name="wallet" size={18} /> Bookkeeping
+                                </button>
+                            </div>
+
+                            {appModule === 'quoter' && (
+                                <div className="hidden lg:flex items-center gap-8">
+                                    <div className="text-right">
+                                        <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Est. Profit ({calc.totalMarginPercent.toFixed(1)}%)</p>
+                                        <p className="font-black text-2xl leading-none text-emerald-600">{formatCurrency(calc.netProfit)}</p>
+                                    </div>
+                                    <div className="text-right border-l border-slate-200 pl-8">
+                                        <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Total Quote</p>
+                                        <p className="font-black text-2xl leading-none text-indigo-700">{formatCurrency(calc.grandTotal)}</p>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Main Content Area */}
+                    <div className="p-4 md:p-6 max-w-4xl w-full mx-auto flex-1">
+                        {appModule === 'quoter' ? (
+                            <div className="slide-fade-enter-active">
+                                {quoterTab === 'build' && renderQuoterBuild()}
+                                {quoterTab === 'internal' && renderQuoterInternal()}
+                                {quoterTab === 'proposal' && renderQuoterDoc('proposal')}
+                                {quoterTab === 'invoice' && renderQuoterDoc('invoice')}
+                                {quoterTab === 'receipt' && renderQuoterDoc('receipt')}
+                            </div>
+                        ) : (
+                            <div className="slide-fade-enter-active">
+                                {bookTab === 'dashboard' && renderBookDashboard()}
+                                {bookTab === 'quick' && renderBookQuickEntry()}
+                                {bookTab === 'income' && renderBookLedger()}
+                                {bookTab === 'expenses' && renderBookLedger()}
+                                {bookTab === 'setup' && renderBookSetup()}
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Dynamic Bottom Navigation */}
+                    <div className="fixed bottom-0 w-full bg-white border-t border-slate-200 shadow-[0_-10px_20px_-5px_rgba(0,0,0,0.05)] z-30 no-print pb-safe">
+                        <div className="max-w-4xl mx-auto flex h-16 md:h-20">
+                            {appModule === 'quoter' ? (
+                                <>
+                                    <button className={`flex-1 flex flex-col items-center justify-center gap-1 font-bold text-[10px] md:text-xs uppercase tracking-wider transition-colors ${quoterTab === 'build' ? 'text-indigo-700 bg-indigo-50/80 border-t-2 border-indigo-600' : 'text-slate-400 hover:text-slate-800 hover:bg-slate-50 border-t-2 border-transparent'}`} onClick={() => setQuoterTab('build')}><Icon name="calculator" size={22} /> Builder</button>
+                                    <button className={`flex-1 flex flex-col items-center justify-center gap-1 font-bold text-[10px] md:text-xs uppercase tracking-wider border-l border-slate-100 transition-colors ${quoterTab === 'internal' ? 'text-emerald-700 bg-emerald-50/80 border-t-2 border-emerald-600' : 'text-slate-400 hover:text-slate-800 hover:bg-slate-50 border-t-2 border-transparent'}`} onClick={() => setQuoterTab('internal')}><Icon name="eye" size={22} /> Internal</button>
+                                    <button className={`flex-1 flex flex-col items-center justify-center gap-1 font-bold text-[10px] md:text-xs uppercase tracking-wider border-l border-slate-100 transition-colors ${quoterTab === 'proposal' ? 'text-indigo-700 bg-indigo-50/80 border-t-2 border-indigo-600' : 'text-slate-400 hover:text-slate-800 hover:bg-slate-50 border-t-2 border-transparent'}`} onClick={() => setQuoterTab('proposal')}><Icon name="fileText" size={22} /> Proposal</button>
+                                    <button className={`flex-1 flex flex-col items-center justify-center gap-1 font-bold text-[10px] md:text-xs uppercase tracking-wider border-l border-slate-100 transition-colors ${quoterTab === 'invoice' ? 'text-indigo-700 bg-indigo-50/80 border-t-2 border-indigo-600' : 'text-slate-400 hover:text-slate-800 hover:bg-slate-50 border-t-2 border-transparent'}`} onClick={() => setQuoterTab('invoice')}><Icon name="receipt" size={22} /> Invoice</button>
+                                    <button className={`flex-1 flex flex-col items-center justify-center gap-1 font-bold text-[10px] md:text-xs uppercase tracking-wider border-l border-slate-100 transition-colors ${quoterTab === 'receipt' ? 'text-emerald-700 bg-emerald-50/80 border-t-2 border-emerald-600' : 'text-slate-400 hover:text-slate-800 hover:bg-slate-50 border-t-2 border-transparent'}`} onClick={() => setQuoterTab('receipt')}><Icon name="fileCheck" size={22} /> Receipt</button>
+                                </>
+                            ) : (
+                                <>
+                                    <button className={`flex-1 flex flex-col items-center justify-center gap-1 font-bold text-[10px] md:text-xs uppercase tracking-wider transition-colors ${bookTab === 'dashboard' ? 'text-indigo-700 bg-indigo-50/80 border-t-2 border-indigo-600' : 'text-slate-400 hover:text-slate-800 hover:bg-slate-50 border-t-2 border-transparent'}`} onClick={() => { setBookTab('dashboard'); setQuickAction(null); }}><Icon name="layoutDashboard" size={22} /> Dashboard</button>
+                                    <button className={`flex-1 flex flex-col items-center justify-center gap-1 font-bold text-[10px] md:text-xs uppercase tracking-wider border-l border-slate-100 transition-colors ${bookTab === 'quick' ? 'text-emerald-700 bg-emerald-50/80 border-t-2 border-emerald-600' : 'text-slate-400 hover:text-slate-800 hover:bg-slate-50 border-t-2 border-transparent'}`} onClick={() => { setBookTab('quick'); setQuickAction(null); }}><Icon name="zap" size={22} /> Quick Log</button>
+                                    <button className={`flex-1 flex flex-col items-center justify-center gap-1 font-bold text-[10px] md:text-xs uppercase tracking-wider border-l border-slate-100 transition-colors ${bookTab === 'income' ? 'text-emerald-700 bg-emerald-50/80 border-t-2 border-emerald-600' : 'text-slate-400 hover:text-slate-800 hover:bg-slate-50 border-t-2 border-transparent'}`} onClick={() => { setBookTab('income'); setQuickAction(null); }}><Icon name="trendingUp" size={22} /> Income</button>
+                                    <button className={`flex-1 flex flex-col items-center justify-center gap-1 font-bold text-[10px] md:text-xs uppercase tracking-wider border-l border-slate-100 transition-colors ${bookTab === 'expenses' ? 'text-rose-700 bg-rose-50/80 border-t-2 border-rose-600' : 'text-slate-400 hover:text-slate-800 hover:bg-slate-50 border-t-2 border-transparent'}`} onClick={() => { setBookTab('expenses'); setQuickAction(null); }}><Icon name="trendingDown" size={22} /> Expenses</button>
+                                    <button className={`flex-1 flex flex-col items-center justify-center gap-1 font-bold text-[10px] md:text-xs uppercase tracking-wider border-l border-slate-100 transition-colors ${bookTab === 'setup' ? 'text-indigo-700 bg-indigo-50/80 border-t-2 border-indigo-600' : 'text-slate-400 hover:text-slate-800 hover:bg-slate-50 border-t-2 border-transparent'}`} onClick={() => { setBookTab('setup'); setQuickAction(null); }}><Icon name="settings" size={22} /> Setup</button>
+                                </>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
