@@ -37,7 +37,134 @@
             };
             return icons[name] || null;
         };
+// --- QUOTER CONSTANTS ---
+        const STITCH_MATRIX = [
+            { maxStitch: 8000, prices: [15, 15, 14.5, 14.5, 14] },
+            { maxStitch: 15000, prices: [22.5, 22, 21, 21, 20] },
+            { maxStitch: 20000, prices: [30, 28, 27, 27, 25] },
+            { maxStitch: Infinity, prices: [50, 45, 43, 43, 40] }
+        ];
+        const QTY_TIERS = [{ max: 10, index: 0 }, { max: 49, index: 1 }, { max: 100, index: 2 }, { max: 299, index: 3 }, { max: Infinity, index: 4 }];
+        
+        const getEmbroideryCost = (stitches, qty) => {
+            if (!stitches || stitches <= 0) return 0;
+            const sRow = STITCH_MATRIX.find(r => stitches <= r.maxStitch) || STITCH_MATRIX[STITCH_MATRIX.length - 1];
+            const qCol = QTY_TIERS.find(q => qty <= q.max) || QTY_TIERS[QTY_TIERS.length - 1];
+            return sRow.prices[qCol.index];
+        };
 
+        const DTF_FEES = { small: 11.33, medium: 16.00, large: 22.00 }; // Simplified for mobile view
+
+        // --- QUOTER COMPONENT ---
+        const QuoterModule = ({ onPushToPipeline }) => {
+            const [customer, setCustomer] = useState('');
+            const [desc, setDesc] = useState('');
+            const [qty, setQty] = useState(1);
+            const [blankCost, setBlankCost] = useState(0);
+            const [decoType, setDecoType] = useState('dtf'); // 'dtf' or 'embroidery'
+            const [decoSize, setDecoSize] = useState('small');
+            const [stitches, setStitches] = useState(10000);
+            const [margin, setMargin] = useState(35);
+
+            // Calculate Totals
+            const landedCost = parseFloat(blankCost) || 0;
+            const clientGarmentPrice = landedCost / (1 - ((parseFloat(margin) || 0) / 100));
+            
+            let decoCost = 0;
+            if (decoType === 'dtf') decoCost = DTF_FEES[decoSize] || 0;
+            if (decoType === 'embroidery') decoCost = getEmbroideryCost(parseFloat(stitches), parseFloat(qty));
+
+            const pricePerPiece = clientGarmentPrice + decoCost;
+            const totalQuote = pricePerPiece * (parseFloat(qty) || 1);
+
+            const handleSend = () => {
+                if(!customer) return alert("Please enter a customer name.");
+                onPushToPipeline({
+                    id: `JOB-${Date.now().toString().slice(-6)}`,
+                    customer: customer,
+                    desc: `${qty}x ${desc || 'Custom Items'}`,
+                    stage: 'new',
+                    balance: totalQuote / 2, // Assuming 50% deposit paid, 50% owed
+                    total: totalQuote
+                });
+                // Reset form
+                setCustomer(''); setDesc(''); setQty(1); setBlankCost(0);
+            };
+
+            return (
+                <div className="space-y-6 pb-6">
+                    <div className="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
+                        <h2 className="text-sm font-black text-slate-800 uppercase tracking-widest mb-4 flex items-center gap-2">
+                            <Icon name="calculator" size={18} className="text-indigo-600" /> Quick Quote
+                        </h2>
+                        
+                        <div className="space-y-4">
+                            <div>
+                                <label className="block text-xs font-bold text-slate-500 mb-1">Customer / Project</label>
+                                <input type="text" placeholder="e.g., Local Hockey Team" className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm" value={customer} onChange={e => setCustomer(e.target.value)} />
+                            </div>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-xs font-bold text-slate-500 mb-1">Item Desc</label>
+                                    <input type="text" placeholder="e.g., Black Hoodies" className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm" value={desc} onChange={e => setDesc(e.target.value)} />
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-bold text-slate-500 mb-1">Total Qty</label>
+                                    <input type="number" className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold" value={qty} onChange={e => setQty(e.target.value)} />
+                                </div>
+                            </div>
+                            
+                            <div className="grid grid-cols-2 gap-4 pt-2 border-t border-slate-100">
+                                <div>
+                                    <label className="block text-xs font-bold text-slate-500 mb-1">Blank Cost ($)</label>
+                                    <input type="number" className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm" value={blankCost} onChange={e => setBlankCost(e.target.value)} />
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-bold text-slate-500 mb-1">Margin (%)</label>
+                                    <input type="number" className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-indigo-700 font-bold" value={margin} onChange={e => setMargin(e.target.value)} />
+                                </div>
+                            </div>
+
+                            <div className="pt-2 border-t border-slate-100">
+                                <label className="block text-xs font-bold text-slate-500 mb-2">Decoration Type</label>
+                                <div className="flex gap-2 mb-3">
+                                    <button onClick={() => setDecoType('dtf')} className={`flex-1 py-2 rounded-lg text-xs font-bold border ${decoType === 'dtf' ? 'bg-indigo-50 border-indigo-200 text-indigo-700' : 'bg-white border-slate-200 text-slate-500'}`}>DTF Print</button>
+                                    <button onClick={() => setDecoType('embroidery')} className={`flex-1 py-2 rounded-lg text-xs font-bold border ${decoType === 'embroidery' ? 'bg-indigo-50 border-indigo-200 text-indigo-700' : 'bg-white border-slate-200 text-slate-500'}`}>Embroidery</button>
+                                </div>
+
+                                {decoType === 'dtf' ? (
+                                    <select className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm" value={decoSize} onChange={e => setDecoSize(e.target.value)}>
+                                        <option value="small">Small / Left Chest</option>
+                                        <option value="medium">Medium / Youth</option>
+                                        <option value="large">Large / Full Back</option>
+                                    </select>
+                                ) : (
+                                    <div>
+                                        <label className="block text-[10px] font-bold text-slate-400 mb-1 uppercase">Estimated Stitches</label>
+                                        <input type="number" className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm" value={stitches} onChange={e => setStitches(e.target.value)} />
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Live Total Readout */}
+                    <div className="bg-slate-900 text-white p-5 rounded-2xl shadow-md">
+                        <div className="flex justify-between items-center mb-2">
+                            <span className="text-slate-400 text-xs font-bold uppercase tracking-widest">Price Per Item</span>
+                            <span className="text-lg font-bold">${pricePerPiece.toFixed(2)}</span>
+                        </div>
+                        <div className="flex justify-between items-center pt-2 border-t border-slate-700">
+                            <span className="text-slate-300 text-sm font-black uppercase tracking-widest">Total Quote</span>
+                            <span className="text-3xl font-black text-emerald-400">${totalQuote.toFixed(2)}</span>
+                        </div>
+                        <button onClick={handleSend} className="w-full mt-4 bg-indigo-600 hover:bg-indigo-500 text-white py-3 rounded-xl font-bold shadow-md active:scale-95 transition-all">
+                            Collect Deposit & Send to Pipeline
+                        </button>
+                    </div>
+                </div>
+            );
+        };
         function App() {
             const [activeTab, setActiveTab] = useState('pipeline');
 
@@ -130,7 +257,10 @@
                     {/* Main Content Area */}
                     <div className="flex-1 max-w-7xl w-full mx-auto p-4">
                         {activeTab === 'pipeline' && renderPipeline()}
-                        {activeTab === 'quoter' && <div className="text-center py-20 text-slate-400 font-medium">Quoter Module (To Be Added Next)</div>}
+                        {activeTab === 'quoter' && <QuoterModule onPushToPipeline={(newOrder) => {
+    setOrders([newOrder, ...orders]);
+    setActiveTab('pipeline'); // Auto-switch to pipeline to see it
+}} />}
                         {activeTab === 'ledger' && <div className="text-center py-20 text-slate-400 font-medium">Financial Controller (To Be Added Last)</div>}
                     </div>
 
