@@ -402,18 +402,18 @@
                     const opt = { 
                         margin: 0.25, 
                         filename: `${safeName}_${suffix}.pdf`, 
-                        image: { type: 'jpeg', quality: 0.98 }, 
-                        html2canvas: { scale: 2, useCORS: true, letterRendering: true, windowWidth: 800 }, 
+                        image: { type: 'jpeg', quality: 1 }, 
+                        html2canvas: { scale: 2, useCORS: true, letterRendering: true, scrollY: 0 }, 
                         jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' } 
                     };
                     
-                    pdfGenRef.current.style.display = 'block';
+                    pdfGenRef.current.parentElement.style.display = 'block';
                     setTimeout(() => {
                         window.html2pdf().set(opt).from(pdfGenRef.current).save().then(() => {
-                            pdfGenRef.current.style.display = 'none';
+                            if (pdfGenRef.current) pdfGenRef.current.parentElement.style.display = 'none';
                             setPdfConfig(null);
                         });
-                    }, 300);
+                    }, 500);
                 }
             }, [pdfConfig]);
 
@@ -1113,8 +1113,11 @@
                 const title = type === 'proposal' ? 'PROPOSAL' : type === 'invoice' ? 'FINAL INVOICE' : 'RECEIPT';
 
                 return (
-                    <div style={{ position: 'fixed', left: '-10000px', top: 0, zIndex: -100 }}>
-                        <div ref={pdfGenRef} style={{ width: '800px', padding: '50px', boxSizing: 'border-box', backgroundColor: 'white', color: '#0f172a', fontFamily: 'Helvetica, Arial, sans-serif' }}>
+                    {/* The wrapper must be on-screen but transparent, or mobile browsers will cull the rendering */}
+                    <div style={{ position: 'absolute', top: 0, left: 0, opacity: 0.01, pointerEvents: 'none', zIndex: -9999, width: '100%', overflow: 'visible' }}>
+                        
+                        {/* Width is locked to 8 inches (8.5in page - 0.25in margin on both sides) */}
+                        <div ref={pdfGenRef} style={{ width: '8in', padding: '0.2in', boxSizing: 'border-box', backgroundColor: 'white', color: '#0f172a', fontFamily: 'Helvetica, Arial, sans-serif' }}>
                             
                             {/* Paid Stamp for Receipts */}
                             {(type === 'receipt' && order.balance === 0) && (
