@@ -1113,8 +1113,8 @@
                 const title = type === 'proposal' ? 'PROPOSAL' : type === 'invoice' ? 'FINAL INVOICE' : 'RECEIPT';
 
                 return (
-                    {/* The wrapper must be on-screen but transparent, or mobile browsers will cull the rendering */}
                     <div style={{ position: 'absolute', top: 0, left: 0, opacity: 0.01, pointerEvents: 'none', zIndex: -9999, width: '100%', overflow: 'visible' }}>
+                        {/* The wrapper must be on-screen but transparent, or mobile browsers will cull the rendering */}
                         
                         {/* Width is locked to 8 inches (8.5in page - 0.25in margin on both sides) */}
                         <div ref={pdfGenRef} style={{ width: '8in', padding: '0.2in', boxSizing: 'border-box', backgroundColor: 'white', color: '#0f172a', fontFamily: 'Helvetica, Arial, sans-serif' }}>
