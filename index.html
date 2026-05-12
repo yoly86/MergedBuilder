@@ -142,6 +142,8 @@
                 try { return JSON.parse(localStorage.getItem('t1_biz')) || { name: '', address: '', phone: '', email: '', website: '' }; } 
                 catch(e) { return { name: '', address: '', phone: '', email: '', website: '' }; }
             });
+            
+            // NEW: Shop Financial Settings
             const [shopSettings, setShopSettings] = useState(() => {
                 try { return JSON.parse(localStorage.getItem('t1_settings')) || { marginGreen: 45, marginYellow: 30, fundConsumables: 5, fundGrowth: 5, fundTax: 15 }; }
                 catch(e) { return { marginGreen: 45, marginYellow: 30, fundConsumables: 5, fundGrowth: 5, fundTax: 15 }; }
@@ -228,21 +230,16 @@
                     const lineTotal = lineTotalPerPiece * calculatedQty;
                     const decoDiscountTotal = explicitDecoDiscount * calculatedQty;
                     
+                    // Margin Health Calculation per item
                     const itemTotalCost = landedCost + itemDecoCostPerPiece;
                     const itemProfit = lineTotalPerPiece - itemTotalCost;
                     const itemMarginPercent = lineTotalPerPiece > 0 ? (itemProfit / lineTotalPerPiece) * 100 : 0;
-                    
-                    const undiscountedLineTotalPerPiece = clientGarmentPrice + itemDecoPerPiece + explicitDecoDiscount;
-                    const undiscountedLineTotal = undiscountedLineTotalPerPiece * calculatedQty;
 
                     orderGarmentCostTotal += totalGarmentCost; orderGarmentRetailTotal += totalGarmentRetail;
                     orderDecoRetailTotal += totalDecoRetail; orderDecoCostTotal += totalDecoMaterialCost;
                     totalDtfCost += itemDtfCost * calculatedQty; totalThreadCost += itemThreadCost * calculatedQty; totalStabilizerCost += itemStabilizerCost * calculatedQty;
 
-                    const validLocations = item.locations.filter(l => l.type !== 'none');
-                    const validPlacementCount = validLocations.length;
-
-                    return { ...item, calculatedQty, sizeSum, landedCost, clientGarmentPrice, processedLocations, itemDecoPerPiece, totalGarmentRetail, totalDecoRetail, lineTotalPerPiece, lineTotal, explicitDecoDiscount, decoDiscountTotal, itemMarginPercent, undiscountedLineTotalPerPiece, undiscountedLineTotal, validPlacementCount };
+                    return { ...item, calculatedQty, sizeSum, landedCost, clientGarmentPrice, processedLocations, itemDecoPerPiece, totalGarmentRetail, totalDecoRetail, lineTotalPerPiece, lineTotal, explicitDecoDiscount, decoDiscountTotal, itemMarginPercent };
                 });
 
                 const setup = parseFloat(orderData.setupFees) || 0;
@@ -258,6 +255,7 @@
                 const tax = discountedSubtotal * (taxRate / 100);
                 const grandTotal = discountedSubtotal + tax;
                 
+                // Fund Allocations
                 const allocConsumables = discountedSubtotal * (shopSettings.fundConsumables / 100);
                 const allocGrowth = discountedSubtotal * (shopSettings.fundGrowth / 100);
                 const allocTax = discountedSubtotal * (shopSettings.fundTax / 100);
@@ -266,6 +264,7 @@
                 const netProfit = grossProfit - orderDecoCostTotal - allocConsumables - allocGrowth - allocTax - digitizingCost;
                 const deposit = Math.ceil(grandTotal) / 2;
                 
+                // Overall Margin
                 const overallMarginPercent = discountedSubtotal > 0 ? (netProfit / discountedSubtotal) * 100 : 0;
 
                 return { 
@@ -408,6 +407,7 @@
             };
             const annualTotals = useMemo(() => calculateTotals(filteredByYear), [filteredByYear]);
             
+            // Advanced KPIs & Funds
             const kpiData = useMemo(() => {
                 const activeOrders = orders.filter(o => o.stage !== 'quote' && o.stage !== 'archived');
                 const pipelineValue = activeOrders.reduce((sum, o) => sum + (o.total || 0), 0);
@@ -422,6 +422,7 @@
                     return { name: cat, value: filteredByYear.filter(t => t.category === cat && t.type === 'expense').reduce((sum, t) => sum + t.netAmount, 0) };
                 }).filter(c => c.value > 0).sort((a, b) => b.value - a.value);
 
+                // Calculate Fund Balances (Total Archived Income Allocations minus specific expenses)
                 const archivedIncome = orders.filter(o => o.stage === 'archived').reduce((sum, o) => sum + (o.fullData?.calc?.discountedSubtotal || 0), 0);
                 
                 let consTotal = archivedIncome * (shopSettings.fundConsumables / 100);
@@ -470,6 +471,7 @@
                 </div>
             );
 
+            // Returns appropriate health color class
             const getHealthColor = (margin) => {
                 if (margin >= shopSettings.marginGreen) return 'text-emerald-500';
                 if (margin >= shopSettings.marginYellow) return 'text-amber-500';
@@ -489,7 +491,7 @@
                             <div className="p-3 bg-indigo-50 rounded-xl text-indigo-600"><Icon name="building" size={24}/></div>
                             <div>
                                 <h2 className="text-lg font-black text-slate-800 uppercase tracking-widest">Business Profile</h2>
-                                <p className="text-xs text-slate-500 mt-1 leading-relaxed">These details appear on your customer-facing Proposals, Invoices, and Receipts.</p>
+                                <p className="text-xs text-slate-500 mt-1 leading-relaxed">These details appear on your customer-facing Proposals, Invoices, and Receipts. They are securely saved only to this device's local storage.</p>
                             </div>
                         </div>
                         <div className="space-y-5">
@@ -1063,172 +1065,155 @@
                 );
             };
 
-            // --- HIDDEN PDF VIEWS (UPDATED TO MATCH QUOTER 2 STYLING) ---
+            // --- HIDDEN PDF VIEWS ---
             const renderHiddenPDF = () => {
                 if(!pdfConfig) return null;
                 const { order, type } = pdfConfig;
                 const { fullData } = order;
                 const oData = fullData.orderData || {};
                 const oCalc = fullData.calc || {};
-                const title = type === 'proposal' ? 'PROPOSAL' : type === 'invoice' ? 'FINAL INVOICE' : 'RECEIPT';
+                const title = type === 'proposal' ? 'PROPOSAL' : type === 'invoice' ? 'INVOICE' : 'RECEIPT';
 
                 return (
                     <div style={{ position: 'fixed', left: '-10000px', top: 0, zIndex: -100 }}>
-                        <div ref={pdfGenRef} style={{ width: '8.5in', padding: '0.8in', backgroundColor: 'white', color: '#0f172a', fontFamily: 'Helvetica, Arial, sans-serif' }}>
+                        <div ref={pdfGenRef} className="print-full-width" style={{ width: '8.5in', padding: '0.8in', backgroundColor: 'white', color: '#0f172a', fontFamily: 'Helvetica, Arial, sans-serif' }}>
                             
-                            {(type === 'receipt' && order.balance === 0) && (
-                                <div style={{ position: 'absolute', top: '120px', right: '100px', transform: 'rotate(12deg)', opacity: 0.9, border: '4px solid #10b981', color: '#10b981', padding: '12px 32px', borderRadius: '12px', pointerEvents: 'none', zIndex: 10 }}>
-                                    <p style={{ margin: 0, fontSize: '36px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '4px' }}>Paid In Full</p>
-                                </div>
-                            )}
-
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', borderBottom: '2px solid #1e293b', paddingBottom: '24px', marginBottom: '24px' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '2px solid #cbd5e1', paddingBottom: '30px', marginBottom: '40px' }}>
                                 <div>
-                                    <h1 style={{ fontSize: '36px', fontWeight: '900', letterSpacing: '-1px', color: '#0f172a', margin: '0 0 4px 0' }}>{title}</h1>
-                                    <p style={{ margin: 0, color: '#64748b', fontWeight: '500', fontSize: '14px' }}>Date: {new Date().toLocaleDateString()}</p>
-                                    
-                                    {(businessDetails.name || businessDetails.address || businessDetails.phone || businessDetails.email) && (
-                                        <div style={{ marginTop: '16px', paddingTop: '16px', borderTop: '1px solid #e2e8f0', fontSize: '14px', color: '#475569', lineHeight: '1.4' }}>
-                                            {businessDetails.name && <p style={{ margin: 0, fontWeight: 'bold', color: '#1e293b' }}>{businessDetails.name}</p>}
-                                            {businessDetails.address && <p style={{ margin: 0 }}>{businessDetails.address}</p>}
-                                            {businessDetails.phone && <p style={{ margin: 0 }}>{businessDetails.phone}</p>}
-                                            {businessDetails.email && <p style={{ margin: 0 }}>{businessDetails.email}</p>}
-                                            {businessDetails.website && <p style={{ margin: 0 }}>{businessDetails.website}</p>}
-                                        </div>
-                                    )}
+                                    <h2 style={{ fontSize: '24px', fontWeight: 'bold', margin: '0 0 5px 0' }}>{businessDetails.name || 'Your Business Name'}</h2>
+                                    <p style={{ margin: '3px 0', fontSize: '14px', color: '#64748b' }}>{businessDetails.address}</p>
+                                    <p style={{ margin: '3px 0', fontSize: '14px', color: '#64748b' }}>{businessDetails.phone} | {businessDetails.email}</p>
+                                    <p style={{ margin: '3px 0', fontSize: '14px', color: '#4f46e5' }}>{businessDetails.website}</p>
                                 </div>
                                 <div style={{ textAlign: 'right' }}>
-                                    <h2 style={{ fontSize: '20px', fontWeight: 'bold', color: '#1e293b', margin: '0 0 4px 0' }}>{order.customer}</h2>
-                                    {oData.orderName && <p style={{ margin: 0, color: '#475569', fontSize: '16px' }}>{oData.orderName}</p>}
-                                    {(type === 'proposal' && oData.dateRequired) && (
-                                        <p style={{ margin: '4px 0 0 0', color: '#64748b', fontSize: '14px' }}>Required By: {oData.dateRequired}</p>
-                                    )}
+                                    <h1 style={{ fontSize: '42px', fontWeight: '900', color: type === 'proposal' ? '#4f46e5' : '#0f172a', margin: '0 0 10px 0', letterSpacing: '2px' }}>{title}</h1>
+                                    <p style={{ margin: '0 0 5px 0', fontSize: '16px', fontWeight: 'bold' }}>Date: {new Date().toLocaleDateString()}</p>
+                                    <p style={{ margin: '0', fontSize: '14px', color: '#64748b' }}>Order ID: {order.id}</p>
                                 </div>
                             </div>
 
+                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '40px' }}>
+                                <div>
+                                    <p style={{ fontSize: '12px', fontWeight: 'bold', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '1px', margin: '0 0 5px 0' }}>Billed To:</p>
+                                    <h3 style={{ fontSize: '22px', fontWeight: 'bold', margin: '0 0 5px 0' }}>{order.customer}</h3>
+                                    {oData.orderName && <p style={{ margin: '0', fontSize: '16px', color: '#475569' }}>{oData.orderName}</p>}
+                                </div>
+                                {type === 'proposal' && oData.dateRequired && (
+                                    <div style={{ textAlign: 'right' }}>
+                                        <p style={{ fontSize: '12px', fontWeight: 'bold', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '1px', margin: '0 0 5px 0' }}>Required By:</p>
+                                        <p style={{ margin: '0', fontSize: '18px', fontWeight: 'bold', color: '#4f46e5' }}>{oData.dateRequired}</p>
+                                    </div>
+                                )}
+                            </div>
+
                             {oData.orderDescription && (
-                                <div style={{ marginBottom: '24px', padding: '16px', backgroundColor: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0', breakInside: 'avoid' }}>
-                                    <p style={{ margin: 0, fontSize: '14px', color: '#334155', lineHeight: '1.5', whiteSpace: 'pre-wrap' }}>{oData.orderDescription}</p>
+                                <div style={{ marginBottom: '30px', padding: '20px', backgroundColor: '#f8fafc', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+                                    <p style={{ margin: 0, fontSize: '14px', color: '#334155', lineHeight: '1.6' }}>{oData.orderDescription}</p>
                                 </div>
                             )}
 
                             {(type === 'proposal' && oData.designNotes) && (
-                                <div style={{ marginBottom: '24px', padding: '16px', backgroundColor: '#eef2ff', borderRadius: '8px', border: '1px solid #c7d2fe', breakInside: 'avoid' }}>
-                                    <h3 style={{ margin: '0 0 4px 0', fontSize: '10px', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '1px', color: '#3730a3' }}>Design Notes</h3>
-                                    <p style={{ margin: 0, fontSize: '14px', color: '#312e81', lineHeight: '1.5', whiteSpace: 'pre-wrap' }}>{oData.designNotes}</p>
+                                <div style={{ marginBottom: '30px', padding: '20px', backgroundColor: '#eef2ff', borderRadius: '12px', border: '1px solid #e0e7ff' }}>
+                                    <h4 style={{ margin: '0 0 10px 0', fontSize: '12px', fontWeight: 'bold', color: '#3730a3', textTransform: 'uppercase', letterSpacing: '1px' }}>Design Notes</h4>
+                                    <p style={{ margin: 0, fontSize: '14px', color: '#312e81', lineHeight: '1.6' }}>{oData.designNotes}</p>
                                 </div>
                             )}
 
                             {oData.mockupImage && (
-                                <div style={{ marginBottom: '32px', breakInside: 'avoid' }}>
-                                    <h3 style={{ margin: '0 0 12px 0', fontSize: '12px', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '1px', color: '#64748b', borderBottom: '1px solid #e2e8f0', paddingBottom: '8px' }}>Design Mockup</h3>
-                                    <div>
-                                        <img src={oData.mockupImage} alt="Design Mockup" style={{ maxHeight: '2in', width: 'auto', objectFit: 'contain', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '4px', backgroundColor: '#f8fafc' }} />
-                                    </div>
+                                <div style={{ marginBottom: '40px', padding: '20px', backgroundColor: '#f8fafc', borderRadius: '12px', border: '1px solid #e2e8f0', textAlign: 'center', breakInside: 'avoid' }}>
+                                    <h4 style={{ margin: '0 0 15px 0', fontSize: '10px', fontWeight: 'bold', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '2px' }}>Approved Design Mockup</h4>
+                                    <img src={oData.mockupImage} alt="Mockup" style={{ maxHeight: '2in', width: 'auto', display: 'block', margin: '0 auto', borderRadius: '8px' }} />
                                 </div>
                             )}
 
-                            <div style={{ marginBottom: '32px' }}>
-                                <div style={{ display: 'flex', borderBottom: '1px solid #cbd5e1', paddingBottom: '8px', marginBottom: '16px', fontSize: '12px', fontWeight: 'bold', color: '#64748b', textTransform: 'uppercase', letterSpacing: '1px' }}>
-                                    <div style={{ width: '50%' }}>Description</div>
-                                    <div style={{ width: '16.6%', textAlign: 'center' }}>Qty</div>
-                                    <div style={{ width: '16.6%', textAlign: 'right' }}>Price</div>
-                                    <div style={{ width: '16.6%', textAlign: 'right' }}>Total</div>
+                            <div style={{ marginBottom: '40px', breakInside: 'avoid' }}>
+                                <div style={{ display: 'flex', borderBottom: '2px solid #cbd5e1', paddingBottom: '10px', marginBottom: '15px' }}>
+                                    <div style={{ width: '60%', fontSize: '12px', fontWeight: 'bold', color: '#64748b', textTransform: 'uppercase', letterSpacing: '1px' }}>Description</div>
+                                    <div style={{ width: '15%', fontSize: '12px', fontWeight: 'bold', color: '#64748b', textTransform: 'uppercase', letterSpacing: '1px', textAlign: 'center' }}>Qty</div>
+                                    <div style={{ width: '25%', fontSize: '12px', fontWeight: 'bold', color: '#64748b', textTransform: 'uppercase', letterSpacing: '1px', textAlign: 'right' }}>Total</div>
                                 </div>
 
                                 {oCalc.items && oCalc.items.map((item, idx) => {
                                     const activeSizes = SIZES_LIST.filter(s => (parseInt(item.sizes?.[s]) || 0) > 0);
                                     const sizeStr = activeSizes.length > 0 ? activeSizes.map(s => `${s}: ${item.sizes[s]}`).join(', ') : null;
-                                    
-                                    const validLocations = item.locations.filter(l => l.type !== 'none');
-                                    const validPlacementCount = validLocations.length;
-                                    
                                     return (
-                                    <div key={idx} style={{ display: 'flex', marginBottom: '16px', paddingBottom: '16px', borderBottom: '1px solid #f1f5f9', breakInside: 'avoid' }}>
-                                        <div style={{ width: '50%', paddingRight: '16px' }}>
-                                            <p style={{ margin: '0 0 4px 0', fontWeight: 'bold', fontSize: '18px', color: '#1e293b' }}>
-                                                {item.name} {item.color ? `- ${item.color}` : ''}
-                                                {validPlacementCount > 0 && <span style={{ fontSize: '14px', fontWeight: 'normal', color: '#64748b', marginLeft: '8px' }}>({validPlacementCount} Placement{validPlacementCount !== 1 ? 's' : ''})</span>}
-                                            </p>
-                                            
-                                            {sizeStr && (
-                                                <p style={{ margin: '0 0 8px 0' }}>
-                                                    <span style={{ fontSize: '10px', backgroundColor: '#f1f5f9', border: '1px solid #e2e8f0', color: '#475569', padding: '2px 10px', borderRadius: '12px', fontWeight: 'bold' }}>{sizeStr}</span>
-                                                </p>
-                                            )}
-                                            
-                                            <div style={{ marginTop: '8px', paddingLeft: '12px', borderLeft: '2px solid #c7d2fe' }}>
-                                                {validLocations.map((l, i) => {
+                                    <div key={idx} style={{ display: 'flex', borderBottom: '1px solid #f1f5f9', paddingBottom: '15px', marginBottom: '15px' }}>
+                                        <div style={{ width: '60%' }}>
+                                            <p style={{ margin: '0 0 5px 0', fontSize: '16px', fontWeight: 'bold', color: '#0f172a' }}>{item.name} {item.color ? `- ${item.color}` : ''}</p>
+                                            {sizeStr && <p style={{ margin: '0 0 8px 0', fontSize: '12px', color: '#64748b', fontWeight: 'bold' }}>{sizeStr}</p>}
+                                            <div style={{ paddingLeft: '15px', borderLeft: '2px solid #c7d2fe' }}>
+                                                {item.locations.filter(l=>l.type!=='none').map((l, i) => {
                                                     const pLabel = PLACEMENTS.find(p=>p.id===l.placement)?.label || 'Custom';
                                                     return (
-                                                        <p key={i} style={{ margin: '0 0 4px 0', fontSize: '14px', color: '#475569' }}>
-                                                            <span style={{ fontWeight: '600', color: '#334155' }}>
-                                                                {l.type === 'embroidery' ? (l.isPuff ? '3D Puff Embroidery' : 'Standard Embroidery') : 'DTF Print'}
-                                                            </span>
+                                                        <p key={i} style={{ margin: '0 0 3px 0', fontSize: '12px', color: '#475569' }}>
+                                                            {l.type === 'embroidery' ? (l.isPuff ? '3D Puff Embroidery' : 'Standard Embroidery') : 'DTF Print'} 
                                                             {l.placement !== 'custom' && ` - ${pLabel}`} 
                                                             {l.desc && ` - ${l.desc}`}
                                                         </p>
                                                     )
                                                 })}
                                             </div>
+                                            {item.explicitDecoDiscount > 0 && <p style={{ margin: '5px 0 0 0', fontSize: '11px', color: '#059669', fontWeight: 'bold' }}>Includes Item Discount (-{formatCurrency(item.explicitDecoDiscount)}/ea)</p>}
                                         </div>
-                                        <div style={{ width: '16.6%', textAlign: 'center', fontWeight: '600', color: '#334155', paddingTop: '4px' }}>{item.calculatedQty}</div>
-                                        <div style={{ width: '16.6%', textAlign: 'right', fontWeight: '600', color: '#334155', paddingTop: '4px' }}>{formatCurrency(item.undiscountedLineTotalPerPiece)}</div>
-                                        <div style={{ width: '16.6%', textAlign: 'right', fontWeight: 'bold', color: '#0f172a', paddingTop: '4px' }}>{formatCurrency(item.undiscountedLineTotal)}</div>
+                                        <div style={{ width: '15%', textAlign: 'center', fontSize: '16px', fontWeight: 'bold', color: '#475569', paddingTop: '2px' }}>{item.calculatedQty}</div>
+                                        <div style={{ width: '25%', textAlign: 'right', fontSize: '18px', fontWeight: '900', color: '#0f172a', paddingTop: '2px' }}>{formatCurrency(item.lineTotal)}</div>
                                     </div>
                                 )})}
                             </div>
 
-                            <div style={{ width: '50%', marginLeft: 'auto', breakInside: 'avoid', fontSize: '14px' }}>
+                            <div style={{ width: '50%', marginLeft: 'auto', breakInside: 'avoid' }}>
                                 {(oCalc.setup > 0 || oCalc.digitizing > 0) && (
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px', color: '#475569' }}>
-                                        <span>Setup & Digitizing</span><span style={{ fontWeight: '600' }}>{formatCurrency(oCalc.setup + oCalc.digitizing)}</span>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px', fontSize: '14px', color: '#64748b' }}>
+                                        <span>Setup / Fees</span><span>{formatCurrency(oCalc.setup + oCalc.digitizing)}</span>
                                     </div>
                                 )}
-                                
-                                <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: '8px', borderTop: '1px solid #e2e8f0', marginBottom: '12px', color: '#1e293b', fontWeight: '500' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px', fontSize: '14px', color: '#475569', fontWeight: 'bold' }}>
                                     <span>Subtotal</span><span>{formatCurrency(oCalc.grossSubtotal)}</span>
                                 </div>
-                                
                                 {oCalc.totalDiscount > 0 && (
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px', color: '#059669', fontWeight: 'bold' }}>
-                                        <span>Total Discount Applied</span><span>-{formatCurrency(oCalc.totalDiscount)}</span>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px', fontSize: '14px', color: '#059669', fontWeight: 'bold', backgroundColor: '#ecfdf5', padding: '8px', borderRadius: '6px' }}>
+                                        <span>Order Discount</span><span>-{formatCurrency(oCalc.totalDiscount)}</span>
                                     </div>
                                 )}
-                                
-                                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '16px', color: '#475569' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '15px', fontSize: '14px', color: '#64748b' }}>
                                     <span>Tax ({oData.taxRate}%)</span><span>{formatCurrency(oCalc.tax)}</span>
                                 </div>
                                 
-                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', paddingTop: '16px', borderTop: '2px solid #1e293b', marginBottom: (type === 'proposal' ? '0' : '8px') }}>
-                                    <span style={{ fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px', color: '#0f172a' }}>{type === 'proposal' ? 'Total' : 'Order Total'}</span>
-                                    <span style={{ fontSize: (type === 'proposal' ? '30px' : '20px'), fontWeight: '900', color: (type === 'proposal' ? '#4338ca' : '#0f172a') }}>{formatCurrency(order.total)}</span>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', paddingTop: '20px', borderTop: '2px solid #0f172a', marginBottom: '20px' }}>
+                                    <span style={{ fontSize: '14px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Order Total</span>
+                                    <span style={{ fontSize: '28px', fontWeight: '900', color: '#4f46e5' }}>{formatCurrency(order.total)}</span>
                                 </div>
                                 
                                 {type === 'proposal' && (
-                                    <div style={{ marginTop: '24px', backgroundColor: '#f8fafc', padding: '16px', borderRadius: '8px', border: '1px solid #e2e8f0', textAlign: 'center' }}>
-                                        <p style={{ margin: '0 0 4px 0', fontSize: '12px', fontWeight: '600', color: '#64748b', textTransform: 'uppercase', letterSpacing: '1px' }}>Deposit Required to Begin</p>
-                                        <p style={{ margin: 0, fontSize: '24px', fontWeight: 'bold', color: '#1e293b' }}>{formatCurrency(order.depositAmount || (order.total / 2))}</p>
+                                    <div style={{ marginTop: '30px', padding: '25px', backgroundColor: '#f8fafc', borderRadius: '12px', border: '1px solid #e2e8f0', textAlign: 'center' }}>
+                                        <p style={{ margin: '0 0 10px 0', fontSize: '11px', fontWeight: 'bold', color: '#64748b', textTransform: 'uppercase', letterSpacing: '1px' }}>Required Deposit to Begin</p>
+                                        <p style={{ margin: 0, fontSize: '32px', fontWeight: '900', color: '#0f172a' }}>{formatCurrency(order.depositAmount || (order.total / 2))}</p>
+                                        <p style={{ margin: '10px 0 0 0', fontSize: '11px', color: '#94a3b8', fontStyle: 'italic' }}>(*Or you may choose to pay the full balance upfront)</p>
                                     </div>
                                 )}
 
                                 {type !== 'proposal' && (
-                                    <>
-                                        <div style={{ display: 'flex', justifyContent: 'space-between', color: '#059669', fontWeight: 'bold', paddingTop: '8px' }}>
-                                            <span>Total Amount Paid</span>
-                                            <span style={{ fontSize: '20px' }}>-{formatCurrency(order.total - order.balance)}</span>
+                                    <div style={{ marginTop: '20px', paddingTop: '20px', borderTop: '1px solid #e2e8f0' }}>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px', fontSize: '16px', color: '#059669', fontWeight: 'bold' }}>
+                                            <span>Amount Paid</span><span>-{formatCurrency(order.total - order.balance)}</span>
                                         </div>
-                                        
-                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', paddingTop: '16px', borderTop: '2px solid #10b981', marginTop: '8px', backgroundColor: '#ecfdf5', padding: '12px', borderRadius: '8px', border: '1px solid #a7f3d0' }}>
-                                            <span style={{ fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px', color: '#064e3b' }}>Balance Due</span>
-                                            <span style={{ fontSize: '30px', fontWeight: '900', color: (order.balance > 0 ? '#4338ca' : '#059669') }}>{formatCurrency(order.balance)}</span>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', paddingTop: '10px' }}>
+                                            <span style={{ fontSize: '14px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Balance Due</span>
+                                            <span style={{ fontSize: '24px', fontWeight: '900', color: order.balance > 0 ? '#e11d48' : '#059669' }}>{formatCurrency(order.balance)}</span>
                                         </div>
-                                    </>
+                                    </div>
                                 )}
                             </div>
-                            
-                            <div style={{ marginTop: '48px', paddingTop: '24px', borderTop: '1px solid #e2e8f0', textAlign: 'center' }}>
-                                <p style={{ margin: 0, fontSize: '14px', color: '#64748b', fontWeight: '500', fontStyle: (type === 'proposal' ? 'italic' : 'normal') }}>
+
+                            {/* PAID IN FULL STAMP */}
+                            {(type === 'receipt' && order.balance === 0) && (
+                                <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%) rotate(-15deg)', color: 'rgba(16, 185, 129, 0.12)', fontSize: '110px', fontWeight: '900', border: '12px solid rgba(16, 185, 129, 0.12)', padding: '20px 40px', borderRadius: '30px', pointerEvents: 'none', zIndex: 0, whiteSpace: 'nowrap' }}>
+                                    PAID IN FULL
+                                </div>
+                            )}
+
+                            <div style={{ marginTop: '80px', paddingTop: '20px', borderTop: '1px solid #e2e8f0', textAlign: 'center' }}>
+                                <p style={{ margin: 0, fontSize: '12px', fontWeight: 'bold', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '2px' }}>
                                     {type === 'proposal' ? '* Quotes are valid for 14 days from date of issue.' : 'Thank you for your business!'}
                                 </p>
                             </div>
