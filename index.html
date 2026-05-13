@@ -85,7 +85,7 @@
             { id: 'pickup', label: '7. Ready for Pickup', color: 'bg-emerald-100 text-emerald-800' },
             { id: 'archived', label: 'Archived', color: 'bg-slate-800 text-white' }
         ];
-
+        
         const PLACEMENTS = [
             { id: 'custom', label: 'Custom / Other' }, { id: 'fc', label: 'Front - Center Chest' }, { id: 'lc', label: 'Front - Left Chest' }, { id: 'rc', label: 'Front - Right Chest' },
             { id: 'bc', label: 'Back - Center' }, { id: 'yoke', label: 'Back - Yoke / Nape' }, { id: 'sleeve_l', label: 'Left Sleeve' }, { id: 'sleeve_r', label: 'Right Sleeve' }, 
@@ -143,9 +143,20 @@
                 try { return JSON.parse(localStorage.getItem('t1_biz')) || { name: '', address: '', phone: '', email: '', website: '' }; } 
                 catch(e) { return { name: '', address: '', phone: '', email: '', website: '' }; }
             });
+            const defaultQuickFill = [
+                { id: 'g5000', name: 'Gildan 5000 - Heavy Cotton Tee', cost: 3.50, shipping: 0.50, margin: 45 },
+                { id: 'g18500', name: 'Gildan 18500 - Heavy Blend Hoodie', cost: 14.50, shipping: 1.00, margin: 40 },
+                { id: 'r112', name: 'Richardson 112 - Trucker Hat', cost: 8.50, shipping: 0.50, margin: 50 },
+                { id: 'as5001', name: 'AS Colour 5001 - Staple Tee', cost: 8.00, shipping: 0.50, margin: 45 },
+                { id: 'bc3001', name: 'Bella+Canvas 3001 - Premium Tee', cost: 6.50, shipping: 0.50, margin: 45 }
+            ];
+
             const [shopSettings, setShopSettings] = useState(() => {
-                try { return JSON.parse(localStorage.getItem('t1_settings')) || { marginGreen: 45, marginYellow: 30, fundConsumables: 5, fundGrowth: 5, fundTax: 15, targetHourlyRate: 75 }; }
-                catch(e) { return { marginGreen: 45, marginYellow: 30, fundConsumables: 5, fundGrowth: 5, fundTax: 15, targetHourlyRate: 75 }; }
+                const defaults = { marginGreen: 45, marginYellow: 30, fundConsumables: 5, fundGrowth: 5, fundTax: 15, targetHourlyRate: 75, quickFillGarments: defaultQuickFill };
+                try { 
+                    const saved = JSON.parse(localStorage.getItem('t1_settings'));
+                    return saved ? { ...defaults, ...saved, quickFillGarments: saved.quickFillGarments || defaults.quickFillGarments } : defaults;
+                } catch(e) { return defaults; }
             });
 
             useEffect(() => { localStorage.setItem('t1_orders', JSON.stringify(orders)); }, [orders]);
@@ -153,11 +164,24 @@
             useEffect(() => { localStorage.setItem('t1_biz', JSON.stringify(businessDetails)); }, [businessDetails]);
             useEffect(() => { localStorage.setItem('t1_settings', JSON.stringify(shopSettings)); }, [shopSettings]);
 
-            const defaultOrderData = { customerName: '', orderName: '', dateRequired: '', orderDescription: '', designNotes: '', mockupImage: null, setupFees: '', digitizingFee: '', digitizingCost: '', taxRate: 5, discount: '' };
+            const defaultOrderData = { customerName: '', orderName: '', dateRequired: '', orderDescription: '', designNotes: '', mockupImage: null, setupFees: '', digitizingFee: '', digitizingCost: '', rushFee: '', rushFeeWaived: false, taxRate: 5, discount: '' };
             const defaultItem = { id: genId(), name: '', color: '', qty: 1, rawCost: '', shippingCost: '1.00', margin: 35, decoDiscount: '', sizes: generateEmptySizes(), locations: [ { id: genId(), type: 'none', placement: 'custom', desc: '', stitches: '', dtfSize: 'small', isPuff: false, puffMarkup: 5, adjustment: '' } ] };
 
             const [orderData, setOrderData] = useState(defaultOrderData);
             const [items, setItems] = useState([defaultItem]);
+
+            const [newGarment, setNewGarment] = useState({ name: '', cost: '', shipping: '1.00', margin: '45' });
+            
+            const handleAddQuickFill = () => {
+                if (!newGarment.name) return;
+                const updated = [...(shopSettings.quickFillGarments || []), { ...newGarment, id: genId(), cost: parseFloat(newGarment.cost)||0, shipping: parseFloat(newGarment.shipping)||0, margin: parseFloat(newGarment.margin)||0 }];
+                setShopSettings(prev => ({ ...prev, quickFillGarments: updated }));
+                setNewGarment({ name: '', cost: '', shipping: '1.00', margin: '45' });
+            };
+            
+            const handleRemoveQuickFill = (id) => {
+                setShopSettings(prev => ({ ...prev, quickFillGarments: (prev.quickFillGarments || []).filter(g => g.id !== id) }));
+            };
 
             // --- QUOTER LOGIC & MATH ---
             const updateBiz = (field, value) => setBusinessDetails(prev => ({ ...prev, [field]: value }));
@@ -250,11 +274,12 @@
                 const setup = parseFloat(orderData.setupFees) || 0;
                 const digitizing = parseFloat(orderData.digitizingFee) || 0;
                 const digitizingCost = parseFloat(orderData.digitizingCost) || 0;
+                const rush = (!orderData.rushFeeWaived && parseFloat(orderData.rushFee)) ? parseFloat(orderData.rushFee) : 0;
                 const discount = Math.abs(parseFloat(orderData.discount) || 0);
                 const taxRate = parseFloat(orderData.taxRate) || 0;
                 
                 const totalDecoDiscount = processedItems.reduce((sum, item) => sum + (item.decoDiscountTotal || 0), 0);
-                const subtotal = orderGarmentRetailTotal + orderDecoRetailTotal + setup + digitizing;
+                const subtotal = orderGarmentRetailTotal + orderDecoRetailTotal + setup + digitizing + rush;
                 const grossSubtotal = subtotal + totalDecoDiscount; 
                 const discountedSubtotal = Math.max(0, subtotal - discount);
                 const tax = discountedSubtotal * (taxRate / 100);
@@ -282,7 +307,7 @@
                 if (mins > 0 || hrs === 0) timeString += `${mins} minute${mins !== 1 ? 's' : ''}`;
 
                 return { 
-                    items: processedItems, orderGarmentCostTotal, orderDecoCostTotal, setup, digitizing, digitizingCost, discount, 
+                    items: processedItems, orderGarmentCostTotal, orderDecoCostTotal, setup, digitizing, digitizingCost, rush, discount, 
                     allocConsumables, allocGrowth, allocTax, 
                     subtotal, grossSubtotal, discountedSubtotal, tax, grandTotal, netProfit, deposit, totalDiscount: totalDecoDiscount + discount,
                     overallMarginPercent, timeString, targetRate
@@ -574,18 +599,54 @@
                                 <div><label className="block text-[11px] font-bold text-slate-500 mb-1.5 uppercase">Growth / Machine (%)</label><input type="number" className="w-full p-3 soft-input rounded-xl text-sm" value={shopSettings.fundGrowth} onChange={e => updateSetting('fundGrowth', e.target.value)} /></div>
                                 <div><label className="block text-[11px] font-bold text-slate-500 mb-1.5 uppercase">Tax Reserve (%)</label><input type="number" className="w-full p-3 soft-input rounded-xl text-sm" value={shopSettings.fundTax} onChange={e => updateSetting('fundTax', e.target.value)} /></div>
                             </div>
+                            
                             <div className="mt-8 border-t border-slate-100 pt-6">
-                            <h3 className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-3">Shop Rate Target</h3>
-                            <div className="bg-indigo-50 p-4 md:p-5 rounded-xl border border-indigo-100 md:w-1/2">
-                                <label className="block text-[11px] font-bold text-indigo-700 mb-2 uppercase">Target Hourly Rate ($)</label>
-                                <div className="flex items-center gap-2">
-                                    <span className="text-base font-black text-indigo-400">$</span>
-                                    <input type="number" className="w-full p-2.5 soft-input rounded-lg text-sm text-indigo-700 font-black focus:ring-indigo-500" value={shopSettings.targetHourlyRate || 75} onChange={e => updateSetting('targetHourlyRate', e.target.value)} />
-                                    <span className="text-sm font-bold text-indigo-500">/ hr</span>
+                                <h3 className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-3">Shop Rate Target</h3>
+                                <div className="bg-indigo-50 p-4 md:p-5 rounded-xl border border-indigo-100 md:w-1/2">
+                                    <label className="block text-[11px] font-bold text-indigo-700 mb-2 uppercase">Target Hourly Rate ($)</label>
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-base font-black text-indigo-400">$</span>
+                                        <input type="number" className="w-full p-2.5 soft-input rounded-lg text-sm text-indigo-700 font-black focus:ring-indigo-500" value={shopSettings.targetHourlyRate || 75} onChange={e => updateSetting('targetHourlyRate', e.target.value)} />
+                                        <span className="text-sm font-bold text-indigo-500">/ hr</span>
+                                    </div>
+                                    <p className="text-[10px] text-indigo-500/80 mt-2 font-medium leading-relaxed">Used in the Quoter to calculate the maximum allowable time you can spend on a job while maintaining profitability.</p>
                                 </div>
-                                <p className="text-[10px] text-indigo-500/80 mt-2 font-medium leading-relaxed">Used in the Quoter to calculate the maximum allowable time you can spend on a job while maintaining profitability.</p>
                             </div>
                         </div>
+                    </div>
+
+                    <div className="bg-white rounded-2xl shadow-sm p-6 md:p-8 border border-slate-200">
+                        <div className="flex items-start gap-4 mb-6 border-b border-slate-100 pb-6">
+                            <div className="p-3 bg-indigo-50 rounded-xl text-indigo-600"><Icon name="shirt" size={24}/></div>
+                            <div>
+                                <h2 className="text-lg font-black text-slate-800 uppercase tracking-widest">Quick Fill Garment Catalog</h2>
+                                <p className="text-xs text-slate-500 mt-1 leading-relaxed">Save your most frequently used blanks to auto-populate prices and margins in the Quoter.</p>
+                            </div>
+                        </div>
+
+                        <div className="space-y-3 mb-6">
+                            {(shopSettings.quickFillGarments || []).map(g => (
+                                <div key={g.id} className="flex justify-between items-center bg-slate-50 border border-slate-200 p-3 rounded-xl">
+                                    <div>
+                                        <p className="font-bold text-slate-800 text-sm">{g.name}</p>
+                                        <p className="text-[10px] text-slate-500 font-semibold uppercase tracking-widest">Cost: {formatCurrency(g.cost)} | Frt: {formatCurrency(g.shipping)} | Margin: {g.margin}%</p>
+                                    </div>
+                                    <button onClick={() => handleRemoveQuickFill(g.id)} className="p-2 text-slate-400 hover:text-red-500 transition-colors"><Icon name="trash" size={16}/></button>
+                                </div>
+                            ))}
+                        </div>
+
+                        <div className="bg-indigo-50/50 border border-indigo-100 p-4 rounded-xl">
+                            <h3 className="text-[11px] font-black text-indigo-700 uppercase tracking-widest mb-3">Add New Favorite</h3>
+                            <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+                                <div className="col-span-2 md:col-span-2"><input type="text" placeholder="Item Name (e.g. Gildan 5000)" className="w-full p-2 soft-input rounded-lg text-xs" value={newGarment.name} onChange={e => setNewGarment({...newGarment, name: e.target.value})} /></div>
+                                <div><input type="number" placeholder="Cost ($)" className="w-full p-2 soft-input rounded-lg text-xs" value={newGarment.cost} onChange={e => setNewGarment({...newGarment, cost: e.target.value})} /></div>
+                                <div><input type="number" placeholder="Freight ($)" className="w-full p-2 soft-input rounded-lg text-xs" value={newGarment.shipping} onChange={e => setNewGarment({...newGarment, shipping: e.target.value})} /></div>
+                                <div><input type="number" placeholder="Margin (%)" className="w-full p-2 soft-input rounded-lg text-xs text-indigo-700 font-bold" value={newGarment.margin} onChange={e => setNewGarment({...newGarment, margin: e.target.value})} /></div>
+                            </div>
+                            <button onClick={handleAddQuickFill} className="mt-3 w-full py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold active:scale-95 transition-all flex items-center justify-center gap-2">
+                                <Icon name="plus" size={14} /> Add to Catalog
+                            </button>
                         </div>
                     </div>
 
@@ -640,9 +701,21 @@
 
                         {calc.items.map((item, index) => (
                             <div key={item.id} className="bg-slate-50 rounded-xl border border-slate-200 overflow-hidden mb-5">
-                                <div className="p-3 md:p-4 border-b border-slate-200 flex justify-between items-center bg-slate-100/50">
-                                    <h3 className="font-extrabold text-slate-700 text-xs uppercase tracking-wide flex items-center gap-2"><Icon name="shirt" size={16} className="text-indigo-500"/> Garment Style {index + 1}</h3>
-                                    <div className="flex gap-2">
+                                <div className="p-3 md:p-4 border-b border-slate-200 flex flex-col md:flex-row justify-between items-start md:items-center bg-slate-100/50 gap-3">
+                                    <div className="flex items-center gap-3 w-full md:w-auto">
+                                        <h3 className="font-extrabold text-slate-700 text-xs uppercase tracking-wide flex items-center gap-2 whitespace-nowrap"><Icon name="shirt" size={16} className="text-indigo-500"/> Garment Style {index + 1}</h3>
+                                        <select className="p-1.5 soft-input border-slate-200 rounded-md text-[10px] font-bold text-slate-500 cursor-pointer shadow-sm bg-white" onChange={(e) => {
+                                            const g = (shopSettings.quickFillGarments || []).find(f => f.id === e.target.value);
+                                            if(g) {
+                                                setItems(items.map(i => i.id === item.id ? { ...i, name: g.name, rawCost: g.cost, shippingCost: g.shipping, margin: g.margin } : i));
+                                            }
+                                            e.target.value = "";
+                                        }}>
+                                            <option value="">+ Quick Fill...</option>
+                                            {(shopSettings.quickFillGarments || []).map(g => <option key={g.id} value={g.id}>{g.name}</option>)}
+                                        </select>
+                                    </div>
+                                    <div className="flex gap-2 self-end md:self-auto">
                                         <button onClick={() => duplicateItem(item)} className="text-slate-400 hover:text-indigo-500"><Icon name="copy" size={16} /></button>
                                         {items.length > 1 && <button onClick={() => removeItem(item.id)} className="text-slate-400 hover:text-red-500"><Icon name="trash" size={16} /></button>}
                                     </div>
@@ -794,16 +867,35 @@
 
                     <div className="bg-white rounded-2xl shadow-sm p-4 md:p-6 border border-slate-200">
                         <h2 className="text-sm font-bold text-slate-800 mb-4 md:mb-5 flex items-center gap-2 uppercase tracking-wider"><Icon name="settings" size={18} className="text-indigo-500" /> Fees & Discounts</h2>
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
-                            <div><label className="block text-[10px] md:text-[11px] font-semibold text-slate-500 mb-1.5 uppercase">Setup Fees</label><input type="number" className="w-full p-2.5 md:p-3 soft-input rounded-xl text-sm" value={orderData.setupFees} onFocus={(e) => e.target.select()} onChange={e => updateOrder('setupFees', e.target.value)} /></div>
-                            <div><label className="block text-[10px] md:text-[11px] font-semibold text-slate-500 mb-1.5 uppercase">Digitizing Fee</label><input type="number" className="w-full p-2.5 md:p-3 soft-input rounded-xl text-sm" value={orderData.digitizingFee} onFocus={(e) => e.target.select()} onChange={e => updateOrder('digitizingFee', e.target.value)} /></div>
+                        <div className="grid grid-cols-2 md:grid-cols-5 gap-3 md:gap-4">
+                            <div><label className="block text-[10px] md:text-[11px] font-semibold text-slate-500 mb-1.5 uppercase">Setup / Art Fee</label><input type="number" className="w-full p-2.5 md:p-3 soft-input rounded-xl text-sm" value={orderData.setupFees} onFocus={(e) => e.target.select()} onChange={e => updateOrder('setupFees', e.target.value)} /></div>
+                            
+                            <div className="bg-slate-50 p-2 -m-2 rounded-xl border border-slate-100">
+                                <label className="block text-[10px] md:text-[11px] font-semibold text-slate-500 mb-1.5 uppercase">Digitizing Fee</label>
+                                <input type="number" className="w-full p-2 md:p-2.5 soft-input rounded-lg text-sm mb-2" value={orderData.digitizingFee} onFocus={(e) => e.target.select()} onChange={e => updateOrder('digitizingFee', e.target.value)} />
+                                <div className="flex items-center justify-between">
+                                    <span className="text-[9px] text-slate-400 font-bold uppercase">Outsourced Cost:</span>
+                                    <input type="number" className="w-14 p-1 bg-rose-50 text-rose-600 border border-rose-100 rounded text-[10px] font-bold text-center focus:ring-rose-400" placeholder="$0" value={orderData.digitizingCost} onFocus={(e) => e.target.select()} onChange={e => updateOrder('digitizingCost', e.target.value)} />
+                                </div>
+                            </div>
+
+                            <div>
+                                <label className="block text-[10px] md:text-[11px] font-semibold text-slate-500 mb-1.5 uppercase">Rush Order</label>
+                                <input type="number" className={`w-full p-2.5 md:p-3 soft-input rounded-xl text-sm ${orderData.rushFeeWaived ? 'line-through text-slate-400 bg-slate-100' : ''}`} value={orderData.rushFee} onFocus={(e) => e.target.select()} onChange={e => updateOrder('rushFee', e.target.value)} />
+                                <label className="flex items-center gap-1.5 mt-2 cursor-pointer">
+                                    <input type="checkbox" checked={orderData.rushFeeWaived} onChange={e => updateOrder('rushFeeWaived', e.target.checked)} className="rounded text-emerald-500 focus:ring-emerald-500" />
+                                    <span className="text-[10px] font-bold text-emerald-600 uppercase">Waive Fee</span>
+                                </label>
+                            </div>
+
                             <div>
                                 <label className="block text-[10px] md:text-[11px] font-semibold text-slate-500 mb-1.5 uppercase flex items-center gap-1"><Icon name="tag" size={12}/> Discount ($)</label>
                                 <div className="relative">
-                                    <span className="absolute left-3 top-3 text-emerald-600 font-bold">-$</span>
+                                    <span className="absolute left-3 top-2.5 md:top-3 text-emerald-600 font-bold">-$</span>
                                     <input type="number" className="w-full pl-8 p-2.5 md:p-3 soft-input rounded-xl text-sm text-emerald-600 font-bold focus:ring-emerald-500" value={orderData.discount} onFocus={(e) => e.target.select()} onChange={e => updateOrder('discount', e.target.value)} />
                                 </div>
                             </div>
+
                             <div><label className="block text-[10px] md:text-[11px] font-semibold text-slate-500 mb-1.5 uppercase flex items-center gap-1"><Icon name="percent" size={12}/> Tax Rate (%)</label><input type="number" className="w-full p-2.5 md:p-3 soft-input rounded-xl text-sm" value={orderData.taxRate} onFocus={(e) => e.target.select()} onChange={e => updateOrder('taxRate', e.target.value)} /></div>
                         </div>
                     </div>
@@ -915,6 +1007,22 @@
                                         </div>
                                     </div>
 
+                                    {/* Rush Fee Line Item */}
+                                    {(orderData.rushFee > 0 || orderData.rushFeeWaived) && (
+                                        <div className="bg-slate-800 border border-slate-700 rounded-xl p-4 shadow-sm flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
+                                            <div>
+                                                <h4 className="font-bold text-white text-sm md:text-base">Rush Order Fee</h4>
+                                                {orderData.rushFeeWaived && <p className="text-[10px] font-bold text-emerald-400 mt-0.5 uppercase tracking-widest">Fee Waived</p>}
+                                            </div>
+                                            <div className="text-left sm:text-right">
+                                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Line Value</span>
+                                                <span className={`font-bold text-lg block ${orderData.rushFeeWaived ? 'text-emerald-400' : 'text-indigo-300'}`}>
+                                                    {orderData.rushFeeWaived ? 'WAIVED' : formatCurrency(calc.rush)}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    )}
+
                                 </div>
                             </div>
                             
@@ -933,6 +1041,13 @@
                                         <h4 className="text-[10px] font-black text-rose-400 uppercase tracking-widest">Operating Deductions</h4>
                                         <div className="flex justify-between"><span className="text-slate-300">Consumables ({shopSettings.fundConsumables}%):</span><span className="font-bold text-rose-400">-{formatCurrency(calc.allocConsumables)}</span></div>
                                         <div className="flex justify-between"><span className="text-slate-300">Tax Reserve ({shopSettings.fundTax}%):</span><span className="font-bold text-rose-400">-{formatCurrency(calc.allocTax)}</span></div>
+                                        
+                                        {calc.digitizingCost > 0 && (
+                                            <div className="flex justify-between border-t border-slate-700 pt-2 mt-2">
+                                                <span className="text-slate-300">Outsourced Digitizing:</span>
+                                                <span className="font-bold text-rose-400">-{formatCurrency(calc.digitizingCost)}</span>
+                                            </div>
+                                        )}
                                     </div>
 
                                     {/* Savings (Part of Profit) */}
@@ -944,25 +1059,25 @@
                                 </div>
 
                                 <div className="mt-4 pt-4 border-t border-slate-700 flex justify-between items-center">
-        <div className="flex flex-col">
-            <span className="font-bold uppercase tracking-widest text-[10px] md:text-xs text-slate-300">True Net Profit</span>
-            <span className={`text-[9px] md:text-[11px] font-black uppercase tracking-widest ${getHealthColor(calc.overallMarginPercent)}`}>{calc.overallMarginPercent.toFixed(1)}% MARGIN</span>
-        </div>
-        <span className={`text-2xl md:text-3xl font-black ${getHealthColor(calc.overallMarginPercent)}`}>{formatCurrency(calc.netProfit)}</span>
-    </div>
+                                    <div className="flex flex-col">
+                                        <span className="font-bold uppercase tracking-widest text-[10px] md:text-xs text-slate-300">True Net Profit</span>
+                                        <span className={`text-[9px] md:text-[11px] font-black uppercase tracking-widest ${getHealthColor(calc.overallMarginPercent)}`}>{calc.overallMarginPercent.toFixed(1)}% MARGIN</span>
+                                    </div>
+                                    <span className={`text-2xl md:text-3xl font-black ${getHealthColor(calc.overallMarginPercent)}`}>{formatCurrency(calc.netProfit)}</span>
+                                </div>
 
-    {calc.netProfit > 0 && (
-        <div className="mt-4 bg-slate-800/80 p-3 md:p-4 rounded-xl border border-slate-700">
-            <div className="flex items-center gap-2 mb-2">
-                <Icon name="activity" size={14} className="text-sky-400" />
-                <span className="text-[10px] font-black uppercase tracking-widest text-sky-400">Shop Rate Check ({formatCurrency(calc.targetRate)}/hr)</span>
-            </div>
-            <p className="text-xs md:text-sm text-slate-300 leading-relaxed">
-                To hit your target shop rate, this entire job (admin, art prep, production, and packing) must be completed in under <strong className="text-white bg-slate-700 px-2 py-0.5 rounded ml-1">{calc.timeString}</strong>.
-            </p>
-        </div>
-    )}
-</div>
+                                {calc.netProfit > 0 && (
+                                    <div className="mt-4 bg-slate-800/80 p-3 md:p-4 rounded-xl border border-slate-700">
+                                        <div className="flex items-center gap-2 mb-2">
+                                            <Icon name="activity" size={14} className="text-sky-400" />
+                                            <span className="text-[10px] font-black uppercase tracking-widest text-sky-400">Shop Rate Check ({formatCurrency(calc.targetRate)}/hr)</span>
+                                        </div>
+                                        <p className="text-xs md:text-sm text-slate-300 leading-relaxed">
+                                            To hit your target shop rate, this entire job (admin, art prep, production, and packing) must be completed in under <strong className="text-white bg-slate-700 px-2 py-0.5 rounded ml-1">{calc.timeString}</strong>.
+                                        </p>
+                                    </div>
+                                )}
+                            </div>
                         </div>
                     )}
 
@@ -1202,55 +1317,64 @@
                                 )}
 
                                 <div>
-    <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-3 border-b border-slate-100 pb-2">Line Items</h3>
-    {orderItems && orderItems.map((item, idx) => {
-        const activeSizes = SIZES_LIST.filter(s => (parseInt(item.sizes?.[s]) || 0) > 0);
-        const sizeStr = activeSizes.length > 0 ? activeSizes.map(s => `${s}: ${item.sizes[s]}`).join(', ') : null;
-        return (
-        <div key={idx} className="mb-3 pb-3 border-b border-slate-50 flex justify-between items-start">
-            <div>
-                <p className="font-bold text-sm text-slate-800">{item.qty}x {item.name} {item.color ? `(${item.color})` : ''}</p>
-                {sizeStr && <p className="text-[10px] text-slate-500 mt-0.5">{sizeStr}</p>}
-                
-                <div className="mt-1 pl-2 border-l border-indigo-200">
-                    {item.locations.filter(l=>l.type!=='none').map((l, i) => {
-                        const pLabel = PLACEMENTS.find(p=>p.id===l.placement)?.label || 'Custom';
-                        return (
-                            <p key={i} className="text-[10px] text-slate-600">
-                                {l.type === 'embroidery' ? (l.isPuff ? '3D Puff Emb' : 'Embroidery') : 'DTF Print'} 
-                                {l.placement !== 'custom' && ` - ${pLabel}`} 
-                                {l.desc && ` - ${l.desc}`}
-                            </p>
-                        )
-                    })}
-                </div>
+                                    <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-3 border-b border-slate-100 pb-2">Line Items</h3>
+                                    {orderItems && orderItems.map((item, idx) => {
+                                        const activeSizes = SIZES_LIST.filter(s => (parseInt(item.sizes?.[s]) || 0) > 0);
+                                        const sizeStr = activeSizes.length > 0 ? activeSizes.map(s => `${s}: ${item.sizes[s]}`).join(', ') : null;
+                                        return (
+                                        <div key={idx} className="mb-3 pb-3 border-b border-slate-50 flex justify-between items-start">
+                                            <div>
+                                                <p className="font-bold text-sm text-slate-800">{item.qty}x {item.name} {item.color ? `(${item.color})` : ''}</p>
+                                                {sizeStr && <p className="text-[10px] text-slate-500 mt-0.5">{sizeStr}</p>}
+                                                
+                                                <div className="mt-1 pl-2 border-l border-indigo-200">
+                                                    {item.locations.filter(l=>l.type!=='none').map((l, i) => {
+                                                        const pLabel = PLACEMENTS.find(p=>p.id===l.placement)?.label || 'Custom';
+                                                        return (
+                                                            <p key={i} className="text-[10px] text-slate-600">
+                                                                {l.type === 'embroidery' ? (l.isPuff ? '3D Puff Emb' : 'Embroidery') : 'DTF Print'} 
+                                                                {l.placement !== 'custom' && ` - ${pLabel}`} 
+                                                                {l.desc && ` - ${l.desc}`}
+                                                            </p>
+                                                        )
+                                                    })}
+                                                </div>
 
-                {item.decoDiscount > 0 && <p className="text-[10px] text-emerald-600 font-bold mt-1">- Item Discount Applied</p>}
-            </div>
-            <span className="font-bold text-sm text-slate-600">{orderCalc ? formatCurrency(orderCalc.items[idx].lineTotal) : ''}</span>
-        </div>
-    )})}
+                                                {item.decoDiscount > 0 && <p className="text-[10px] text-emerald-600 font-bold mt-1">- Item Discount Applied</p>}
+                                            </div>
+                                            <span className="font-bold text-sm text-slate-600">{orderCalc ? formatCurrency(orderCalc.items[idx].lineTotal) : ''}</span>
+                                        </div>
+                                    )})}
 
-    {/* New Setup & Digitizing Rows for Modal */}
-    {orderCalc && (
-        <>
-            <div className="mb-3 pb-3 border-b border-slate-50 flex justify-between items-start">
-                <div>
-                    <p className="font-bold text-sm text-slate-800">1x Setup / Art Prep</p>
-                    {orderCalc.setup === 0 && <p className="text-[10px] text-emerald-600 font-bold mt-0.5 uppercase tracking-wider">Fee Waived</p>}
-                </div>
-                <span className={`font-bold text-sm ${orderCalc.setup === 0 ? 'text-emerald-600' : 'text-slate-600'}`}>{orderCalc.setup === 0 ? 'WAIVED' : formatCurrency(orderCalc.setup)}</span>
-            </div>
-            <div className="mb-3 pb-3 border-b border-slate-50 last:border-0 flex justify-between items-start">
-                <div>
-                    <p className="font-bold text-sm text-slate-800">1x Digitizing / File Conversion</p>
-                    {orderCalc.digitizing === 0 && <p className="text-[10px] text-emerald-600 font-bold mt-0.5 uppercase tracking-wider">Fee Waived</p>}
-                </div>
-                <span className={`font-bold text-sm ${orderCalc.digitizing === 0 ? 'text-emerald-600' : 'text-slate-600'}`}>{orderCalc.digitizing === 0 ? 'WAIVED' : formatCurrency(orderCalc.digitizing)}</span>
-            </div>
-        </>
-    )}
-</div>
+                                    {/* New Setup, Digitizing, and Rush Rows for Modal */}
+                                    {orderCalc && fullData && fullData.orderData && (
+                                        <>
+                                            <div className="mb-3 pb-3 border-b border-slate-50 flex justify-between items-start">
+                                                <div>
+                                                    <p className="font-bold text-sm text-slate-800">1x Setup / Art Prep</p>
+                                                    {orderCalc.setup === 0 && <p className="text-[10px] text-emerald-600 font-bold mt-0.5 uppercase tracking-wider">Fee Waived</p>}
+                                                </div>
+                                                <span className={`font-bold text-sm ${orderCalc.setup === 0 ? 'text-emerald-600' : 'text-slate-600'}`}>{orderCalc.setup === 0 ? 'WAIVED' : formatCurrency(orderCalc.setup)}</span>
+                                            </div>
+                                            <div className="mb-3 pb-3 border-b border-slate-50 flex justify-between items-start">
+                                                <div>
+                                                    <p className="font-bold text-sm text-slate-800">1x Digitizing / File Conversion</p>
+                                                    {orderCalc.digitizing === 0 && <p className="text-[10px] text-emerald-600 font-bold mt-0.5 uppercase tracking-wider">Fee Waived</p>}
+                                                </div>
+                                                <span className={`font-bold text-sm ${orderCalc.digitizing === 0 ? 'text-emerald-600' : 'text-slate-600'}`}>{orderCalc.digitizing === 0 ? 'WAIVED' : formatCurrency(orderCalc.digitizing)}</span>
+                                            </div>
+                                            {(fullData.orderData.rushFee > 0 || fullData.orderData.rushFeeWaived) && (
+                                                <div className="mb-3 pb-3 border-b border-slate-50 last:border-0 flex justify-between items-start">
+                                                    <div>
+                                                        <p className="font-bold text-sm text-slate-800">1x Rush Order</p>
+                                                        {fullData.orderData.rushFeeWaived && <p className="text-[10px] text-emerald-600 font-bold mt-0.5 uppercase tracking-wider">Fee Waived</p>}
+                                                    </div>
+                                                    <span className={`font-bold text-sm ${fullData.orderData.rushFeeWaived ? 'text-emerald-600' : 'text-slate-600'}`}>{fullData.orderData.rushFeeWaived ? 'WAIVED' : formatCurrency(orderCalc.rush)}</span>
+                                                </div>
+                                            )}
+                                        </>
+                                    )}
+                                </div>
                             </div>
 
                             <div className="p-5 border-t border-slate-200 bg-slate-50 space-y-3">
@@ -1312,9 +1436,6 @@
 
                 return (
                     <div style={{ position: 'absolute', top: 0, left: 0, opacity: 0.01, pointerEvents: 'none', zIndex: -9999, width: '100%', overflow: 'visible' }}>
-                        {/* The wrapper must be on-screen but transparent, or mobile browsers will cull the rendering */}
-                        
-                        {/* Width is locked to 8 inches (8.5in page - 0.25in margin on both sides) */}
                         <div ref={pdfGenRef} style={{ width: '8in', padding: '0.2in', boxSizing: 'border-box', backgroundColor: 'white', color: '#0f172a', fontFamily: 'Helvetica, Arial, sans-serif' }}>
                             
                             {/* Paid Stamp for Receipts */}
@@ -1402,7 +1523,7 @@
                                 </div>
                             ))}
 
-                            {/* Setup & Digitizing PDF Rows */}
+                            {/* Setup & Digitizing & Rush PDF Rows */}
                             <div style={{ display: 'flex', marginBottom: '10px', paddingBottom: '10px', borderBottom: '1px solid #f1f5f9', breakInside: 'avoid' }}>
                                 <div style={{ width: '55%', paddingRight: '20px' }}>
                                     <p style={{ margin: '0 0 5px 0', fontWeight: '800', fontSize: '17px', color: '#0f172a' }}>Setup / Art Prep</p>
@@ -1413,7 +1534,7 @@
                                 <div style={{ width: '15%', textAlign: 'right', fontWeight: '800', fontSize: '16px', color: oCalc.setup === 0 ? '#059669' : '#0f172a' }}>{oCalc.setup === 0 ? 'WAIVED' : formatCurrency(oCalc.setup)}</div>
                             </div>
                             
-                            <div style={{ display: 'flex', marginBottom: '20px', paddingBottom: '20px', borderBottom: '1px solid #f1f5f9', breakInside: 'avoid' }}>
+                            <div style={{ display: 'flex', marginBottom: '10px', paddingBottom: '10px', borderBottom: '1px solid #f1f5f9', breakInside: 'avoid' }}>
                                 <div style={{ width: '55%', paddingRight: '20px' }}>
                                     <p style={{ margin: '0 0 5px 0', fontWeight: '800', fontSize: '17px', color: '#0f172a' }}>Digitizing / File Conversion</p>
                                     {oCalc.digitizing === 0 && <p style={{ margin: 0, fontSize: '12px', color: '#059669', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Fee Waived</p>}
@@ -1422,6 +1543,18 @@
                                 <div style={{ width: '15%', textAlign: 'right', fontWeight: '600', fontSize: '16px', color: '#334155' }}>{formatCurrency(oCalc.digitizing)}</div>
                                 <div style={{ width: '15%', textAlign: 'right', fontWeight: '800', fontSize: '16px', color: oCalc.digitizing === 0 ? '#059669' : '#0f172a' }}>{oCalc.digitizing === 0 ? 'WAIVED' : formatCurrency(oCalc.digitizing)}</div>
                             </div>
+
+                            {(oData.rushFee > 0 || oData.rushFeeWaived) && (
+                                <div style={{ display: 'flex', marginBottom: '20px', paddingBottom: '20px', borderBottom: '1px solid #f1f5f9', breakInside: 'avoid' }}>
+                                    <div style={{ width: '55%', paddingRight: '20px' }}>
+                                        <p style={{ margin: '0 0 5px 0', fontWeight: '800', fontSize: '17px', color: '#0f172a' }}>Rush Order Priority</p>
+                                        {oData.rushFeeWaived && <p style={{ margin: 0, fontSize: '12px', color: '#059669', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Fee Waived</p>}
+                                    </div>
+                                    <div style={{ width: '15%', textAlign: 'center', fontWeight: '700', fontSize: '16px', color: '#334155' }}>1</div>
+                                    <div style={{ width: '15%', textAlign: 'right', fontWeight: '600', fontSize: '16px', color: '#334155' }}>{oData.rushFeeWaived ? '$0.00' : formatCurrency(oCalc.rush)}</div>
+                                    <div style={{ width: '15%', textAlign: 'right', fontWeight: '800', fontSize: '16px', color: oData.rushFeeWaived ? '#059669' : '#0f172a' }}>{oData.rushFeeWaived ? 'WAIVED' : formatCurrency(oCalc.rush)}</div>
+                                </div>
+                            )}
 
                             {/* Totals Section */}
                             <div style={{ width: '50%', marginLeft: 'auto', marginTop: '30px', breakInside: 'avoid' }}>
@@ -1463,7 +1596,7 @@
 
                             <div style={{ marginTop: '60px', borderTop: '1px solid #e2e8f0', paddingTop: '20px', textAlign: 'center' }}>
                                 <p style={{ margin: 0, color: '#64748b', fontSize: '14px', fontWeight: '500' }}>
-                                    {type === 'proposal' ? 'Quotes are valid for 14 days. We require a deposit to begin production.' : 'Thank you for choosing our Small Business!'}
+                                    {type === 'proposal' ? 'Quotes are valid for 14 days. We require a deposit to begin production.' : 'Thank you for choosing Triple One Threads!'}
                                 </p>
                             </div>
                         </div>
@@ -1475,7 +1608,7 @@
                 <div className="min-h-screen pb-content flex flex-col relative z-10">
                     <div className="bg-white border-b border-slate-200 shadow-sm sticky top-0 z-30 pt-safe no-print">
                         <div className="max-w-4xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4 p-4">
-                            <div><h1 className="text-2xl font-black flex items-center gap-2 tracking-tight text-slate-800"><Icon name="layers" size={28} className="text-indigo-600"/> Mobile Quote By LG</h1></div>
+                            <div><h1 className="text-2xl font-black flex items-center gap-2 tracking-tight text-slate-800"><Icon name="layers" size={28} className="text-indigo-600"/> Triple One OS</h1></div>
                             
                             <div className="flex bg-slate-100 p-1.5 rounded-xl border border-slate-200 w-full md:w-auto overflow-x-auto hide-scrollbar">
                                 <button onClick={() => setAppModule('quoter')} className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-5 py-2 rounded-lg text-sm font-bold transition-all ${appModule === 'quoter' ? 'bg-white text-indigo-700 shadow-sm' : 'text-slate-500'}`}><Icon name="calculator" size={18} /> Quoter</button>
