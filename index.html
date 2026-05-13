@@ -582,7 +582,7 @@
 
             const renderQuoter = () => (
                 <div className="space-y-6 pb-6 fade-in">
-                    <div className="bg-white rounded-2xl shadow-sm p-6 border border-slate-200">
+                    <div className="bg-white rounded-2xl shadow-sm p-4 md:p-6 border border-slate-200">
                         <div className="flex justify-between items-center mb-6">
                             <h2 className="text-sm font-bold text-slate-800 flex items-center gap-2 uppercase tracking-wider"><Icon name="calculator" size={18} className="text-indigo-500" /> Build Quote</h2>
                             <button onClick={() => setShowInternalBreakdown(!showInternalBreakdown)} className="text-xs font-bold text-indigo-600 bg-indigo-50 px-3 py-1.5 rounded-lg border border-indigo-100">
@@ -590,7 +590,7 @@
                             </button>
                         </div>
                         
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-6">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-5 mb-6">
                             <div><label className="block text-xs font-semibold text-slate-500 mb-1 flex items-center gap-1.5"><Icon name="user" size={14}/> Customer / Company</label><input type="text" className="w-full p-3 soft-input rounded-xl text-sm" value={orderData.customerName} onChange={e => updateOrder('customerName', e.target.value)} /></div>
                             <div><label className="block text-xs font-semibold text-slate-500 mb-1 flex items-center gap-1.5"><Icon name="fileText" size={14}/> Order Name</label><input type="text" placeholder="e.g. Summer Staff Gear" className="w-full p-3 soft-input rounded-xl text-sm" value={orderData.orderName} onChange={e => updateOrder('orderName', e.target.value)} /></div>
                             <div><label className="block text-xs font-semibold text-slate-500 mb-1 flex items-center gap-1.5"><Icon name="calendar" size={14}/> Date Required</label><input type="date" className="w-full p-3 soft-input rounded-xl text-sm text-slate-600" value={orderData.dateRequired} onChange={e => updateOrder('dateRequired', e.target.value)} /></div>
@@ -616,18 +616,18 @@
 
                         {calc.items.map((item, index) => (
                             <div key={item.id} className="bg-slate-50 rounded-xl border border-slate-200 overflow-hidden mb-5">
-                                <div className="p-4 border-b border-slate-200 flex justify-between items-center bg-slate-100/50">
+                                <div className="p-3 md:p-4 border-b border-slate-200 flex justify-between items-center bg-slate-100/50">
                                     <h3 className="font-extrabold text-slate-700 text-xs uppercase tracking-wide flex items-center gap-2"><Icon name="shirt" size={16} className="text-indigo-500"/> Garment Style {index + 1}</h3>
                                     <div className="flex gap-2">
                                         <button onClick={() => duplicateItem(item)} className="text-slate-400 hover:text-indigo-500"><Icon name="copy" size={16} /></button>
                                         {items.length > 1 && <button onClick={() => removeItem(item.id)} className="text-slate-400 hover:text-red-500"><Icon name="trash" size={16} /></button>}
                                     </div>
                                 </div>
-                                <div className="p-4 space-y-4">
-                                    <div className="flex flex-col md:flex-row gap-4">
-                                        <div className="flex-[2]"><label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase">Item Desc</label><input type="text" placeholder="e.g. Gildan 5000" className="w-full p-2.5 soft-input rounded-lg text-sm" value={item.name} onChange={e => updateItem(item.id, 'name', e.target.value)} /></div>
-                                        <div className="flex-1"><label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase">Color</label><input type="text" placeholder="Black" className="w-full p-2.5 soft-input rounded-lg text-sm" value={item.color} onChange={e => updateItem(item.id, 'color', e.target.value)} /></div>
-                                        <div className="flex-1"><label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase">Total Qty</label><input type="number" className={`w-full p-2.5 rounded-lg text-sm font-bold text-center ${item.sizeSum > 0 ? 'bg-slate-100 text-slate-400 border border-slate-200 cursor-not-allowed' : 'bg-white text-indigo-700 border border-indigo-200'}`} value={item.sizeSum > 0 ? item.sizeSum : item.qty} readOnly={item.sizeSum > 0} onChange={e => updateItem(item.id, 'qty', e.target.value)} /></div>
+                                <div className="p-3 md:p-4 space-y-4">
+                                    <div className="flex flex-col md:flex-row gap-3 md:gap-4">
+                                        <div className="flex-[2]"><label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase">Item Desc</label><input type="text" placeholder="e.g. Gildan 5000" className="w-full p-2 md:p-2.5 soft-input rounded-lg text-sm" value={item.name} onChange={e => updateItem(item.id, 'name', e.target.value)} /></div>
+                                        <div className="flex-1"><label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase">Color</label><input type="text" placeholder="Black" className="w-full p-2 md:p-2.5 soft-input rounded-lg text-sm" value={item.color} onChange={e => updateItem(item.id, 'color', e.target.value)} /></div>
+                                        <div className="flex-1"><label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase">Total Qty</label><input type="number" className={`w-full p-2 md:p-2.5 rounded-lg text-sm font-bold text-center ${item.sizeSum > 0 ? 'bg-slate-100 text-slate-400 border border-slate-200 cursor-not-allowed' : 'bg-white text-indigo-700 border border-indigo-200'}`} value={item.sizeSum > 0 ? item.sizeSum : item.qty} readOnly={item.sizeSum > 0} onChange={e => updateItem(item.id, 'qty', e.target.value)} /></div>
                                     </div>
                                     <div className="mt-1">
                                         <label className="block text-[10px] font-bold text-slate-400 mb-2 uppercase tracking-wider">Size Breakdown (Overrides Total Qty)</label>
@@ -640,66 +640,105 @@
                                             ))}
                                         </div>
                                     </div>
-                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3 bg-white p-3 rounded-lg border border-slate-200">
+                                    
+                                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2 md:gap-3 bg-white p-2 md:p-3 rounded-lg border border-slate-200">
                                         <div><label className="block text-[10px] font-bold text-slate-500 mb-1">Wholesale $</label><input type="number" className="w-full p-2 soft-input rounded-md text-sm" value={item.rawCost} onChange={e => updateItem(item.id, 'rawCost', e.target.value)} /></div>
                                         <div><label className="block text-[10px] font-bold text-slate-500 mb-1">Freight $</label><input type="number" className="w-full p-2 soft-input rounded-md text-sm" value={item.shippingCost} onChange={e => updateItem(item.id, 'shippingCost', e.target.value)} /></div>
                                         <div><label className="block text-[10px] font-bold text-slate-500 mb-1">Margin %</label><input type="number" className="w-full p-2 soft-input rounded-md text-sm text-indigo-700 font-bold" value={item.margin} onChange={e => updateItem(item.id, 'margin', e.target.value)} /></div>
+                                        
+                                        <div className="bg-indigo-50 border border-indigo-100 rounded-md p-2 flex flex-col justify-center">
+                                            <label className="block text-[9px] font-bold text-indigo-600 mb-1 uppercase text-center leading-none">Sell Price</label>
+                                            <div className="text-sm font-black text-indigo-700 text-center">
+                                                {formatCurrency(item.clientGarmentPrice)}
+                                            </div>
+                                        </div>
+
+                                        <div className="bg-emerald-50 border border-emerald-100 rounded-md p-2 flex flex-col justify-center">
+                                            <label className="block text-[9px] font-bold text-emerald-600 mb-1 uppercase text-center leading-none">Profit/ea</label>
+                                            <div className="text-sm font-black text-emerald-700 text-center">
+                                                {formatCurrency(item.clientGarmentPrice - item.landedCost)}
+                                            </div>
+                                        </div>
+
                                         <div>
-                                            <label className="block text-[10px] font-bold text-emerald-600 mb-1">Deco Discount $</label>
+                                            <label className="block text-[10px] font-bold text-emerald-600 mb-1 uppercase">Deco Disc.</label>
                                             <div className="relative">
-                                                <span className="absolute left-3 top-2 text-emerald-600 font-bold">-$</span>
-                                                <input type="number" placeholder="0.00" className="w-full pl-8 p-2 soft-input border-emerald-200 rounded-md text-sm text-emerald-700 font-bold focus:ring-emerald-500" value={item.decoDiscount} onChange={e => updateItem(item.id, 'decoDiscount', e.target.value)} />
+                                                <span className="absolute left-2 top-2 text-emerald-600 font-bold text-xs">-$</span>
+                                                <input type="number" placeholder="0.00" className="w-full pl-6 p-2 soft-input border-emerald-100 rounded-md text-sm text-emerald-700 font-bold focus:ring-emerald-500" value={item.decoDiscount} onChange={e => updateItem(item.id, 'decoDiscount', e.target.value)} />
                                             </div>
                                         </div>
                                     </div>
+
                                     <div>
                                         <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Decorations</p>
-                                        {item.processedLocations.map((loc, lIdx) => (
-                                            <div key={loc.id} className="bg-white border border-slate-200 rounded-lg p-3 mb-2 flex flex-col lg:flex-row gap-3 items-center relative pr-8">
+                                        {item.processedLocations.map((loc, lIdx) => {
+                                            const marginPct = loc.cost > 0 ? ((loc.cost - loc.materialCost) / loc.cost) * 100 : 0;
+                                            return (
+                                            
+                                            <div key={loc.id} className="bg-white border border-slate-200 rounded-lg p-2 md:p-3 mb-2 flex flex-col xl:flex-row gap-2 md:gap-3 items-start xl:items-center relative pr-8">
                                                 {item.locations.length > 1 && <button onClick={() => removeLocation(item.id, loc.id)} className="absolute right-2 top-2 text-slate-300 hover:text-red-500"><Icon name="x" size={14} /></button>}
                                                 
-                                                <select className="w-full lg:w-32 p-2 soft-input rounded-md text-xs font-bold shrink-0" value={loc.type} onChange={e => updateLocation(item.id, loc.id, 'type', e.target.value)}>
-                                                    <option value="none">None</option>
-                                                    <option value="embroidery">Embroidery</option>
-                                                    <option value="dtf">DTF Print</option>
-                                                </select>
-                                                
-                                                {loc.type === 'embroidery' && (
-                                                    <div className="w-full lg:w-auto flex items-center gap-2 shrink-0">
-                                                        <input type="number" placeholder="Stitches" className="w-24 p-2 soft-input rounded-md text-xs" value={loc.stitches} onChange={e => updateLocation(item.id, loc.id, 'stitches', e.target.value)} />
-                                                        <label className="flex items-center gap-1 text-[10px] font-bold text-slate-500 cursor-pointer whitespace-nowrap">
-                                                            <input type="checkbox" checked={loc.isPuff} onChange={e => updateLocation(item.id, loc.id, 'isPuff', e.target.checked)} className="rounded text-indigo-600 focus:ring-indigo-500" />
-                                                            3D Puff
-                                                        </label>
-                                                        {loc.isPuff && <input type="number" className="w-16 p-2 soft-input rounded-md text-xs text-indigo-700 font-bold" value={loc.puffMarkup} onChange={e => updateLocation(item.id, loc.id, 'puffMarkup', e.target.value)} placeholder="+$" />}
-                                                    </div>
-                                                )}
-                                                
-                                                {loc.type === 'dtf' && (
-                                                    <select className="w-full lg:w-32 p-2 soft-input rounded-md text-xs shrink-0" value={loc.dtfSize} onChange={e => updateLocation(item.id, loc.id, 'dtfSize', e.target.value)}>
-                                                        {DTF_SIZES.map(s => <option key={s.id} value={s.id}>{s.label}</option>)}
+                                                <div className="flex flex-col md:flex-row gap-2 w-full xl:w-auto">
+                                                    <select className="w-full md:w-32 p-2 soft-input rounded-md text-xs font-bold shrink-0" value={loc.type} onChange={e => updateLocation(item.id, loc.id, 'type', e.target.value)}>
+                                                        <option value="none">None</option>
+                                                        <option value="embroidery">Embroidery</option>
+                                                        <option value="dtf">DTF Print</option>
                                                     </select>
-                                                )}
+                                                    
+                                                    {loc.type === 'embroidery' && (
+                                                        <div className="w-full flex items-center gap-2 shrink-0">
+                                                            <input type="number" placeholder="Stitches" className="w-24 p-2 soft-input rounded-md text-xs" value={loc.stitches} onChange={e => updateLocation(item.id, loc.id, 'stitches', e.target.value)} />
+                                                            <label className="flex items-center gap-1 text-[10px] font-bold text-slate-500 cursor-pointer whitespace-nowrap">
+                                                                <input type="checkbox" checked={loc.isPuff} onChange={e => updateLocation(item.id, loc.id, 'isPuff', e.target.checked)} className="rounded text-indigo-600 focus:ring-indigo-500" />
+                                                                3D Puff
+                                                            </label>
+                                                            {loc.isPuff && <input type="number" className="w-16 p-2 soft-input rounded-md text-xs text-indigo-700 font-bold" value={loc.puffMarkup} onChange={e => updateLocation(item.id, loc.id, 'puffMarkup', e.target.value)} placeholder="+$" />}
+                                                        </div>
+                                                    )}
+                                                    
+                                                    {loc.type === 'dtf' && (
+                                                        <select className="w-full md:w-40 p-2 soft-input rounded-md text-xs shrink-0" value={loc.dtfSize} onChange={e => updateLocation(item.id, loc.id, 'dtfSize', e.target.value)}>
+                                                            {DTF_SIZES.map(s => <option key={s.id} value={s.id}>{s.label}</option>)}
+                                                        </select>
+                                                    )}
+                                                    
+                                                    {loc.type !== 'none' && (
+                                                        <select className="w-full md:w-40 p-2 soft-input rounded-md text-xs shrink-0" value={loc.placement} onChange={e => updateLocation(item.id, loc.id, 'placement', e.target.value)}>
+                                                            {PLACEMENTS.map(p => <option key={p.id} value={p.id}>{p.label}</option>)}
+                                                        </select>
+                                                    )}
+                                                </div>
                                                 
                                                 {loc.type !== 'none' && (
-                                                    <select className="w-full lg:w-40 p-2 soft-input rounded-md text-xs shrink-0" value={loc.placement} onChange={e => updateLocation(item.id, loc.id, 'placement', e.target.value)}>
-                                                        {PLACEMENTS.map(p => <option key={p.id} value={p.id}>{p.label}</option>)}
-                                                    </select>
-                                                )}
-                                                
-                                                {loc.type !== 'none' && (
-                                                    <input type="text" placeholder="Custom notes..." className="w-full flex-1 p-2 soft-input rounded-md text-xs min-w-[100px]" value={loc.desc} onChange={e => updateLocation(item.id, loc.id, 'desc', e.target.value)} />
+                                                    <input type="text" placeholder="Custom notes..." className="w-full xl:flex-1 p-2 soft-input rounded-md text-xs min-w-[100px]" value={loc.desc} onChange={e => updateLocation(item.id, loc.id, 'desc', e.target.value)} />
                                                 )}
 
                                                 {loc.type !== 'none' && (
-                                                    <div className="w-full lg:w-auto flex justify-end shrink-0">
-                                                        <span className="text-xs font-black text-indigo-700 bg-indigo-50 px-3 py-2 rounded-md border border-indigo-100 shadow-sm whitespace-nowrap">
-                                                            +{formatCurrency(loc.baseCost)} / ea
-                                                        </span>
+                                                    <div className="w-full xl:w-auto flex flex-wrap justify-between md:justify-end gap-2 md:gap-4 shrink-0 bg-slate-50 p-2 rounded-md border border-slate-200 items-center mt-1 xl:mt-0">
+                                                        <div className="flex flex-col items-center border-r border-slate-200 pr-2 md:pr-4">
+                                                            <span className="text-[9px] font-bold text-slate-400 uppercase">Adj $</span>
+                                                            <input type="number" className="w-12 md:w-14 p-1 soft-input rounded text-xs font-bold text-slate-700 text-center" placeholder="0.00" value={loc.adjustment} onChange={e => updateLocation(item.id, loc.id, 'adjustment', e.target.value)} />
+                                                        </div>
+                                                        <div className="flex gap-3 md:gap-4 text-[9px] md:text-[10px]">
+                                                            <div className="flex flex-col items-end">
+                                                                <span className="text-slate-400 font-bold uppercase">Mat. Cost</span>
+                                                                <span className="text-rose-500 font-bold">{formatCurrency(loc.materialCost)}</span>
+                                                            </div>
+                                                            <div className="flex flex-col items-end">
+                                                                <span className="text-slate-400 font-bold uppercase">Sell Price</span>
+                                                                <span className="text-indigo-600 font-black">{formatCurrency(loc.cost)}</span>
+                                                            </div>
+                                                            <div className="flex flex-col items-end">
+                                                                <span className="text-slate-400 font-bold uppercase">Profit/ea</span>
+                                                                <span className={`font-black ${marginPct >= shopSettings.marginGreen ? 'text-emerald-600' : marginPct >= shopSettings.marginYellow ? 'text-amber-500' : 'text-rose-500'}`}>
+                                                                    {formatCurrency(loc.cost - loc.materialCost)}
+                                                                </span>
+                                                            </div>
+                                                        </div>
                                                     </div>
                                                 )}
                                             </div>
-                                        ))}
+                                        )})}
                                         <button onClick={() => addLocation(item.id)} className="text-[10px] font-bold text-indigo-600 bg-indigo-50 px-3 py-1.5 rounded-md mt-1">+ Add Decor</button>
                                     </div>
                                 </div>
@@ -708,53 +747,53 @@
                         <button onClick={addItem} className="w-full py-3 border-2 border-dashed border-slate-300 rounded-xl text-slate-500 font-bold text-sm hover:border-indigo-400 hover:text-indigo-600 hover:bg-indigo-50 transition-all">+ Add Garment Style</button>
                     </div>
 
-                    <div className="bg-white rounded-2xl shadow-sm p-6 border border-slate-200">
-                        <h2 className="text-sm font-bold text-slate-800 mb-5 flex items-center gap-2 uppercase tracking-wider"><Icon name="settings" size={18} className="text-indigo-500" /> Fees & Discounts</h2>
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                            <div><label className="block text-[11px] font-semibold text-slate-500 mb-1.5 uppercase">Setup Fees</label><input type="number" className="w-full p-3 soft-input rounded-xl text-sm" value={orderData.setupFees} onFocus={(e) => e.target.select()} onChange={e => updateOrder('setupFees', e.target.value)} /></div>
-                            <div><label className="block text-[11px] font-semibold text-slate-500 mb-1.5 uppercase">Digitizing Fee</label><input type="number" className="w-full p-3 soft-input rounded-xl text-sm" value={orderData.digitizingFee} onFocus={(e) => e.target.select()} onChange={e => updateOrder('digitizingFee', e.target.value)} /></div>
+                    <div className="bg-white rounded-2xl shadow-sm p-4 md:p-6 border border-slate-200">
+                        <h2 className="text-sm font-bold text-slate-800 mb-4 md:mb-5 flex items-center gap-2 uppercase tracking-wider"><Icon name="settings" size={18} className="text-indigo-500" /> Fees & Discounts</h2>
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
+                            <div><label className="block text-[10px] md:text-[11px] font-semibold text-slate-500 mb-1.5 uppercase">Setup Fees</label><input type="number" className="w-full p-2.5 md:p-3 soft-input rounded-xl text-sm" value={orderData.setupFees} onFocus={(e) => e.target.select()} onChange={e => updateOrder('setupFees', e.target.value)} /></div>
+                            <div><label className="block text-[10px] md:text-[11px] font-semibold text-slate-500 mb-1.5 uppercase">Digitizing Fee</label><input type="number" className="w-full p-2.5 md:p-3 soft-input rounded-xl text-sm" value={orderData.digitizingFee} onFocus={(e) => e.target.select()} onChange={e => updateOrder('digitizingFee', e.target.value)} /></div>
                             <div>
-                                <label className="block text-[11px] font-semibold text-slate-500 mb-1.5 uppercase flex items-center gap-1"><Icon name="tag" size={12}/> Order Discount ($)</label>
+                                <label className="block text-[10px] md:text-[11px] font-semibold text-slate-500 mb-1.5 uppercase flex items-center gap-1"><Icon name="tag" size={12}/> Discount ($)</label>
                                 <div className="relative">
                                     <span className="absolute left-3 top-3 text-emerald-600 font-bold">-$</span>
-                                    <input type="number" className="w-full pl-8 p-3 soft-input rounded-xl text-sm text-emerald-600 font-bold focus:ring-emerald-500" value={orderData.discount} onFocus={(e) => e.target.select()} onChange={e => updateOrder('discount', e.target.value)} />
+                                    <input type="number" className="w-full pl-8 p-2.5 md:p-3 soft-input rounded-xl text-sm text-emerald-600 font-bold focus:ring-emerald-500" value={orderData.discount} onFocus={(e) => e.target.select()} onChange={e => updateOrder('discount', e.target.value)} />
                                 </div>
                             </div>
-                            <div><label className="block text-[11px] font-semibold text-slate-500 mb-1.5 uppercase flex items-center gap-1"><Icon name="percent" size={12}/> Tax Rate (%)</label><input type="number" className="w-full p-3 soft-input rounded-xl text-sm" value={orderData.taxRate} onFocus={(e) => e.target.select()} onChange={e => updateOrder('taxRate', e.target.value)} /></div>
+                            <div><label className="block text-[10px] md:text-[11px] font-semibold text-slate-500 mb-1.5 uppercase flex items-center gap-1"><Icon name="percent" size={12}/> Tax Rate (%)</label><input type="number" className="w-full p-2.5 md:p-3 soft-input rounded-xl text-sm" value={orderData.taxRate} onFocus={(e) => e.target.select()} onChange={e => updateOrder('taxRate', e.target.value)} /></div>
                         </div>
                     </div>
 
                     {showInternalBreakdown && (
-                        <div className="bg-slate-900 text-white rounded-2xl p-6 shadow-lg space-y-6">
+                        <div className="bg-slate-900 text-white rounded-2xl p-4 md:p-6 shadow-lg space-y-6">
                             <div>
                                 <h3 className="text-sm font-bold border-b border-slate-700 pb-3 mb-4 text-indigo-300 uppercase tracking-widest">Line Item Analysis</h3>
                                 <div className="space-y-4">
                                     {calc.items.map((item, idx) => {
                                         const sizeStr = getSizeString(item);
                                         return (
-                                        <div key={item.id} className="bg-slate-800 border border-slate-700 rounded-xl p-4 shadow-sm">
-                                            <div className="flex justify-between items-start mb-3 border-b border-slate-700 pb-3">
+                                        <div key={item.id} className="bg-slate-800 border border-slate-700 rounded-xl p-3 md:p-4 shadow-sm">
+                                            <div className="flex flex-col sm:flex-row sm:justify-between items-start mb-3 border-b border-slate-700 pb-3 gap-2">
                                                 <div>
-                                                    <h4 className="font-bold text-white">{idx + 1}. {item.name || 'Unnamed Item'} {item.color ? `(${item.color})` : ''} (Qty: {item.calculatedQty})</h4>
+                                                    <h4 className="font-bold text-white text-sm md:text-base">{idx + 1}. {item.name || 'Unnamed Item'} {item.color ? `(${item.color})` : ''} (Qty: {item.calculatedQty})</h4>
                                                     {sizeStr && <p className="text-[10px] font-bold text-slate-400 mt-1">{sizeStr}</p>}
                                                 </div>
-                                                <div className="text-right">
-                                                    <span className="font-bold text-indigo-300 text-lg block">{formatCurrency(item.lineTotal)}</span>
-                                                    <span className={`text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-md ${getHealthBg(item.itemMarginPercent)} ${getHealthColor(item.itemMarginPercent)}`}>
+                                                <div className="text-left sm:text-right">
+                                                    <span className="font-bold text-indigo-300 text-base md:text-lg block">{formatCurrency(item.lineTotal)}</span>
+                                                    <span className={`text-[9px] md:text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-md ${getHealthBg(item.itemMarginPercent)} ${getHealthColor(item.itemMarginPercent)}`}>
                                                         {item.itemMarginPercent.toFixed(1)}% Margin
                                                     </span>
                                                 </div>
                                             </div>
-                                            <div className="grid grid-cols-2 gap-x-6 gap-y-2 text-sm text-slate-300">
-                                                <div className="flex justify-between"><span>Landed Cost /ea:</span><span className="font-semibold">{formatCurrency(item.landedCost)}</span></div>
-                                                <div className="flex justify-between"><span>Garment Retail /ea:</span><span className="font-semibold">{formatCurrency(item.clientGarmentPrice)}</span></div>
-                                                <div className="flex justify-between"><span>Garment Profit /ea:</span><span className="font-bold text-emerald-400">{formatCurrency(item.clientGarmentPrice - item.landedCost)}</span></div>
-                                                <div className="flex justify-between"><span>Deco Revenue /ea (Net):</span><span className="font-bold text-indigo-300">{formatCurrency(item.itemDecoPerPiece)}</span></div>
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 text-xs md:text-sm text-slate-300">
+                                                <div className="flex justify-between border-b sm:border-0 border-slate-700 pb-1 sm:pb-0"><span>Landed Cost /ea:</span><span className="font-semibold">{formatCurrency(item.landedCost)}</span></div>
+                                                <div className="flex justify-between border-b sm:border-0 border-slate-700 pb-1 sm:pb-0"><span>Garment Retail /ea:</span><span className="font-semibold">{formatCurrency(item.clientGarmentPrice)}</span></div>
+                                                <div className="flex justify-between border-b sm:border-0 border-slate-700 pb-1 sm:pb-0"><span>Garment Profit /ea:</span><span className="font-bold text-emerald-400">{formatCurrency(item.clientGarmentPrice - item.landedCost)}</span></div>
+                                                <div className="flex justify-between border-b sm:border-0 border-slate-700 pb-1 sm:pb-0"><span>Deco Rev /ea (Net):</span><span className="font-bold text-indigo-300">{formatCurrency(item.itemDecoPerPiece)}</span></div>
                                                 
                                                 {item.explicitDecoDiscount > 0 && (
-                                                    <div className="col-span-2 flex justify-between bg-emerald-900/30 text-emerald-400 p-2 rounded-lg mt-1 border border-emerald-800">
-                                                        <span className="font-bold text-xs">Item Discount Applied</span>
-                                                        <span className="font-bold text-xs">-{formatCurrency(item.decoDiscountTotal)} (-{formatCurrency(item.explicitDecoDiscount)}/ea)</span>
+                                                    <div className="col-span-1 sm:col-span-2 flex justify-between bg-emerald-900/30 text-emerald-400 p-2 rounded-lg mt-1 border border-emerald-800">
+                                                        <span className="font-bold text-[10px] md:text-xs">Item Discount</span>
+                                                        <span className="font-bold text-[10px] md:text-xs">-{formatCurrency(item.decoDiscountTotal)} (-{formatCurrency(item.explicitDecoDiscount)}/ea)</span>
                                                     </div>
                                                 )}
                                             </div>
@@ -765,13 +804,13 @@
                             
                             <div>
                                 <h3 className="text-sm font-bold border-b border-slate-700 pb-3 mb-4 text-amber-300 uppercase tracking-widest">Order Math & Cash Allocation</h3>
-                                <div className="grid grid-cols-2 gap-4 text-sm mb-4">
-                                    <div className="flex justify-between"><span className="text-slate-400">Total Rev:</span><span className="font-bold">{formatCurrency(calc.discountedSubtotal)}</span></div>
-                                    <div className="flex justify-between"><span className="text-slate-400">Garment Cost:</span><span className="font-bold text-rose-400">-{formatCurrency(calc.orderGarmentCostTotal)}</span></div>
-                                    <div className="flex justify-between"><span className="text-slate-400">Deco Cost:</span><span className="font-bold text-rose-400">-{formatCurrency(calc.orderDecoCostTotal)}</span></div>
-                                    <div className="flex justify-between"><span className="text-slate-400">Gross Profit:</span><span className="font-bold text-white">{formatCurrency(calc.discountedSubtotal - calc.orderGarmentCostTotal - calc.orderDecoCostTotal)}</span></div>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-4 text-xs md:text-sm mb-4">
+                                    <div className="flex justify-between border-b sm:border-0 border-slate-700 pb-1 sm:pb-0"><span className="text-slate-400">Total Rev:</span><span className="font-bold">{formatCurrency(calc.discountedSubtotal)}</span></div>
+                                    <div className="flex justify-between border-b sm:border-0 border-slate-700 pb-1 sm:pb-0"><span className="text-slate-400">Garment Cost:</span><span className="font-bold text-rose-400">-{formatCurrency(calc.orderGarmentCostTotal)}</span></div>
+                                    <div className="flex justify-between border-b sm:border-0 border-slate-700 pb-1 sm:pb-0"><span className="text-slate-400">Deco Cost:</span><span className="font-bold text-rose-400">-{formatCurrency(calc.orderDecoCostTotal)}</span></div>
+                                    <div className="flex justify-between border-b sm:border-0 border-slate-700 pb-1 sm:pb-0"><span className="text-slate-400">Gross Profit:</span><span className="font-bold text-white">{formatCurrency(calc.discountedSubtotal - calc.orderGarmentCostTotal - calc.orderDecoCostTotal)}</span></div>
                                 </div>
-                                <div className="bg-slate-800 p-3 rounded-xl border border-slate-700 space-y-2 text-sm mb-4">
+                                <div className="bg-slate-800 p-3 rounded-xl border border-slate-700 space-y-2 text-xs md:text-sm mb-4">
                                     <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Automated Fund Deductions</h4>
                                     <div className="flex justify-between"><span className="text-amber-200">Consumables ({shopSettings.fundConsumables}%):</span><span className="font-bold text-amber-400">-{formatCurrency(calc.allocConsumables)}</span></div>
                                     <div className="flex justify-between"><span className="text-amber-200">Growth/Machine ({shopSettings.fundGrowth}%):</span><span className="font-bold text-amber-400">-{formatCurrency(calc.allocGrowth)}</span></div>
@@ -779,23 +818,23 @@
                                 </div>
                                 <div className="mt-4 pt-4 border-t border-slate-700 flex justify-between items-center">
                                     <div className="flex flex-col">
-                                        <span className="font-bold uppercase tracking-widest text-xs text-slate-300">True Net Profit</span>
-                                        <span className={`text-[11px] font-black uppercase tracking-widest ${getHealthColor(calc.overallMarginPercent)}`}>{calc.overallMarginPercent.toFixed(1)}% MARGIN</span>
+                                        <span className="font-bold uppercase tracking-widest text-[10px] md:text-xs text-slate-300">True Net Profit</span>
+                                        <span className={`text-[9px] md:text-[11px] font-black uppercase tracking-widest ${getHealthColor(calc.overallMarginPercent)}`}>{calc.overallMarginPercent.toFixed(1)}% MARGIN</span>
                                     </div>
-                                    <span className={`text-3xl font-black ${getHealthColor(calc.overallMarginPercent)}`}>{formatCurrency(calc.netProfit)}</span>
+                                    <span className={`text-2xl md:text-3xl font-black ${getHealthColor(calc.overallMarginPercent)}`}>{formatCurrency(calc.netProfit)}</span>
                                 </div>
                             </div>
                         </div>
                     )}
 
-                    <div className="bg-white rounded-2xl shadow-sm p-6 border border-slate-200 relative overflow-hidden">
+                    <div className="bg-white rounded-2xl shadow-sm p-4 md:p-6 border border-slate-200 relative overflow-hidden">
                         <div className={`absolute top-0 left-0 w-2 h-full ${calc.overallMarginPercent >= shopSettings.marginGreen ? 'bg-emerald-500' : calc.overallMarginPercent >= shopSettings.marginYellow ? 'bg-amber-500' : 'bg-rose-500'}`}></div>
-                        <div className="flex justify-between items-end border-b border-slate-100 pb-4 mb-4 pl-4">
-                            <span className="text-slate-500 font-bold uppercase tracking-widest text-sm">Order Total</span>
-                            <span className="text-4xl font-black text-indigo-700">{formatCurrency(calc.grandTotal)}</span>
+                        <div className="flex justify-between items-end border-b border-slate-100 pb-3 md:pb-4 mb-3 md:mb-4 pl-3 md:pl-4">
+                            <span className="text-slate-500 font-bold uppercase tracking-widest text-xs md:text-sm">Order Total</span>
+                            <span className="text-3xl md:text-4xl font-black text-indigo-700">{formatCurrency(calc.grandTotal)}</span>
                         </div>
-                        <div className="flex flex-col md:flex-row gap-3 pl-4">
-                            <button onClick={handleSendToPipeline} className="flex-1 py-4 bg-emerald-600 text-white rounded-xl font-bold text-lg shadow-md hover:bg-emerald-700 active:scale-95 transition-all">
+                        <div className="flex flex-col md:flex-row gap-2 md:gap-3 pl-3 md:pl-4">
+                            <button onClick={handleSendToPipeline} className="flex-1 py-3 md:py-4 bg-emerald-600 text-white rounded-xl font-bold text-base md:text-lg shadow-md hover:bg-emerald-700 active:scale-95 transition-all">
                                 {editingOrderId ? 'Update Quote in Pipeline' : 'Save & Send to Pipeline'}
                             </button>
                             {editingOrderId && (
@@ -804,7 +843,7 @@
                                     setOrderData(defaultOrderData);
                                     setItems([defaultItem]);
                                     setAppModule('pipeline');
-                                }} className="px-8 bg-slate-200 text-slate-700 rounded-xl font-bold hover:bg-slate-300 active:scale-95 transition-all">
+                                }} className="px-6 md:px-8 py-3 md:py-4 bg-slate-200 text-slate-700 rounded-xl font-bold hover:bg-slate-300 active:scale-95 transition-all">
                                     Cancel Edit
                                 </button>
                             )}
