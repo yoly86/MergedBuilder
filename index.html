@@ -144,8 +144,8 @@
                 catch(e) { return { name: '', address: '', phone: '', email: '', website: '' }; }
             });
             const [shopSettings, setShopSettings] = useState(() => {
-                try { return JSON.parse(localStorage.getItem('t1_settings')) || { marginGreen: 45, marginYellow: 30, fundConsumables: 5, fundGrowth: 5, fundTax: 15 }; }
-                catch(e) { return { marginGreen: 45, marginYellow: 30, fundConsumables: 5, fundGrowth: 5, fundTax: 15 }; }
+                try { return JSON.parse(localStorage.getItem('t1_settings')) || { marginGreen: 45, marginYellow: 30, fundConsumables: 5, fundGrowth: 5, fundTax: 15, targetHourlyRate: 75 }; }
+                catch(e) { return { marginGreen: 45, marginYellow: 30, fundConsumables: 5, fundGrowth: 5, fundTax: 15, targetHourlyRate: 75 }; }
             });
 
             useEffect(() => { localStorage.setItem('t1_orders', JSON.stringify(orders)); }, [orders]);
@@ -265,16 +265,27 @@
                 const allocTax = discountedSubtotal * (shopSettings.fundTax / 100);
 
                 const grossProfit = discountedSubtotal - orderGarmentCostTotal;
-                const netProfit = grossProfit - orderDecoCostTotal - allocConsumables - allocGrowth - allocTax - digitizingCost;
+                // allocGrowth is removed from deductions since it is retained profit
+                const netProfit = grossProfit - orderDecoCostTotal - allocConsumables - allocTax - digitizingCost;
                 const deposit = Math.ceil(grandTotal) / 2;
                 
                 const overallMarginPercent = discountedSubtotal > 0 ? (netProfit / discountedSubtotal) * 100 : 0;
+
+                // --- NEW TIME MATH ---
+                const targetRate = shopSettings.targetHourlyRate || 75;
+                const maxAllowableTimeHours = netProfit > 0 && targetRate > 0 ? netProfit / targetRate : 0;
+                const hrs = Math.floor(maxAllowableTimeHours);
+                const mins = Math.round((maxAllowableTimeHours - hrs) * 60);
+                let timeString = "";
+                if (hrs > 0) timeString += `${hrs} hour${hrs !== 1 ? 's' : ''}`;
+                if (hrs > 0 && mins > 0) timeString += ` and `;
+                if (mins > 0 || hrs === 0) timeString += `${mins} minute${mins !== 1 ? 's' : ''}`;
 
                 return { 
                     items: processedItems, orderGarmentCostTotal, orderDecoCostTotal, setup, digitizing, digitizingCost, discount, 
                     allocConsumables, allocGrowth, allocTax, 
                     subtotal, grossSubtotal, discountedSubtotal, tax, grandTotal, netProfit, deposit, totalDiscount: totalDecoDiscount + discount,
-                    overallMarginPercent
+                    overallMarginPercent, timeString, targetRate
                 };
             }, [items, orderData, shopSettings]);
 
@@ -563,6 +574,18 @@
                                 <div><label className="block text-[11px] font-bold text-slate-500 mb-1.5 uppercase">Growth / Machine (%)</label><input type="number" className="w-full p-3 soft-input rounded-xl text-sm" value={shopSettings.fundGrowth} onChange={e => updateSetting('fundGrowth', e.target.value)} /></div>
                                 <div><label className="block text-[11px] font-bold text-slate-500 mb-1.5 uppercase">Tax Reserve (%)</label><input type="number" className="w-full p-3 soft-input rounded-xl text-sm" value={shopSettings.fundTax} onChange={e => updateSetting('fundTax', e.target.value)} /></div>
                             </div>
+                            <div className="mt-8 border-t border-slate-100 pt-6">
+                            <h3 className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-3">Shop Rate Target</h3>
+                            <div className="bg-indigo-50 p-4 md:p-5 rounded-xl border border-indigo-100 md:w-1/2">
+                                <label className="block text-[11px] font-bold text-indigo-700 mb-2 uppercase">Target Hourly Rate ($)</label>
+                                <div className="flex items-center gap-2">
+                                    <span className="text-base font-black text-indigo-400">$</span>
+                                    <input type="number" className="w-full p-2.5 soft-input rounded-lg text-sm text-indigo-700 font-black focus:ring-indigo-500" value={shopSettings.targetHourlyRate || 75} onChange={e => updateSetting('targetHourlyRate', e.target.value)} />
+                                    <span className="text-sm font-bold text-indigo-500">/ hr</span>
+                                </div>
+                                <p className="text-[10px] text-indigo-500/80 mt-2 font-medium leading-relaxed">Used in the Quoter to calculate the maximum allowable time you can spend on a job while maintaining profitability.</p>
+                            </div>
+                        </div>
                         </div>
                     </div>
 
@@ -737,7 +760,7 @@
                                             <div className="mt-3 p-3 bg-slate-100 rounded-lg border border-slate-200 flex flex-col md:flex-row justify-between items-center gap-3">
                                                 <div className="flex gap-4 w-full md:w-auto">
                                                     <div className="flex flex-col">
-                                                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Deco Cost/ea</span>
+                                                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Decoration Cost/ea</span>
                                                         <span className="text-sm font-black text-rose-500">{formatCurrency(item.itemDecoCostPerPiece)}</span>
                                                     </div>
                                                     <div className="flex flex-col">
@@ -820,14 +843,14 @@
                                                 <div className="space-y-2">
                                                     <h5 className="text-[10px] font-black text-slate-500 uppercase tracking-widest border-b border-slate-700 pb-1 mb-2">Revenue /ea (Client Pays)</h5>
                                                     <div className="flex justify-between text-xs text-slate-300"><span>Garment Retail:</span><span className="font-semibold">{formatCurrency(item.clientGarmentPrice)}</span></div>
-                                                    <div className="flex justify-between text-xs text-slate-300"><span>Gross Deco Fees:</span><span className="font-semibold">{formatCurrency(item.grossDecoPerPiece)}</span></div>
+                                                    <div className="flex justify-between text-xs text-slate-300"><span>Gross Decoration Fees:</span><span className="font-semibold">{formatCurrency(item.grossDecoPerPiece)}</span></div>
                                                     
                                                     {item.explicitDecoDiscount > 0 && (
                                                         <div className="flex justify-between text-xs text-emerald-400 font-bold"><span>Discount Applied:</span><span>-{formatCurrency(item.explicitDecoDiscount)}</span></div>
                                                     )}
                                                     
                                                     {item.explicitDecoDiscount > 0 && (
-                                                        <div className="flex justify-between text-xs text-slate-300"><span>Net Deco Fees:</span><span className="font-semibold text-indigo-300">{formatCurrency(item.itemDecoPerPiece)}</span></div>
+                                                        <div className="flex justify-between text-xs text-slate-300"><span>Net Decoration Fees:</span><span className="font-semibold text-indigo-300">{formatCurrency(item.itemDecoPerPiece)}</span></div>
                                                     )}
                                                     
                                                     <div className="flex justify-between text-sm text-white font-bold pt-2 border-t border-slate-700/50">
@@ -839,7 +862,7 @@
                                                 <div className="space-y-2">
                                                     <h5 className="text-[10px] font-black text-slate-500 uppercase tracking-widest border-b border-slate-700 pb-1 mb-2">Costs /ea (You Paid)</h5>
                                                     <div className="flex justify-between text-xs text-slate-300"><span>Blank Garment (Landed):</span><span className="font-semibold">{formatCurrency(item.landedCost)}</span></div>
-                                                    <div className="flex justify-between text-xs text-slate-300"><span>Deco Materials (DTF/Thread):</span><span className="font-semibold">{formatCurrency(decoMatCost)}</span></div>
+                                                    <div className="flex justify-between text-xs text-slate-300"><span>Materials Cost (DTF/Thread):</span><span className="font-semibold">{formatCurrency(decoMatCost)}</span></div>
                                                     
                                                     <div className="flex justify-between text-sm text-white font-bold pt-2 border-t border-slate-700/50">
                                                         <span>True Cost /ea:</span><span className="text-rose-400">{formatCurrency(totalMatCost)}</span>
@@ -861,9 +884,37 @@
                                                     </span>
                                                 </div>
                                             </div>
-
                                         </div>
                                     )})}
+
+                                    {/* Setup / Art Fee Line Item */}
+                                    <div className="bg-slate-800 border border-slate-700 rounded-xl p-4 shadow-sm flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
+                                        <div>
+                                            <h4 className="font-bold text-white text-sm md:text-base">Setup / Art Prep</h4>
+                                            {calc.setup === 0 && <p className="text-[10px] font-bold text-emerald-400 mt-0.5 uppercase tracking-widest">Fee Waived</p>}
+                                        </div>
+                                        <div className="text-left sm:text-right">
+                                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Line Value</span>
+                                            <span className={`font-bold text-lg block ${calc.setup === 0 ? 'text-emerald-400' : 'text-indigo-300'}`}>
+                                                {calc.setup === 0 ? 'WAIVED' : formatCurrency(calc.setup)}
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    {/* Digitizing Line Item */}
+                                    <div className="bg-slate-800 border border-slate-700 rounded-xl p-4 shadow-sm flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
+                                        <div>
+                                            <h4 className="font-bold text-white text-sm md:text-base">Digitizing / File Conversion</h4>
+                                            {calc.digitizing === 0 && <p className="text-[10px] font-bold text-emerald-400 mt-0.5 uppercase tracking-widest">Fee Waived</p>}
+                                        </div>
+                                        <div className="text-left sm:text-right">
+                                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Line Value</span>
+                                            <span className={`font-bold text-lg block ${calc.digitizing === 0 ? 'text-emerald-400' : 'text-indigo-300'}`}>
+                                                {calc.digitizing === 0 ? 'WAIVED' : formatCurrency(calc.digitizing)}
+                                            </span>
+                                        </div>
+                                    </div>
+
                                 </div>
                             </div>
                             
@@ -872,23 +923,46 @@
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-4 text-xs md:text-sm mb-4">
                                     <div className="flex justify-between border-b sm:border-0 border-slate-700 pb-1 sm:pb-0"><span className="text-slate-400">Total Rev:</span><span className="font-bold">{formatCurrency(calc.discountedSubtotal)}</span></div>
                                     <div className="flex justify-between border-b sm:border-0 border-slate-700 pb-1 sm:pb-0"><span className="text-slate-400">Garment Cost:</span><span className="font-bold text-rose-400">-{formatCurrency(calc.orderGarmentCostTotal)}</span></div>
-                                    <div className="flex justify-between border-b sm:border-0 border-slate-700 pb-1 sm:pb-0"><span className="text-slate-400">Deco Cost:</span><span className="font-bold text-rose-400">-{formatCurrency(calc.orderDecoCostTotal)}</span></div>
+                                    <div className="flex justify-between border-b sm:border-0 border-slate-700 pb-1 sm:pb-0"><span className="text-slate-400">Decoration Cost:</span><span className="font-bold text-rose-400">-{formatCurrency(calc.orderDecoCostTotal)}</span></div>
                                     <div className="flex justify-between border-b sm:border-0 border-slate-700 pb-1 sm:pb-0"><span className="text-slate-400">Gross Profit:</span><span className="font-bold text-white">{formatCurrency(calc.discountedSubtotal - calc.orderGarmentCostTotal - calc.orderDecoCostTotal)}</span></div>
                                 </div>
-                                <div className="bg-slate-800 p-3 rounded-xl border border-slate-700 space-y-2 text-xs md:text-sm mb-4">
-                                    <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Automated Fund Deductions</h4>
-                                    <div className="flex justify-between"><span className="text-amber-200">Consumables ({shopSettings.fundConsumables}%):</span><span className="font-bold text-amber-400">-{formatCurrency(calc.allocConsumables)}</span></div>
-                                    <div className="flex justify-between"><span className="text-amber-200">Growth/Machine ({shopSettings.fundGrowth}%):</span><span className="font-bold text-amber-400">-{formatCurrency(calc.allocGrowth)}</span></div>
-                                    <div className="flex justify-between"><span className="text-amber-200">Tax Reserve ({shopSettings.fundTax}%):</span><span className="font-bold text-amber-400">-{formatCurrency(calc.allocTax)}</span></div>
-                                </div>
-                                <div className="mt-4 pt-4 border-t border-slate-700 flex justify-between items-center">
-                                    <div className="flex flex-col">
-                                        <span className="font-bold uppercase tracking-widest text-[10px] md:text-xs text-slate-300">True Net Profit</span>
-                                        <span className={`text-[9px] md:text-[11px] font-black uppercase tracking-widest ${getHealthColor(calc.overallMarginPercent)}`}>{calc.overallMarginPercent.toFixed(1)}% MARGIN</span>
+                                
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                                    {/* Deductions (Hits to Profit) */}
+                                    <div className="bg-slate-800 p-3 rounded-xl border border-slate-700 space-y-2 text-xs md:text-sm">
+                                        <h4 className="text-[10px] font-black text-rose-400 uppercase tracking-widest">Operating Deductions</h4>
+                                        <div className="flex justify-between"><span className="text-slate-300">Consumables ({shopSettings.fundConsumables}%):</span><span className="font-bold text-rose-400">-{formatCurrency(calc.allocConsumables)}</span></div>
+                                        <div className="flex justify-between"><span className="text-slate-300">Tax Reserve ({shopSettings.fundTax}%):</span><span className="font-bold text-rose-400">-{formatCurrency(calc.allocTax)}</span></div>
                                     </div>
-                                    <span className={`text-2xl md:text-3xl font-black ${getHealthColor(calc.overallMarginPercent)}`}>{formatCurrency(calc.netProfit)}</span>
+
+                                    {/* Savings (Part of Profit) */}
+                                    <div className="bg-indigo-900/30 p-3 rounded-xl border border-indigo-800/50 space-y-2 text-xs md:text-sm">
+                                        <h4 className="text-[10px] font-black text-indigo-400 uppercase tracking-widest">Retained Savings Allocations</h4>
+                                        <div className="flex justify-between"><span className="text-indigo-200">Growth/Machine ({shopSettings.fundGrowth}%):</span><span className="font-bold text-indigo-400">{formatCurrency(calc.allocGrowth)}</span></div>
+                                        <p className="text-[9px] text-indigo-300/70 italic leading-tight mt-1">This is retained profit earmarked for future growth, not an operating expense.</p>
+                                    </div>
                                 </div>
-                            </div>
+
+                                <div className="mt-4 pt-4 border-t border-slate-700 flex justify-between items-center">
+        <div className="flex flex-col">
+            <span className="font-bold uppercase tracking-widest text-[10px] md:text-xs text-slate-300">True Net Profit</span>
+            <span className={`text-[9px] md:text-[11px] font-black uppercase tracking-widest ${getHealthColor(calc.overallMarginPercent)}`}>{calc.overallMarginPercent.toFixed(1)}% MARGIN</span>
+        </div>
+        <span className={`text-2xl md:text-3xl font-black ${getHealthColor(calc.overallMarginPercent)}`}>{formatCurrency(calc.netProfit)}</span>
+    </div>
+
+    {calc.netProfit > 0 && (
+        <div className="mt-4 bg-slate-800/80 p-3 md:p-4 rounded-xl border border-slate-700">
+            <div className="flex items-center gap-2 mb-2">
+                <Icon name="activity" size={14} className="text-sky-400" />
+                <span className="text-[10px] font-black uppercase tracking-widest text-sky-400">Shop Rate Check ({formatCurrency(calc.targetRate)}/hr)</span>
+            </div>
+            <p className="text-xs md:text-sm text-slate-300 leading-relaxed">
+                To hit your target shop rate, this entire job (admin, art prep, production, and packing) must be completed in under <strong className="text-white bg-slate-700 px-2 py-0.5 rounded ml-1">{calc.timeString}</strong>.
+            </p>
+        </div>
+    )}
+</div>
                         </div>
                     )}
 
@@ -1128,35 +1202,55 @@
                                 )}
 
                                 <div>
-                                    <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-3 border-b border-slate-100 pb-2">Line Items</h3>
-                                    {orderItems && orderItems.map((item, idx) => {
-                                        const activeSizes = SIZES_LIST.filter(s => (parseInt(item.sizes?.[s]) || 0) > 0);
-                                        const sizeStr = activeSizes.length > 0 ? activeSizes.map(s => `${s}: ${item.sizes[s]}`).join(', ') : null;
-                                        return (
-                                        <div key={idx} className="mb-3 pb-3 border-b border-slate-50 last:border-0 flex justify-between items-start">
-                                            <div>
-                                                <p className="font-bold text-sm text-slate-800">{item.qty}x {item.name} {item.color ? `(${item.color})` : ''}</p>
-                                                {sizeStr && <p className="text-[10px] text-slate-500 mt-0.5">{sizeStr}</p>}
-                                                
-                                                <div className="mt-1 pl-2 border-l border-indigo-200">
-                                                    {item.locations.filter(l=>l.type!=='none').map((l, i) => {
-                                                        const pLabel = PLACEMENTS.find(p=>p.id===l.placement)?.label || 'Custom';
-                                                        return (
-                                                            <p key={i} className="text-[10px] text-slate-600">
-                                                                {l.type === 'embroidery' ? (l.isPuff ? '3D Puff Emb' : 'Embroidery') : 'DTF Print'} 
-                                                                {l.placement !== 'custom' && ` - ${pLabel}`} 
-                                                                {l.desc && ` - ${l.desc}`}
-                                                            </p>
-                                                        )
-                                                    })}
-                                                </div>
+    <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-3 border-b border-slate-100 pb-2">Line Items</h3>
+    {orderItems && orderItems.map((item, idx) => {
+        const activeSizes = SIZES_LIST.filter(s => (parseInt(item.sizes?.[s]) || 0) > 0);
+        const sizeStr = activeSizes.length > 0 ? activeSizes.map(s => `${s}: ${item.sizes[s]}`).join(', ') : null;
+        return (
+        <div key={idx} className="mb-3 pb-3 border-b border-slate-50 flex justify-between items-start">
+            <div>
+                <p className="font-bold text-sm text-slate-800">{item.qty}x {item.name} {item.color ? `(${item.color})` : ''}</p>
+                {sizeStr && <p className="text-[10px] text-slate-500 mt-0.5">{sizeStr}</p>}
+                
+                <div className="mt-1 pl-2 border-l border-indigo-200">
+                    {item.locations.filter(l=>l.type!=='none').map((l, i) => {
+                        const pLabel = PLACEMENTS.find(p=>p.id===l.placement)?.label || 'Custom';
+                        return (
+                            <p key={i} className="text-[10px] text-slate-600">
+                                {l.type === 'embroidery' ? (l.isPuff ? '3D Puff Emb' : 'Embroidery') : 'DTF Print'} 
+                                {l.placement !== 'custom' && ` - ${pLabel}`} 
+                                {l.desc && ` - ${l.desc}`}
+                            </p>
+                        )
+                    })}
+                </div>
 
-                                                {item.decoDiscount > 0 && <p className="text-[10px] text-emerald-600 font-bold mt-1">- Item Discount Applied</p>}
-                                            </div>
-                                            <span className="font-bold text-sm text-slate-600">{orderCalc ? formatCurrency(orderCalc.items[idx].lineTotal) : ''}</span>
-                                        </div>
-                                    )})}
-                                </div>
+                {item.decoDiscount > 0 && <p className="text-[10px] text-emerald-600 font-bold mt-1">- Item Discount Applied</p>}
+            </div>
+            <span className="font-bold text-sm text-slate-600">{orderCalc ? formatCurrency(orderCalc.items[idx].lineTotal) : ''}</span>
+        </div>
+    )})}
+
+    {/* New Setup & Digitizing Rows for Modal */}
+    {orderCalc && (
+        <>
+            <div className="mb-3 pb-3 border-b border-slate-50 flex justify-between items-start">
+                <div>
+                    <p className="font-bold text-sm text-slate-800">1x Setup / Art Prep</p>
+                    {orderCalc.setup === 0 && <p className="text-[10px] text-emerald-600 font-bold mt-0.5 uppercase tracking-wider">Fee Waived</p>}
+                </div>
+                <span className={`font-bold text-sm ${orderCalc.setup === 0 ? 'text-emerald-600' : 'text-slate-600'}`}>{orderCalc.setup === 0 ? 'WAIVED' : formatCurrency(orderCalc.setup)}</span>
+            </div>
+            <div className="mb-3 pb-3 border-b border-slate-50 last:border-0 flex justify-between items-start">
+                <div>
+                    <p className="font-bold text-sm text-slate-800">1x Digitizing / File Conversion</p>
+                    {orderCalc.digitizing === 0 && <p className="text-[10px] text-emerald-600 font-bold mt-0.5 uppercase tracking-wider">Fee Waived</p>}
+                </div>
+                <span className={`font-bold text-sm ${orderCalc.digitizing === 0 ? 'text-emerald-600' : 'text-slate-600'}`}>{orderCalc.digitizing === 0 ? 'WAIVED' : formatCurrency(orderCalc.digitizing)}</span>
+            </div>
+        </>
+    )}
+</div>
                             </div>
 
                             <div className="p-5 border-t border-slate-200 bg-slate-50 space-y-3">
@@ -1308,6 +1402,27 @@
                                 </div>
                             ))}
 
+                            {/* Setup & Digitizing PDF Rows */}
+                            <div style={{ display: 'flex', marginBottom: '10px', paddingBottom: '10px', borderBottom: '1px solid #f1f5f9', breakInside: 'avoid' }}>
+                                <div style={{ width: '55%', paddingRight: '20px' }}>
+                                    <p style={{ margin: '0 0 5px 0', fontWeight: '800', fontSize: '17px', color: '#0f172a' }}>Setup / Art Prep</p>
+                                    {oCalc.setup === 0 && <p style={{ margin: 0, fontSize: '12px', color: '#059669', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Fee Waived</p>}
+                                </div>
+                                <div style={{ width: '15%', textAlign: 'center', fontWeight: '700', fontSize: '16px', color: '#334155' }}>1</div>
+                                <div style={{ width: '15%', textAlign: 'right', fontWeight: '600', fontSize: '16px', color: '#334155' }}>{formatCurrency(oCalc.setup)}</div>
+                                <div style={{ width: '15%', textAlign: 'right', fontWeight: '800', fontSize: '16px', color: oCalc.setup === 0 ? '#059669' : '#0f172a' }}>{oCalc.setup === 0 ? 'WAIVED' : formatCurrency(oCalc.setup)}</div>
+                            </div>
+                            
+                            <div style={{ display: 'flex', marginBottom: '20px', paddingBottom: '20px', borderBottom: '1px solid #f1f5f9', breakInside: 'avoid' }}>
+                                <div style={{ width: '55%', paddingRight: '20px' }}>
+                                    <p style={{ margin: '0 0 5px 0', fontWeight: '800', fontSize: '17px', color: '#0f172a' }}>Digitizing / File Conversion</p>
+                                    {oCalc.digitizing === 0 && <p style={{ margin: 0, fontSize: '12px', color: '#059669', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Fee Waived</p>}
+                                </div>
+                                <div style={{ width: '15%', textAlign: 'center', fontWeight: '700', fontSize: '16px', color: '#334155' }}>1</div>
+                                <div style={{ width: '15%', textAlign: 'right', fontWeight: '600', fontSize: '16px', color: '#334155' }}>{formatCurrency(oCalc.digitizing)}</div>
+                                <div style={{ width: '15%', textAlign: 'right', fontWeight: '800', fontSize: '16px', color: oCalc.digitizing === 0 ? '#059669' : '#0f172a' }}>{oCalc.digitizing === 0 ? 'WAIVED' : formatCurrency(oCalc.digitizing)}</div>
+                            </div>
+
                             {/* Totals Section */}
                             <div style={{ width: '50%', marginLeft: 'auto', marginTop: '30px', breakInside: 'avoid' }}>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px', fontSize: '15px', color: '#475569' }}>
@@ -1348,7 +1463,7 @@
 
                             <div style={{ marginTop: '60px', borderTop: '1px solid #e2e8f0', paddingTop: '20px', textAlign: 'center' }}>
                                 <p style={{ margin: 0, color: '#64748b', fontSize: '14px', fontWeight: '500' }}>
-                                    {type === 'proposal' ? 'Quotes are valid for 14 days. We require a deposit to begin production.' : 'Thank you for choosing Triple One Threads!'}
+                                    {type === 'proposal' ? 'Quotes are valid for 14 days. We require a deposit to begin production.' : 'Thank you for choosing our Small Business!'}
                                 </p>
                             </div>
                         </div>
@@ -1360,7 +1475,7 @@
                 <div className="min-h-screen pb-content flex flex-col relative z-10">
                     <div className="bg-white border-b border-slate-200 shadow-sm sticky top-0 z-30 pt-safe no-print">
                         <div className="max-w-4xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4 p-4">
-                            <div><h1 className="text-2xl font-black flex items-center gap-2 tracking-tight text-slate-800"><Icon name="layers" size={28} className="text-indigo-600"/> Triple One OS</h1></div>
+                            <div><h1 className="text-2xl font-black flex items-center gap-2 tracking-tight text-slate-800"><Icon name="layers" size={28} className="text-indigo-600"/> Mobile Quote By LG</h1></div>
                             
                             <div className="flex bg-slate-100 p-1.5 rounded-xl border border-slate-200 w-full md:w-auto overflow-x-auto hide-scrollbar">
                                 <button onClick={() => setAppModule('quoter')} className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-5 py-2 rounded-lg text-sm font-bold transition-all ${appModule === 'quoter' ? 'bg-white text-indigo-700 shadow-sm' : 'text-slate-500'}`}><Icon name="calculator" size={18} /> Quoter</button>
