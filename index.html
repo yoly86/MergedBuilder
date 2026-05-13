@@ -219,6 +219,7 @@
                         return { ...loc, baseCost, cost, materialCost: matCost, isFirstDtf: loc.type === 'dtf' && dtfCount === 1 };
                     });
                     
+                    const grossDecoPerPiece = itemDecoPerPiece;
                     itemDecoPerPiece = Math.max(0, itemDecoPerPiece - explicitDecoDiscount);
 
                     const totalGarmentCost = landedCost * calculatedQty;
@@ -243,7 +244,7 @@
                     const validLocations = item.locations.filter(l => l.type !== 'none');
                     const validPlacementCount = validLocations.length;
 
-                    return { ...item, calculatedQty, sizeSum, landedCost, clientGarmentPrice, processedLocations, itemDecoPerPiece, totalGarmentRetail, totalDecoRetail, lineTotalPerPiece, lineTotal, explicitDecoDiscount, decoDiscountTotal, itemMarginPercent, undiscountedLineTotalPerPiece, undiscountedLineTotal, validPlacementCount };
+                    return { ...item, calculatedQty, sizeSum, landedCost, clientGarmentPrice, processedLocations, itemDecoPerPiece, grossDecoPerPiece, itemDecoCostPerPiece, totalGarmentRetail, totalDecoRetail, lineTotalPerPiece, lineTotal, explicitDecoDiscount, decoDiscountTotal, itemMarginPercent, undiscountedLineTotalPerPiece, undiscountedLineTotal, validPlacementCount };
                 });
 
                 const setup = parseFloat(orderData.setupFees) || 0;
@@ -295,9 +296,9 @@
                 const rows = transactions.map(t => [
                     t.date,
                     t.type.toUpperCase(),
-                    `"${t.category}"`, // Escape in case of commas
+                    `"${t.category}"`, 
                     t.netAmount,
-                    `"${(t.description || '').replace(/"/g, '""')}"` // Safely escape quotes inside descriptions
+                    `"${(t.description || '').replace(/"/g, '""')}"` 
                 ]);
                 
                 const csvContent = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
@@ -641,7 +642,7 @@
                                         </div>
                                     </div>
                                     
-                                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2 md:gap-3 bg-white p-2 md:p-3 rounded-lg border border-slate-200">
+                                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2 md:gap-3 bg-white p-2 md:p-3 rounded-lg border border-slate-200">
                                         <div><label className="block text-[10px] font-bold text-slate-500 mb-1">Wholesale $</label><input type="number" className="w-full p-2 soft-input rounded-md text-sm" value={item.rawCost} onChange={e => updateItem(item.id, 'rawCost', e.target.value)} /></div>
                                         <div><label className="block text-[10px] font-bold text-slate-500 mb-1">Freight $</label><input type="number" className="w-full p-2 soft-input rounded-md text-sm" value={item.shippingCost} onChange={e => updateItem(item.id, 'shippingCost', e.target.value)} /></div>
                                         <div><label className="block text-[10px] font-bold text-slate-500 mb-1">Margin %</label><input type="number" className="w-full p-2 soft-input rounded-md text-sm text-indigo-700 font-bold" value={item.margin} onChange={e => updateItem(item.id, 'margin', e.target.value)} /></div>
@@ -657,14 +658,6 @@
                                             <label className="block text-[9px] font-bold text-emerald-600 mb-1 uppercase text-center leading-none">Profit/ea</label>
                                             <div className="text-sm font-black text-emerald-700 text-center">
                                                 {formatCurrency(item.clientGarmentPrice - item.landedCost)}
-                                            </div>
-                                        </div>
-
-                                        <div>
-                                            <label className="block text-[10px] font-bold text-emerald-600 mb-1 uppercase">Deco Disc.</label>
-                                            <div className="relative">
-                                                <span className="absolute left-2 top-2 text-emerald-600 font-bold text-xs">-$</span>
-                                                <input type="number" placeholder="0.00" className="w-full pl-6 p-2 soft-input border-emerald-100 rounded-md text-sm text-emerald-700 font-bold focus:ring-emerald-500" value={item.decoDiscount} onChange={e => updateItem(item.id, 'decoDiscount', e.target.value)} />
                                             </div>
                                         </div>
                                     </div>
@@ -739,7 +732,36 @@
                                                 )}
                                             </div>
                                         )})}
-                                        <button onClick={() => addLocation(item.id)} className="text-[10px] font-bold text-indigo-600 bg-indigo-50 px-3 py-1.5 rounded-md mt-1">+ Add Decor</button>
+
+                                        {item.processedLocations.length > 0 && (
+                                            <div className="mt-3 p-3 bg-slate-100 rounded-lg border border-slate-200 flex flex-col md:flex-row justify-between items-center gap-3">
+                                                <div className="flex gap-4 w-full md:w-auto">
+                                                    <div className="flex flex-col">
+                                                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Deco Cost/ea</span>
+                                                        <span className="text-sm font-black text-rose-500">{formatCurrency(item.itemDecoCostPerPiece)}</span>
+                                                    </div>
+                                                    <div className="flex flex-col">
+                                                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Gross Deco/ea</span>
+                                                        <span className="text-sm font-black text-slate-700">{formatCurrency(item.grossDecoPerPiece)}</span>
+                                                    </div>
+                                                </div>
+                                                
+                                                <div className="flex items-center gap-3 bg-white p-2 rounded-md border border-slate-200 w-full md:w-auto">
+                                                    <div className="flex-1 md:w-32">
+                                                        <label className="block text-[9px] font-bold text-emerald-600 uppercase mb-0.5">Deco Disc/ea</label>
+                                                        <div className="relative">
+                                                            <span className="absolute left-2 top-1.5 text-emerald-600 font-bold text-xs">-$</span>
+                                                            <input type="number" placeholder="0.00" className="w-full pl-6 p-1.5 soft-input border-emerald-100 rounded text-xs text-emerald-700 font-bold focus:ring-emerald-500" value={item.decoDiscount} onChange={e => updateItem(item.id, 'decoDiscount', e.target.value)} />
+                                                        </div>
+                                                    </div>
+                                                    <div className="flex flex-col items-end pl-3 border-l border-slate-200">
+                                                        <span className="text-[10px] font-bold text-indigo-500 uppercase tracking-widest">Net Deco/ea</span>
+                                                        <span className="text-sm font-black text-indigo-600">{formatCurrency(item.itemDecoPerPiece)}</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        )}
+                                        <button onClick={() => addLocation(item.id)} className="text-[10px] font-bold text-indigo-600 bg-indigo-50 px-3 py-1.5 rounded-md mt-2">+ Add Decor</button>
                                     </div>
                                 </div>
                             </div>
@@ -766,81 +788,84 @@
                     {showInternalBreakdown && (
                         <div className="bg-slate-900 text-white rounded-2xl p-4 md:p-6 shadow-lg space-y-6">
                             <div>
-    <h3 className="text-sm font-bold border-b border-slate-700 pb-3 mb-4 text-indigo-300 uppercase tracking-widest">Line Item Analysis</h3>
-    <div className="space-y-4">
-        {calc.items.map((item, idx) => {
-            const sizeStr = getSizeString(item);
-            
-            // Calculate true internal costs for the breakdown
-            const grossDeco = item.itemDecoPerPiece + item.explicitDecoDiscount;
-            const decoMatCost = item.processedLocations.reduce((sum, loc) => sum + (loc.materialCost || 0), 0);
-            const totalMatCost = item.landedCost + decoMatCost;
-            const trueProfitEa = item.lineTotalPerPiece - totalMatCost;
+                                <h3 className="text-sm font-bold border-b border-slate-700 pb-3 mb-4 text-indigo-300 uppercase tracking-widest">Line Item Analysis</h3>
+                                <div className="space-y-4">
+                                    {calc.items.map((item, idx) => {
+                                        const sizeStr = getSizeString(item);
+                                        
+                                        // Calculate true internal costs for the breakdown
+                                        const decoMatCost = item.processedLocations.reduce((sum, loc) => sum + (loc.materialCost || 0), 0);
+                                        const totalMatCost = item.landedCost + decoMatCost;
+                                        const trueProfitEa = item.lineTotalPerPiece - totalMatCost;
 
-            return (
-            <div key={item.id} className="bg-slate-800 border border-slate-700 rounded-xl p-4 shadow-sm">
-                
-                {/* Header: Item Name & Total Line Value */}
-                <div className="flex flex-col sm:flex-row sm:justify-between items-start mb-4 border-b border-slate-700 pb-3 gap-2">
-                    <div>
-                        <h4 className="font-bold text-white text-sm md:text-base">{idx + 1}. {item.name || 'Unnamed Item'} {item.color ? `(${item.color})` : ''} (Qty: {item.calculatedQty})</h4>
-                        {sizeStr && <p className="text-[10px] font-bold text-slate-400 mt-1">{sizeStr}</p>}
-                    </div>
-                    <div className="text-left sm:text-right">
-                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Total Line Value</span>
-                        <span className="font-bold text-indigo-300 text-lg block">{formatCurrency(item.lineTotal)}</span>
-                    </div>
-                </div>
+                                        return (
+                                        <div key={item.id} className="bg-slate-800 border border-slate-700 rounded-xl p-4 shadow-sm">
+                                            
+                                            {/* Header: Item Name & Total Line Value */}
+                                            <div className="flex flex-col sm:flex-row sm:justify-between items-start mb-4 border-b border-slate-700 pb-3 gap-2">
+                                                <div>
+                                                    <h4 className="font-bold text-white text-sm md:text-base">{idx + 1}. {item.name || 'Unnamed Item'} {item.color ? `(${item.color})` : ''} (Qty: {item.calculatedQty})</h4>
+                                                    {sizeStr && <p className="text-[10px] font-bold text-slate-400 mt-1">{sizeStr}</p>}
+                                                </div>
+                                                <div className="text-left sm:text-right">
+                                                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Total Line Value</span>
+                                                    <span className="font-bold text-indigo-300 text-lg block">{formatCurrency(item.lineTotal)}</span>
+                                                </div>
+                                            </div>
 
-                {/* The Math Story: Revenue vs Cost */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    
-                    {/* Revenue Side (What Client Pays) */}
-                    <div className="space-y-2">
-                        <h5 className="text-[10px] font-black text-slate-500 uppercase tracking-widest border-b border-slate-700 pb-1 mb-2">Revenue /ea (Client Pays)</h5>
-                        <div className="flex justify-between text-xs text-slate-300"><span>Garment Retail:</span><span className="font-semibold">{formatCurrency(item.clientGarmentPrice)}</span></div>
-                        <div className="flex justify-between text-xs text-slate-300"><span>Deco Fees:</span><span className="font-semibold">{formatCurrency(grossDeco)}</span></div>
-                        
-                        {item.explicitDecoDiscount > 0 && (
-                            <div className="flex justify-between text-xs text-emerald-400 font-bold"><span>Discount Applied:</span><span>-{formatCurrency(item.explicitDecoDiscount)}</span></div>
-                        )}
-                        
-                        <div className="flex justify-between text-sm text-white font-bold pt-2 border-t border-slate-700/50">
-                            <span>Final Sell Price /ea:</span><span className="text-indigo-300">{formatCurrency(item.lineTotalPerPiece)}</span>
-                        </div>
-                    </div>
+                                            {/* The Math Story: Revenue vs Cost */}
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                                
+                                                {/* Revenue Side (What Client Pays) */}
+                                                <div className="space-y-2">
+                                                    <h5 className="text-[10px] font-black text-slate-500 uppercase tracking-widest border-b border-slate-700 pb-1 mb-2">Revenue /ea (Client Pays)</h5>
+                                                    <div className="flex justify-between text-xs text-slate-300"><span>Garment Retail:</span><span className="font-semibold">{formatCurrency(item.clientGarmentPrice)}</span></div>
+                                                    <div className="flex justify-between text-xs text-slate-300"><span>Gross Deco Fees:</span><span className="font-semibold">{formatCurrency(item.grossDecoPerPiece)}</span></div>
+                                                    
+                                                    {item.explicitDecoDiscount > 0 && (
+                                                        <div className="flex justify-between text-xs text-emerald-400 font-bold"><span>Discount Applied:</span><span>-{formatCurrency(item.explicitDecoDiscount)}</span></div>
+                                                    )}
+                                                    
+                                                    {item.explicitDecoDiscount > 0 && (
+                                                        <div className="flex justify-between text-xs text-slate-300"><span>Net Deco Fees:</span><span className="font-semibold text-indigo-300">{formatCurrency(item.itemDecoPerPiece)}</span></div>
+                                                    )}
+                                                    
+                                                    <div className="flex justify-between text-sm text-white font-bold pt-2 border-t border-slate-700/50">
+                                                        <span>Final Sell Price /ea:</span><span className="text-indigo-300">{formatCurrency(item.lineTotalPerPiece)}</span>
+                                                    </div>
+                                                </div>
 
-                    {/* Cost Side (Triple One Pays) */}
-                    <div className="space-y-2">
-                        <h5 className="text-[10px] font-black text-slate-500 uppercase tracking-widest border-b border-slate-700 pb-1 mb-2">Costs /ea (You Paid)</h5>
-                        <div className="flex justify-between text-xs text-slate-300"><span>Blank Garment (Landed):</span><span className="font-semibold">{formatCurrency(item.landedCost)}</span></div>
-                        <div className="flex justify-between text-xs text-slate-300"><span>Deco Materials (DTF/Thread):</span><span className="font-semibold">{formatCurrency(decoMatCost)}</span></div>
-                        
-                        <div className="flex justify-between text-sm text-white font-bold pt-2 border-t border-slate-700/50">
-                            <span>True Cost /ea:</span><span className="text-rose-400">{formatCurrency(totalMatCost)}</span>
-                        </div>
-                    </div>
+                                                {/* Cost Side (Triple One Pays) */}
+                                                <div className="space-y-2">
+                                                    <h5 className="text-[10px] font-black text-slate-500 uppercase tracking-widest border-b border-slate-700 pb-1 mb-2">Costs /ea (You Paid)</h5>
+                                                    <div className="flex justify-between text-xs text-slate-300"><span>Blank Garment (Landed):</span><span className="font-semibold">{formatCurrency(item.landedCost)}</span></div>
+                                                    <div className="flex justify-between text-xs text-slate-300"><span>Deco Materials (DTF/Thread):</span><span className="font-semibold">{formatCurrency(decoMatCost)}</span></div>
+                                                    
+                                                    <div className="flex justify-between text-sm text-white font-bold pt-2 border-t border-slate-700/50">
+                                                        <span>True Cost /ea:</span><span className="text-rose-400">{formatCurrency(totalMatCost)}</span>
+                                                    </div>
+                                                </div>
 
-                </div>
+                                            </div>
 
-                {/* Profit Bar */}
-                <div className="mt-5 bg-slate-900 border border-slate-700 rounded-lg p-3 flex justify-between items-center">
-                    <div className="flex flex-col">
-                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Item Profit /ea</span>
-                        <span className="text-lg font-black text-emerald-400">{formatCurrency(trueProfitEa)}</span>
-                    </div>
-                    <div className="flex flex-col items-end">
-                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Profit Margin</span>
-                        <span className={`text-lg font-black ${getHealthColor(item.itemMarginPercent)}`}>
-                            {item.itemMarginPercent.toFixed(1)}%
-                        </span>
-                    </div>
-                </div>
+                                            {/* Profit Bar */}
+                                            <div className="mt-5 bg-slate-900 border border-slate-700 rounded-lg p-3 flex justify-between items-center">
+                                                <div className="flex flex-col">
+                                                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Item Profit /ea</span>
+                                                    <span className="text-lg font-black text-emerald-400">{formatCurrency(trueProfitEa)}</span>
+                                                </div>
+                                                <div className="flex flex-col items-end">
+                                                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Profit Margin</span>
+                                                    <span className={`text-lg font-black ${getHealthColor(item.itemMarginPercent)}`}>
+                                                        {item.itemMarginPercent.toFixed(1)}%
+                                                    </span>
+                                                </div>
+                                            </div>
 
-            </div>
-        )})}
-    </div>
-</div>
+                                        </div>
+                                    )})}
+                                </div>
+                            </div>
                             
                             <div>
                                 <h3 className="text-sm font-bold border-b border-slate-700 pb-3 mb-4 text-amber-300 uppercase tracking-widest">Order Math & Cash Allocation</h3>
