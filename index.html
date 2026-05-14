@@ -70,7 +70,8 @@
                 trendingDown: <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polyline points="22 17 13.5 8.5 8.5 13.5 2 7"/><polyline points="16 17 22 17 22 11"/></svg>,
                 shield: <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>,
                 pieChart: <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M21.21 15.89A10 10 0 1 1 8 2.83"/><path d="M22 12A10 10 0 0 0 12 2v10z"/></svg>,
-                download: <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                download: <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>,
+                refresh: <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
             };
             return icons[name] || null;
         };
@@ -183,28 +184,39 @@
                 finally { setIsSyncing(false); }
             };
 
-            // 1. Initial Cloud Fetch on Boot
-            useEffect(() => {
-                const fetchCloud = async () => {
-                    if (!cloudConfig.enabled || !cloudConfig.url || !cloudConfig.pin) return;
-                    setIsSyncing(true);
-                    isFetchingRef.current = true;
-                    try {
-                        const res = await fetch(`${cloudConfig.url}?pin=${encodeURIComponent(cloudConfig.pin)}`);
-                        const data = await res.json();
-                        if (data.status === 'success') {
-                            if (data.orders) setOrders(data.orders);
-                            if (data.transactions) setTransactions(data.transactions);
-                            if (data.businessDetails) setBusinessDetails(data.businessDetails);
-                            if (data.shopSettings) setShopSettings(data.shopSettings);
-                        } else { alert("Cloud Sync Error: " + data.message); }
-                    } catch (e) { console.error(e); } 
-                    finally { 
-                        setTimeout(() => { isFetchingRef.current = false; setIsSyncing(false); }, 500); 
+            // 1. Reusable Cloud Fetch Function
+            const fetchCloudData = async (silent = false) => {
+                if (!cloudConfig.enabled || !cloudConfig.url || !cloudConfig.pin) return;
+                setIsSyncing(true);
+                isFetchingRef.current = true;
+                try {
+                    const res = await fetch(`${cloudConfig.url}?pin=${encodeURIComponent(cloudConfig.pin)}`);
+                    const data = await res.json();
+                    if (data.status === 'success') {
+                        if (data.orders) setOrders(data.orders);
+                        if (data.transactions) setTransactions(data.transactions);
+                        if (data.businessDetails) setBusinessDetails(data.businessDetails);
+                        if (data.shopSettings) setShopSettings(data.shopSettings);
+                    } else if (!silent) { 
+                        alert("Cloud Sync Error: " + data.message); 
                     }
-                };
-                fetchCloud();
+                } catch (e) { console.error(e); } 
+                finally { 
+                    setTimeout(() => { isFetchingRef.current = false; setIsSyncing(false); }, 500); 
+                }
+            };
+
+            // Fetch on Boot
+            useEffect(() => {
+                fetchCloudData(true);
             }, [cloudConfig.enabled, cloudConfig.url, cloudConfig.pin]);
+
+            // Auto-Fetch when switching to the Pipeline or Ledger tabs
+            useEffect(() => {
+                if (cloudConfig.enabled && (appModule === 'pipeline' || appModule === 'bookkeeping')) {
+                    fetchCloudData(true);
+                }
+            }, [appModule]);
 
             // 2. Real-time Sync + Local Backup
             useEffect(() => {
@@ -1523,7 +1535,7 @@
                                     </button>
                                 )}
 
-                                {stage === 'archived' && (
+                                {(stage === 'archived' || stage === 'quote') && (
                                     <button onClick={() => deleteOrder(selectedOrder.id)} className="w-full bg-rose-50 text-rose-600 border border-rose-200 py-3 rounded-xl text-sm font-bold hover:bg-rose-100 active:scale-95 transition-all">
                                         Permanently Delete Record
                                     </button>
@@ -1717,15 +1729,30 @@
                 <div className="min-h-screen pb-content flex flex-col relative z-10">
                     <div className="bg-white border-b border-slate-200 shadow-sm sticky top-0 z-30 pt-safe no-print">
                         <div className="max-w-4xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4 p-4">
-                            <div><h1 className="text-2xl font-black flex items-center gap-2 tracking-tight text-slate-800"><Icon name="layers" size={28} className="text-indigo-600"/> Triple One OS</h1></div>
+                            <div className="flex justify-between items-center w-full md:w-auto">
+                                <h1 className="text-2xl font-black flex items-center gap-2 tracking-tight text-slate-800"><Icon name="layers" size={28} className="text-indigo-600"/> Triple One OS</h1>
+                                {cloudConfig.enabled && (
+                                    <button onClick={() => fetchCloudData()} disabled={isSyncing} className={`md:hidden p-2 rounded-lg text-slate-500 hover:bg-slate-100 ${isSyncing ? 'opacity-50' : ''}`}>
+                                        <Icon name="refresh" size={20} className={isSyncing ? "animate-spin text-blue-500" : ""} />
+                                    </button>
+                                )}
+                            </div>
                             
-                            <div className="flex bg-slate-100 p-1.5 rounded-xl border border-slate-200 w-full md:w-auto overflow-x-auto hide-scrollbar">
-                                <button onClick={() => setAppModule('quoter')} className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-5 py-2 rounded-lg text-sm font-bold transition-all ${appModule === 'quoter' ? 'bg-white text-indigo-700 shadow-sm' : 'text-slate-500'}`}><Icon name="calculator" size={18} /> Quoter</button>
-                                <button onClick={() => setAppModule('pipeline')} className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-5 py-2 rounded-lg text-sm font-bold transition-all ${appModule === 'pipeline' ? 'bg-white text-emerald-700 shadow-sm' : 'text-slate-500'}`}><Icon name="layers" size={18} /> Pipeline</button>
-                                <button onClick={() => setAppModule('bookkeeping')} className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-5 py-2 rounded-lg text-sm font-bold transition-all ${appModule === 'bookkeeping' ? 'bg-white text-indigo-700 shadow-sm' : 'text-slate-500'}`}><Icon name="wallet" size={18} /> Ledger</button>
-                                <button onClick={() => setAppModule('settings')} className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-5 py-2 rounded-lg text-sm font-bold transition-all ${appModule === 'settings' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500'}`}><Icon name="settings" size={18} /> Settings</button>
+                            <div className="flex flex-col md:flex-row items-center gap-3 w-full md:w-auto">
+                                {cloudConfig.enabled && (
+                                    <button onClick={() => fetchCloudData()} disabled={isSyncing} className={`hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold text-slate-500 hover:bg-slate-100 transition-colors ${isSyncing ? 'opacity-50' : ''}`}>
+                                        <Icon name="refresh" size={14} className={isSyncing ? "animate-spin text-blue-500" : ""} /> {isSyncing ? 'Syncing...' : 'Refresh'}
+                                    </button>
+                                )}
+                                <div className="flex bg-slate-100 p-1.5 rounded-xl border border-slate-200 w-full md:w-auto overflow-x-auto hide-scrollbar">
+                                    <button onClick={() => setAppModule('quoter')} className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-5 py-2 rounded-lg text-sm font-bold transition-all ${appModule === 'quoter' ? 'bg-white text-indigo-700 shadow-sm' : 'text-slate-500'}`}><Icon name="calculator" size={18} /> Quoter</button>
+                                    <button onClick={() => setAppModule('pipeline')} className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-5 py-2 rounded-lg text-sm font-bold transition-all ${appModule === 'pipeline' ? 'bg-white text-emerald-700 shadow-sm' : 'text-slate-500'}`}><Icon name="layers" size={18} /> Pipeline</button>
+                                    <button onClick={() => setAppModule('bookkeeping')} className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-5 py-2 rounded-lg text-sm font-bold transition-all ${appModule === 'bookkeeping' ? 'bg-white text-indigo-700 shadow-sm' : 'text-slate-500'}`}><Icon name="wallet" size={18} /> Ledger</button>
+                                    <button onClick={() => setAppModule('settings')} className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-5 py-2 rounded-lg text-sm font-bold transition-all ${appModule === 'settings' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500'}`}><Icon name="settings" size={18} /> Settings</button>
+                                </div>
                             </div>
                         </div>
+
                         {appModule === 'pipeline' && (
                             <div className="bg-slate-50 border-t border-slate-200 flex justify-center p-2">
                                 <div className="flex bg-slate-200/50 p-1 rounded-lg">
