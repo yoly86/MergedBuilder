@@ -132,6 +132,16 @@
             const [pdfConfig, setPdfConfig] = useState(null); 
             const [editingOrderId, setEditingOrderId] = useState(null);
 
+            // --- NEW: CLOUD DATABASE STATE ---
+            const [cloudConfig, setCloudConfig] = useState(() => {
+                try { return JSON.parse(localStorage.getItem('t1_cloud')) || { enabled: false, url: '', pin: '' }; } 
+                catch(e) { return { enabled: false, url: '', pin: '' }; }
+            });
+            const [isSyncing, setIsSyncing] = useState(false);
+            const isFetchingRef = useRef(false); // Prevents infinite sync loops on boot
+
+            useEffect(() => { localStorage.setItem('t1_cloud', JSON.stringify(cloudConfig)); }, [cloudConfig]);
+
             // Safe Local Storage
             const [orders, setOrders] = useState(() => {
                 try { return JSON.parse(localStorage.getItem('t1_orders')) || []; } catch(e) { return []; }
@@ -159,10 +169,71 @@
                 } catch(e) { return defaults; }
             });
 
-            useEffect(() => { localStorage.setItem('t1_orders', JSON.stringify(orders)); }, [orders]);
-            useEffect(() => { localStorage.setItem('t1_ledger', JSON.stringify(transactions)); }, [transactions]);
-            useEffect(() => { localStorage.setItem('t1_biz', JSON.stringify(businessDetails)); }, [businessDetails]);
-            useEffect(() => { localStorage.setItem('t1_settings', JSON.stringify(shopSettings)); }, [shopSettings]);
+            // --- UPGRADED: HYBRID LOCAL/CLOUD SYNC PLUMBING ---
+            const syncData = async (action, dataPayload) => {
+                if (!cloudConfig.enabled || !cloudConfig.url || !cloudConfig.pin) return;
+                setIsSyncing(true);
+                try {
+                    await fetch(cloudConfig.url, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'text/plain' },
+                        body: JSON.stringify({ pin: cloudConfig.pin, action: action, payload: dataPayload })
+                    });
+                } catch (e) { console.error("Cloud Sync Error:", e); } 
+                finally { setIsSyncing(false); }
+            };
+
+            // 1. Initial Cloud Fetch on Boot
+            useEffect(() => {
+                const fetchCloud = async () => {
+                    if (!cloudConfig.enabled || !cloudConfig.url || !cloudConfig.pin) return;
+                    setIsSyncing(true);
+                    isFetchingRef.current = true;
+                    try {
+                        const res = await fetch(`${cloudConfig.url}?pin=${encodeURIComponent(cloudConfig.pin)}`);
+                        const data = await res.json();
+                        if (data.status === 'success') {
+                            if (data.orders) setOrders(data.orders);
+                            if (data.transactions) setTransactions(data.transactions);
+                            if (data.businessDetails) setBusinessDetails(data.businessDetails);
+                            if (data.shopSettings) setShopSettings(data.shopSettings);
+                        } else { alert("Cloud Sync Error: " + data.message); }
+                    } catch (e) { console.error(e); } 
+                    finally { 
+                        setTimeout(() => { isFetchingRef.current = false; setIsSyncing(false); }, 500); 
+                    }
+                };
+                fetchCloud();
+            }, [cloudConfig.enabled, cloudConfig.url, cloudConfig.pin]);
+
+            // 2. Real-time Sync + Local Backup
+            useEffect(() => {
+                localStorage.setItem('t1_orders', JSON.stringify(orders));
+                if (cloudConfig.enabled && !isFetchingRef.current) syncData('SYNC_ORDERS', orders);
+            }, [orders]);
+
+            useEffect(() => {
+                localStorage.setItem('t1_ledger', JSON.stringify(transactions));
+                if (cloudConfig.enabled && !isFetchingRef.current) syncData('SYNC_LEDGER', transactions);
+            }, [transactions]);
+
+            const bizTimer = useRef(null);
+            useEffect(() => {
+                localStorage.setItem('t1_biz', JSON.stringify(businessDetails));
+                if (cloudConfig.enabled && !isFetchingRef.current) {
+                    clearTimeout(bizTimer.current);
+                    bizTimer.current = setTimeout(() => syncData('SYNC_BIZ', businessDetails), 1500);
+                }
+            }, [businessDetails]);
+
+            const settingsTimer = useRef(null);
+            useEffect(() => {
+                localStorage.setItem('t1_settings', JSON.stringify(shopSettings));
+                if (cloudConfig.enabled && !isFetchingRef.current) {
+                    clearTimeout(settingsTimer.current);
+                    settingsTimer.current = setTimeout(() => syncData('SYNC_SETTINGS', shopSettings), 1500);
+                }
+            }, [shopSettings]);
 
             const defaultOrderData = { customerName: '', orderName: '', dateRequired: '', orderDescription: '', designNotes: '', mockupImage: null, setupFees: '', digitizingFee: '', digitizingCost: '', rushFee: '', rushFeeWaived: false, taxRate: 5, discount: '' };
             const defaultItem = { id: genId(), name: '', color: '', qty: 1, rawCost: '', shippingCost: '1.00', margin: 35, decoDiscount: '', sizes: generateEmptySizes(), locations: [ { id: genId(), type: 'none', placement: 'custom', desc: '', stitches: '', dtfSize: 'small', isPuff: false, puffMarkup: 5, adjustment: '' } ] };
@@ -548,6 +619,44 @@
             // --- UI RENDERS ---
             const renderSettings = () => (
                 <div className="fade-in max-w-2xl mx-auto space-y-6">
+                    
+                    {/* NEW: CLOUD DATABASE SYNC UI */}
+                    <div className="bg-white rounded-2xl shadow-sm p-6 md:p-8 border border-slate-200 relative overflow-hidden">
+                        <div className="flex items-start gap-4 mb-6 border-b border-slate-100 pb-6">
+                            <div className="p-3 bg-blue-50 rounded-xl text-blue-600"><Icon name="activity" size={24}/></div>
+                            <div className="flex-1">
+                                <div className="flex justify-between items-center">
+                                    <h2 className="text-lg font-black text-slate-800 uppercase tracking-widest">Cloud Database Sync <span className="bg-blue-100 text-blue-700 text-[10px] px-2 py-0.5 rounded-full ml-2">BETA</span></h2>
+                                    <div className="flex items-center gap-3">
+                                        {isSyncing && <span className="text-[10px] font-bold text-blue-500 animate-pulse uppercase tracking-widest">Syncing...</span>}
+                                        <label className="relative inline-flex items-center cursor-pointer">
+                                            <input type="checkbox" className="sr-only peer" checked={cloudConfig.enabled} onChange={e => setCloudConfig({...cloudConfig, enabled: e.target.checked})} />
+                                            <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                                        </label>
+                                    </div>
+                                </div>
+                                <p className="text-xs text-slate-500 mt-1 leading-relaxed">Connect your app to a private Google Sheet. When enabled, your sheet acts as the master database for cross-device syncing.</p>
+                            </div>
+                        </div>
+
+                        {cloudConfig.enabled && (
+                            <div className="space-y-5 fade-in">
+                                <div>
+                                    <label className="block text-[11px] font-bold text-slate-500 mb-1.5 uppercase">Google Apps Script Web App URL</label>
+                                    <input type="text" placeholder="https://script.google.com/macros/s/..." className="w-full p-3 soft-input rounded-xl text-sm font-mono text-blue-700" value={cloudConfig.url} onChange={e => setCloudConfig({...cloudConfig, url: e.target.value})} />
+                                </div>
+                                <div>
+                                    <label className="block text-[11px] font-bold text-slate-500 mb-1.5 uppercase">Database Security PIN</label>
+                                    <input type="password" placeholder="Enter your secret PIN" className="w-full p-3 soft-input rounded-xl text-sm font-bold tracking-widest" value={cloudConfig.pin} onChange={e => setCloudConfig({...cloudConfig, pin: e.target.value})} />
+                                </div>
+                                <div className="bg-blue-50/50 border border-blue-100 p-3 rounded-lg flex items-start gap-3">
+                                    <Icon name="shield" size={16} className="text-blue-500 shrink-0 mt-0.5"/>
+                                    <p className="text-[10px] text-blue-700 font-medium leading-relaxed">Credentials are saved locally to this device only. Do not share your Web App URL or PIN. Your frontend code remains public and safe.</p>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+
                     <div className="bg-white rounded-2xl shadow-sm p-6 md:p-8 border border-slate-200">
                         <div className="flex items-start gap-4 mb-6 border-b border-slate-100 pb-6">
                             <div className="p-3 bg-indigo-50 rounded-xl text-indigo-600"><Icon name="building" size={24}/></div>
