@@ -205,17 +205,12 @@
                     setTimeout(() => { isFetchingRef.current = false; setIsSyncing(false); }, 500); 
                 }
             };
-// --- UPGRADED: HYBRID LOCAL/CLOUD SYNC PLUMBING ---
-            // ... (keep the syncData and fetchCloudData functions as they are) ...
-
-            // Fetch on Boot (DISABLED)
-            /*
+// Fetch on Boot (KEEP THIS ONE)
             useEffect(() => {
                 fetchCloudData(true);
             }, [cloudConfig.enabled, cloudConfig.url, cloudConfig.pin]);
-            */
 
-            // Auto-Fetch when switching to the Pipeline or Ledger tabs (DISABLED)
+            // Auto-Fetch when switching to the Pipeline or Ledger tabs (DELETE OR COMMENT OUT THIS ONE)
             /*
             useEffect(() => {
                 if (cloudConfig.enabled && (appModule === 'pipeline' || appModule === 'bookkeeping')) {
@@ -226,9 +221,9 @@
 
             // 2. Real-time Sync + Local Backup
             useEffect(() => {
-                localStorage.setItem('t1_ledger', JSON.stringify(transactions));
-                if (cloudConfig.enabled && !isFetchingRef.current) syncData('SYNC_LEDGER', transactions);
-            }, [transactions]);
+                localStorage.setItem('t1_orders', JSON.stringify(orders));
+                if (cloudConfig.enabled && !isFetchingRef.current) syncData('SYNC_ORDERS', orders);
+            }, [orders]);
 
             const bizTimer = useRef(null);
             useEffect(() => {
