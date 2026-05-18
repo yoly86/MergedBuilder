@@ -30,10 +30,30 @@
         input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
         .scrollbar-hide::-webkit-scrollbar { display: none; }
         .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
-        .soft-input { background-color: #f8fafc; border: 1px solid #e2e8f0; transition: all 0.2s ease; }
-        .soft-input:focus { background-color: #ffffff; border-color: #818cf8; box-shadow: 0 0 0 3px #e0e7ff; outline: none; }
+        .soft-input { background-color: #f8fafc; border: 1px solid #cbd5e1; transition: all 0.2s ease; }
+        .soft-input:focus { background-color: #ffffff; border-color: #6366f1; box-shadow: 0 0 0 3px #e0e7ff; outline: none; }
         .fade-in { animation: fadeIn 0.2s ease-in-out; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        /* --- GLOBAL READABILITY BOOST --- */
+        /* Darkens what you type into the boxes and makes it slightly bolder */
+        input, select, textarea { 
+            color: #0f172a !important; /* Almost black */
+            font-weight: 600 !important; 
+        }
+        
+        /* Darkens the empty placeholder text so it doesn't vanish into the background */
+        input::placeholder, textarea::placeholder { 
+            color: #64748b !important; /* Medium-dark grey */
+            font-weight: 500 !important; 
+            opacity: 1 !important; 
+        }
+        
+        /* Darkens all the tiny labels sitting above your input boxes */
+        label { 
+            color: #334155 !important; /* Dark slate */
+            font-weight: 800 !important; 
+        }
     </style>
 </head>
 <body class="bg-slate-100 font-sans antialiased text-slate-900 selection:bg-indigo-100">
@@ -1030,6 +1050,54 @@
                                         )}
                                         <button onClick={() => addLocation(item.id)} className="text-[10px] font-bold text-indigo-600 bg-indigo-50 px-3 py-1.5 rounded-md mt-2">+ Add Decor</button>
                                     </div>
+                                    
+                                   {/* --- NEW: GARMENT SUMMARY FOOTER --- */}
+                                    <div className="mt-6 -mx-3 md:-mx-4 -mb-3 md:-mb-4 bg-slate-800 p-4 md:p-5 border-t border-slate-900 rounded-b-xl shadow-inner">
+                                        <div className="grid grid-cols-2 xl:grid-cols-4 gap-3 md:gap-4">
+                                            
+                                            {/* 1. Price Per Garment */}
+                                            <div className="bg-white border border-slate-300 rounded-lg p-3 flex flex-col justify-center items-center shadow-sm">
+                                                <span className="text-[9px] md:text-[10px] font-bold text-slate-500 uppercase tracking-widest text-center leading-tight mb-1">Price / Garment</span>
+                                                <span className="text-base md:text-lg font-black text-slate-700">{formatCurrency(item.lineTotalPerPiece)}</span>
+                                            </div>
+                                            
+                                            {/* 2. Profit Per Garment */}
+                                            <div className={`rounded-lg p-3 flex flex-col justify-center items-center border shadow-sm ${getHealthBg(item.itemMarginPercent).replace('200', '300')}`}>
+                                                <span className={`text-[9px] md:text-[10px] font-bold uppercase tracking-widest text-center leading-tight mb-1 ${getHealthColor(item.itemMarginPercent)}`}>Profit / Garment</span>
+                                                <div className="flex items-baseline gap-1 md:gap-1.5">
+                                                    <span className={`text-base md:text-lg font-black ${getHealthColor(item.itemMarginPercent)}`}>
+                                                        {formatCurrency(item.lineTotalPerPiece - (item.landedCost + item.itemDecoCostPerPiece))}
+                                                    </span>
+                                                    <span className={`text-[9px] md:text-[10px] font-bold ${getHealthColor(item.itemMarginPercent)} opacity-80`}>
+                                                        ({item.itemMarginPercent.toFixed(1)}%)
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            
+                                            {/* 3. Total Style Revenue */}
+                                            <div className="bg-indigo-50 border border-indigo-300 rounded-lg p-3 flex flex-col justify-center items-center relative overflow-hidden shadow-sm">
+                                                <div className="absolute -right-4 -top-4 opacity-10 text-indigo-600"><Icon name="shirt" size={60} /></div>
+                                                <span className="text-[9px] md:text-[10px] font-bold text-indigo-600 uppercase tracking-widest text-center relative z-10 leading-tight mb-1">Total Style Rev</span>
+                                                <div className="flex items-baseline gap-1 relative z-10">
+                                                    <span className="text-lg md:text-xl font-black text-indigo-700">{formatCurrency(item.lineTotal)}</span>
+                                                </div>
+                                            </div>
+
+                                            {/* 4. NEW: Total Style Profit */}
+                                            <div className={`rounded-lg p-3 flex flex-col justify-center items-center border shadow-sm relative overflow-hidden ${getHealthBg(item.itemMarginPercent).replace('200', '300')}`}>
+                                                 <div className={`absolute -right-2 -bottom-2 opacity-10 ${getHealthColor(item.itemMarginPercent)}`}><Icon name="wallet" size={55} /></div>
+                                                <span className={`text-[9px] md:text-[10px] font-bold uppercase tracking-widest text-center relative z-10 leading-tight mb-1 ${getHealthColor(item.itemMarginPercent)}`}>Total Style Profit</span>
+                                                <div className="flex items-baseline gap-1 relative z-10">
+                                                    <span className={`text-lg md:text-xl font-black ${getHealthColor(item.itemMarginPercent)}`}>
+                                                        {formatCurrency((item.lineTotalPerPiece - (item.landedCost + item.itemDecoCostPerPiece)) * item.calculatedQty)}
+                                                    </span>
+                                                </div>
+                                            </div>
+
+                                        </div>
+                                    </div>
+                                    {/* --- END GARMENT SUMMARY FOOTER --- */}
+
                                 </div>
                             </div>
                         ))}
