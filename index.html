@@ -225,6 +225,15 @@
                 localStorage.setItem('t1_orders', JSON.stringify(orders));
                 if (cloudConfig.enabled && !isFetchingRef.current) syncData('SYNC_ORDERS', orders);
             }, [orders]);
+            
+            const ledgerTimer = useRef(null);
+            useEffect(() => {
+                localStorage.setItem('t1_ledger', JSON.stringify(transactions));
+                if (cloudConfig.enabled && !isFetchingRef.current) {
+                    clearTimeout(ledgerTimer.current);
+                    ledgerTimer.current = setTimeout(() => syncData('SYNC_LEDGER', transactions), 1500);
+                }
+            }, [transactions]);
 
             const bizTimer = useRef(null);
             useEffect(() => {
