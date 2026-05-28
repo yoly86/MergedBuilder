@@ -1106,20 +1106,45 @@
 
                     <div className="bg-white rounded-2xl shadow-sm p-4 md:p-6 border border-slate-200">
                         <h2 className="text-sm font-bold text-slate-800 mb-4 md:mb-5 flex items-center gap-2 uppercase tracking-wider"><Icon name="settings" size={18} className="text-indigo-500" /> Fees & Discounts</h2>
-                        <div className="grid grid-cols-2 md:grid-cols-5 gap-3 md:gap-4">
-                            <div><label className="block text-[10px] md:text-[11px] font-semibold text-slate-500 mb-1.5 uppercase">Setup / Art Fee</label><input type="number" className="w-full p-2.5 md:p-3 soft-input rounded-xl text-sm" value={orderData.setupFees} onFocus={(e) => e.target.select()} onChange={e => updateOrder('setupFees', e.target.value)} /></div>
+                        <div className="grid grid-cols-2 md:grid-cols-5 gap-3 md:gap-4 items-start">
+                            <div>
+                                <label className="block text-[10px] md:text-[11px] font-semibold text-slate-500 mb-1.5 uppercase">Setup / Art Fee</label>
+                                <input type="number" className="w-full p-2.5 md:p-3 soft-input rounded-xl text-sm" value={orderData.setupFees} onFocus={(e) => e.target.select()} onChange={e => updateOrder('setupFees', e.target.value)} />
+                                {(!orderData.setupFees || parseFloat(orderData.setupFees) === 0) && (
+                                    <select className="mt-2 w-full p-1.5 bg-slate-50 border border-slate-200 rounded-md text-[10px] text-slate-600 font-bold outline-none focus:ring-1 focus:ring-indigo-400" value={orderData.setupFeeReason || 'none'} onChange={e => updateOrder('setupFeeReason', e.target.value)}>
+                                        <option value="none">Standard ($0.00)</option>
+                                        <option value="Waived (Courtesy)">Show: Waived (Courtesy)</option>
+                                        <option value="Print-Ready Art Provided">Show: Print-Ready Art</option>
+                                    </select>
+                                )}
+                            </div>
                             
                             <div className="bg-slate-50 p-2 -m-2 rounded-xl border border-slate-100">
                                 <label className="block text-[10px] md:text-[11px] font-semibold text-slate-500 mb-1.5 uppercase">Digitizing Fee</label>
                                 <input type="number" className="w-full p-2 md:p-2.5 soft-input rounded-lg text-sm mb-2" value={orderData.digitizingFee} onFocus={(e) => e.target.select()} onChange={e => updateOrder('digitizingFee', e.target.value)} />
-                                <div className="flex items-center justify-between">
+                                {(!orderData.digitizingFee || parseFloat(orderData.digitizingFee) === 0) && (
+                                    <select className="mb-3 w-full p-1.5 bg-slate-50 border border-slate-200 rounded-md text-[10px] text-slate-600 font-bold outline-none focus:ring-1 focus:ring-indigo-400" value={orderData.digitizingFeeReason || 'none'} onChange={e => updateOrder('digitizingFeeReason', e.target.value)}>
+                                        <option value="none">Standard ($0.00)</option>
+                                        <option value="File on Record">Show: File on Record</option>
+                                        <option value="Waived (Courtesy)">Show: Waived (Courtesy)</option>
+                                    </select>
+                                )}
+                                <div className="flex items-center justify-between mt-auto">
                                     <span className="text-[9px] text-slate-400 font-bold uppercase">Outsourced Cost:</span>
                                     <input type="number" className="w-14 p-1 bg-rose-50 text-rose-600 border border-rose-100 rounded text-[10px] font-bold text-center focus:ring-rose-400" placeholder="$0" value={orderData.digitizingCost} onFocus={(e) => e.target.select()} onChange={e => updateOrder('digitizingCost', e.target.value)} />
                                 </div>
                             </div>
 
                             <div>
-                                <label className="block text-[10px] md:text-[11px] font-semibold text-slate-500 mb-1.5 uppercase">Rush Order</label>
+                                <div className="flex justify-between items-end mb-1.5">
+                                    <label className="block text-[10px] md:text-[11px] font-semibold text-slate-500 uppercase">Rush Order</label>
+                                    <button onClick={() => {
+                                        const base = calc.subtotal - calc.rush;
+                                        updateOrder('rushFee', (base * 0.25).toFixed(2));
+                                    }} className="text-[9px] font-bold text-rose-500 bg-rose-50 hover:bg-rose-100 px-2 py-0.5 rounded border border-rose-100 transition-colors">
+                                        Auto 25%
+                                    </button>
+                                </div>
                                 <input type="number" className={`w-full p-2.5 md:p-3 soft-input rounded-xl text-sm ${orderData.rushFeeWaived ? 'line-through text-slate-400 bg-slate-100' : ''}`} value={orderData.rushFee} onFocus={(e) => e.target.select()} onChange={e => updateOrder('rushFee', e.target.value)} />
                                 <label className="flex items-center gap-1.5 mt-2 cursor-pointer">
                                     <input type="checkbox" checked={orderData.rushFeeWaived} onChange={e => updateOrder('rushFeeWaived', e.target.checked)} className="rounded text-emerald-500 focus:ring-emerald-500" />
@@ -1591,16 +1616,16 @@
                                             <div className="mb-3 pb-3 border-b border-slate-50 flex justify-between items-start">
                                                 <div>
                                                     <p className="font-bold text-sm text-slate-800">1x Setup / Art Prep</p>
-                                                    {orderCalc.setup === 0 && <p className="text-[10px] text-emerald-600 font-bold mt-0.5 uppercase tracking-wider">Fee Waived</p>}
+                                                    {(orderCalc.setup === 0 && fullData.orderData.setupFeeReason && fullData.orderData.setupFeeReason !== 'none') && <p className="text-[10px] text-emerald-600 font-bold mt-0.5 uppercase tracking-wider">{fullData.orderData.setupFeeReason}</p>}
                                                 </div>
-                                                <span className={`font-bold text-sm ${orderCalc.setup === 0 ? 'text-emerald-600' : 'text-slate-600'}`}>{orderCalc.setup === 0 ? 'WAIVED' : formatCurrency(orderCalc.setup)}</span>
+                                                <span className={`font-bold text-sm ${(orderCalc.setup === 0 && fullData.orderData.setupFeeReason && fullData.orderData.setupFeeReason !== 'none') ? 'text-emerald-600' : 'text-slate-600'}`}>{(orderCalc.setup === 0 && fullData.orderData.setupFeeReason && fullData.orderData.setupFeeReason !== 'none') ? 'WAIVED' : formatCurrency(orderCalc.setup)}</span>
                                             </div>
                                             <div className="mb-3 pb-3 border-b border-slate-50 flex justify-between items-start">
                                                 <div>
                                                     <p className="font-bold text-sm text-slate-800">1x Digitizing / File Conversion</p>
-                                                    {orderCalc.digitizing === 0 && <p className="text-[10px] text-emerald-600 font-bold mt-0.5 uppercase tracking-wider">Fee Waived</p>}
+                                                    {(orderCalc.digitizing === 0 && fullData.orderData.digitizingFeeReason && fullData.orderData.digitizingFeeReason !== 'none') && <p className="text-[10px] text-emerald-600 font-bold mt-0.5 uppercase tracking-wider">{fullData.orderData.digitizingFeeReason}</p>}
                                                 </div>
-                                                <span className={`font-bold text-sm ${orderCalc.digitizing === 0 ? 'text-emerald-600' : 'text-slate-600'}`}>{orderCalc.digitizing === 0 ? 'WAIVED' : formatCurrency(orderCalc.digitizing)}</span>
+                                                <span className={`font-bold text-sm ${(orderCalc.digitizing === 0 && fullData.orderData.digitizingFeeReason && fullData.orderData.digitizingFeeReason !== 'none') ? 'text-emerald-600' : 'text-slate-600'}`}>{(orderCalc.digitizing === 0 && fullData.orderData.digitizingFeeReason && fullData.orderData.digitizingFeeReason !== 'none') ? 'WAIVED' : formatCurrency(orderCalc.digitizing)}</span>
                                             </div>
                                             {(fullData.orderData.rushFee > 0 || fullData.orderData.rushFeeWaived) && (
                                                 <div className="mb-3 pb-3 border-b border-slate-50 last:border-0 flex justify-between items-start">
@@ -1790,32 +1815,46 @@
                             <div style={{ display: 'flex', marginBottom: '10px', paddingBottom: '10px', borderBottom: '1px solid #f1f5f9', breakInside: 'avoid' }}>
                                 <div style={{ width: '55%', paddingRight: '20px' }}>
                                     <p style={{ margin: '0 0 5px 0', fontWeight: '800', fontSize: '17px', color: '#0f172a' }}>Setup / Art Prep</p>
-                                    {oCalc.setup === 0 && <p style={{ margin: 0, fontSize: '12px', color: '#059669', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Fee Waived</p>}
+                                    {(oCalc.setup === 0 && oData.setupFeeReason && oData.setupFeeReason !== 'none') && <p style={{ margin: 0, fontSize: '12px', color: '#059669', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{oData.setupFeeReason}</p>}
                                 </div>
                                 <div style={{ width: '15%', textAlign: 'center', fontWeight: '700', fontSize: '16px', color: '#334155' }}>1</div>
                                 <div style={{ width: '15%', textAlign: 'right', fontWeight: '600', fontSize: '16px', color: '#334155' }}>{formatCurrency(oCalc.setup)}</div>
-                                <div style={{ width: '15%', textAlign: 'right', fontWeight: '800', fontSize: '16px', color: oCalc.setup === 0 ? '#059669' : '#0f172a' }}>{oCalc.setup === 0 ? 'WAIVED' : formatCurrency(oCalc.setup)}</div>
+                                <div style={{ width: '15%', textAlign: 'right', fontWeight: '800', fontSize: '16px', color: (oCalc.setup === 0 && oData.setupFeeReason && oData.setupFeeReason !== 'none') ? '#059669' : '#0f172a' }}>
+                                    {(oCalc.setup === 0 && oData.setupFeeReason && oData.setupFeeReason !== 'none') ? 'WAIVED' : formatCurrency(oCalc.setup)}
+                                </div>
                             </div>
                             
                             <div style={{ display: 'flex', marginBottom: '10px', paddingBottom: '10px', borderBottom: '1px solid #f1f5f9', breakInside: 'avoid' }}>
                                 <div style={{ width: '55%', paddingRight: '20px' }}>
                                     <p style={{ margin: '0 0 5px 0', fontWeight: '800', fontSize: '17px', color: '#0f172a' }}>Digitizing / File Conversion</p>
-                                    {oCalc.digitizing === 0 && <p style={{ margin: 0, fontSize: '12px', color: '#059669', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Fee Waived</p>}
+                                    {(oCalc.digitizing === 0 && oData.digitizingFeeReason && oData.digitizingFeeReason !== 'none') && <p style={{ margin: 0, fontSize: '12px', color: '#059669', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{oData.digitizingFeeReason}</p>}
                                 </div>
                                 <div style={{ width: '15%', textAlign: 'center', fontWeight: '700', fontSize: '16px', color: '#334155' }}>1</div>
                                 <div style={{ width: '15%', textAlign: 'right', fontWeight: '600', fontSize: '16px', color: '#334155' }}>{formatCurrency(oCalc.digitizing)}</div>
-                                <div style={{ width: '15%', textAlign: 'right', fontWeight: '800', fontSize: '16px', color: oCalc.digitizing === 0 ? '#059669' : '#0f172a' }}>{oCalc.digitizing === 0 ? 'WAIVED' : formatCurrency(oCalc.digitizing)}</div>
+                                <div style={{ width: '15%', textAlign: 'right', fontWeight: '800', fontSize: '16px', color: (oCalc.digitizing === 0 && oData.digitizingFeeReason && oData.digitizingFeeReason !== 'none') ? '#059669' : '#0f172a' }}>
+                                    {(oCalc.digitizing === 0 && oData.digitizingFeeReason && oData.digitizingFeeReason !== 'none') ? 'WAIVED' : formatCurrency(oCalc.digitizing)}
+                                </div>
                             </div>
 
-                            {(oData.rushFee > 0 || oData.rushFeeWaived) && (
-                                <div style={{ display: 'flex', marginBottom: '20px', paddingBottom: '20px', borderBottom: '1px solid #f1f5f9', breakInside: 'avoid' }}>
+                            {(parseFloat(oData.rushFee) > 0 || oData.rushFeeWaived) && (
+                                <div style={{ display: 'flex', marginBottom: '20px', padding: '15px', borderRadius: '8px', backgroundColor: oData.rushFeeWaived ? '#ecfdf5' : '#fff1f2', border: oData.rushFeeWaived ? '1px solid #a7f3d0' : '1px solid #fecdd3', breakInside: 'avoid', alignItems: 'center' }}>
                                     <div style={{ width: '55%', paddingRight: '20px' }}>
-                                        <p style={{ margin: '0 0 5px 0', fontWeight: '800', fontSize: '17px', color: '#0f172a' }}>Rush Order Priority</p>
-                                        {oData.rushFeeWaived && <p style={{ margin: 0, fontSize: '12px', color: '#059669', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Fee Waived</p>}
+                                        <p style={{ margin: '0 0 5px 0', fontWeight: '900', fontSize: '17px', color: oData.rushFeeWaived ? '#064e3b' : '#be123c', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                                            Rush Order Surcharge
+                                        </p>
+                                        {oData.rushFeeWaived ? (
+                                            <p style={{ margin: 0, fontSize: '12px', color: '#059669', fontWeight: '800' }}>Fee Waived (Courtesy Discount)</p>
+                                        ) : (
+                                            <p style={{ margin: 0, fontSize: '12px', color: '#e11d48', fontWeight: '600' }}>Applies to all orders required in &lt; 10 working days (25% surcharge).</p>
+                                        )}
                                     </div>
-                                    <div style={{ width: '15%', textAlign: 'center', fontWeight: '700', fontSize: '16px', color: '#334155' }}>1</div>
-                                    <div style={{ width: '15%', textAlign: 'right', fontWeight: '600', fontSize: '16px', color: '#334155' }}>{oData.rushFeeWaived ? '$0.00' : formatCurrency(oCalc.rush)}</div>
-                                    <div style={{ width: '15%', textAlign: 'right', fontWeight: '800', fontSize: '16px', color: oData.rushFeeWaived ? '#059669' : '#0f172a' }}>{oData.rushFeeWaived ? 'WAIVED' : formatCurrency(oCalc.rush)}</div>
+                                    <div style={{ width: '15%', textAlign: 'center', fontWeight: '700', fontSize: '16px', color: oData.rushFeeWaived ? '#059669' : '#be123c' }}>1</div>
+                                    <div style={{ width: '15%', textAlign: 'right', fontWeight: '600', fontSize: '16px', color: oData.rushFeeWaived ? '#059669' : '#be123c' }}>
+                                        {oData.rushFeeWaived ? <span style={{ textDecoration: 'line-through', opacity: 0.7 }}>{formatCurrency(parseFloat(oData.rushFee))}</span> : formatCurrency(oCalc.rush)}
+                                    </div>
+                                    <div style={{ width: '15%', textAlign: 'right', fontWeight: '900', fontSize: '16px', color: oData.rushFeeWaived ? '#059669' : '#be123c' }}>
+                                        {oData.rushFeeWaived ? 'WAIVED' : formatCurrency(oCalc.rush)}
+                                    </div>
                                 </div>
                             )}
 
@@ -1857,9 +1896,17 @@
                                 </div>
                             </div>
 
-                            <div style={{ marginTop: '60px', borderTop: '1px solid #e2e8f0', paddingTop: '20px', textAlign: 'center' }}>
-                                <p style={{ margin: 0, color: '#64748b', fontSize: '14px', fontWeight: '500' }}>
-                                    {type === 'proposal' ? 'Quotes are valid for 14 days. We require a deposit to begin production.' : 'Thank you for choosing my Small Business!'}
+                            <div style={{ marginTop: '60px', borderTop: '1px solid #e2e8f0', paddingTop: '20px', textAlign: 'left' }}>
+                                <p style={{ margin: 0, color: '#64748b', fontSize: '12px', fontWeight: '500', lineHeight: '1.6' }}>
+                                    {type === 'proposal' ? (
+                                        <>
+                                            <strong>This quote is valid for 14 days. </strong>Deposits are required to get production started; by submitting the deposit, you are agreeing to these terms.<br />
+                                            Orders required under 10 business days are considered a rush order and are subject to a 25% surcharge.<br />
+                                            Low quality artwork needing modifications or formatting, are subject to a $35/hr art fee (min charge 1 hr). 
+                                        </>
+                                    ) : (
+                                        <>Thank you for choosing my small business!</>
+                                    )}
                                 </p>
                             </div>
                         </div>
