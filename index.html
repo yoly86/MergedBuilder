@@ -1641,11 +1641,12 @@
                                 </div>
                             </div>
 
+                           
                             {/* ACTION BUTTONS AREA */}
                             <div className="p-5 border-t border-slate-200 bg-slate-50 space-y-3">
-                                {stage === 'quote' && (
+                                {stage !== 'archived' && (
                                     <button onClick={() => editQuote(selectedOrder)} className="w-full bg-white text-slate-700 py-2.5 rounded-xl text-xs font-bold border border-slate-300 hover:bg-slate-100 active:scale-95 transition-all flex items-center justify-center gap-2">
-                                        <Icon name="settings" size={14} /> Edit Quote Details
+                                        <Icon name="settings" size={14} /> Edit Order Details
                                     </button>
                                 )}
 
