@@ -1787,28 +1787,46 @@
 
                             {/* Line Items */}
                             {oCalc.items && oCalc.items.map((item, idx) => (
-                                <div key={idx} style={{ display: 'flex', marginBottom: '20px', paddingBottom: '20px', borderBottom: '1px solid #f1f5f9', breakInside: 'avoid' }}>
-                                    <div style={{ width: '55%', paddingRight: '20px' }}>
-                                        <p style={{ margin: '0 0 5px 0', fontWeight: '800', fontSize: '19px', color: '#0f172a' }}>
-                                            {item.name} {item.color ? ` - ${item.color}` : ''}
-                                        </p>
-                                        {getSizeString(item) && (
-                                            <p style={{ margin: '0 0 10px 0' }}>
-                                                <span style={{ fontSize: '11px', backgroundColor: '#f1f5f9', border: '1px solid #e2e8f0', color: '#475569', padding: '3px 12px', borderRadius: '20px', fontWeight: '700' }}>{getSizeString(item)}</span>
+                                <div key={idx} style={{ marginBottom: '20px', paddingBottom: '20px', borderBottom: '1px solid #f1f5f9', breakInside: 'avoid' }}>
+                                    <div style={{ display: 'flex' }}>
+                                        <div style={{ width: '55%', paddingRight: '20px' }}>
+                                            <p style={{ margin: '0 0 5px 0', fontWeight: '800', fontSize: '19px', color: '#0f172a' }}>
+                                                {item.name} {item.color ? ` - ${item.color}` : ''}
                                             </p>
-                                        )}
-                                        <div style={{ paddingLeft: '15px', borderLeft: '3px solid #c7d2fe', marginTop: '10px' }}>
-                                            {item.locations.filter(l => l.type !== 'none').map((l, i) => (
-                                                <p key={i} style={{ margin: '0 0 4px 0', fontSize: '14px', color: '#475569' }}>
-                                                    <strong style={{ color: '#334155' }}>{l.type === 'embroidery' ? (l.isPuff ? '3D Puff Emb' : 'Embroidery') : 'DTF Print'}</strong>
-                                                    {` - ${PLACEMENTS.find(p=>p.id===l.placement)?.label || 'Custom'} ${l.desc ? `(${l.desc})` : ''}`}
+                                            {getSizeString(item) && (
+                                                <p style={{ margin: '0 0 10px 0' }}>
+                                                    <span style={{ fontSize: '11px', backgroundColor: '#f1f5f9', border: '1px solid #e2e8f0', color: '#475569', padding: '3px 12px', borderRadius: '20px', fontWeight: '700' }}>{getSizeString(item)}</span>
                                                 </p>
-                                            ))}
+                                            )}
+                                            <div style={{ paddingLeft: '15px', borderLeft: '3px solid #c7d2fe', marginTop: '10px' }}>
+                                                {item.locations.filter(l => l.type !== 'none').map((l, i) => (
+                                                    <p key={i} style={{ margin: '0 0 4px 0', fontSize: '14px', color: '#475569' }}>
+                                                        <strong style={{ color: '#334155' }}>{l.type === 'embroidery' ? (l.isPuff ? '3D Puff Emb' : 'Embroidery') : 'DTF Print'}</strong>
+                                                        {` - ${PLACEMENTS.find(p=>p.id===l.placement)?.label || 'Custom'} ${l.desc ? `(${l.desc})` : ''}`}
+                                                    </p>
+                                                ))}
+                                            </div>
                                         </div>
+                                        <div style={{ width: '15%', textAlign: 'center', fontWeight: '700', fontSize: '16px', color: '#334155' }}>{item.calculatedQty}</div>
+                                        <div style={{ width: '15%', textAlign: 'right', fontWeight: '600', fontSize: '16px', color: '#334155' }}>{formatCurrency(item.undiscountedLineTotalPerPiece)}</div>
+                                        <div style={{ width: '15%', textAlign: 'right', fontWeight: '800', fontSize: '16px', color: '#0f172a' }}>{formatCurrency(item.undiscountedLineTotal)}</div>
                                     </div>
-                                    <div style={{ width: '15%', textAlign: 'center', fontWeight: '700', fontSize: '16px', color: '#334155' }}>{item.calculatedQty}</div>
-                                    <div style={{ width: '15%', textAlign: 'right', fontWeight: '600', fontSize: '16px', color: '#334155' }}>{formatCurrency(item.undiscountedLineTotalPerPiece)}</div>
-                                    <div style={{ width: '15%', textAlign: 'right', fontWeight: '800', fontSize: '16px', color: '#0f172a' }}>{formatCurrency(item.undiscountedLineTotal)}</div>
+
+                                    {/* Item Discount Row */}
+                                    {item.explicitDecoDiscount > 0 && (
+                                        <div style={{ display: 'flex', marginTop: '12px' }}>
+                                            <div style={{ width: '55%', paddingRight: '20px' }}>
+                                                <p style={{ margin: 0, fontSize: '13px', color: '#059669', fontWeight: '700', fontStyle: 'italic' }}>
+                                                    ↳ Item Discount Applied (-{formatCurrency(item.explicitDecoDiscount)}/ea)
+                                                </p>
+                                            </div>
+                                            <div style={{ width: '15%' }}></div>
+                                            <div style={{ width: '15%' }}></div>
+                                            <div style={{ width: '15%', textAlign: 'right', fontWeight: '700', fontSize: '15px', color: '#059669' }}>
+                                                -{formatCurrency(item.decoDiscountTotal)}
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
                             ))}
 
@@ -1859,17 +1877,23 @@
                                 </div>
                             )}
 
+                            {/* Order Discount Line Item */}
+                            {oCalc.discount > 0 && (
+                                <div style={{ display: 'flex', marginBottom: '10px', paddingBottom: '10px', borderBottom: '1px solid #f1f5f9', breakInside: 'avoid', alignItems: 'center' }}>
+                                    <div style={{ width: '55%', paddingRight: '20px' }}>
+                                        <p style={{ margin: '0 0 5px 0', fontWeight: '800', fontSize: '17px', color: '#059669' }}>Order Discount</p>
+                                    </div>
+                                    <div style={{ width: '15%', textAlign: 'center', fontWeight: '700', fontSize: '16px', color: '#059669' }}>1</div>
+                                    <div style={{ width: '15%', textAlign: 'right', fontWeight: '600', fontSize: '16px', color: '#059669' }}>-{formatCurrency(oCalc.discount)}</div>
+                                    <div style={{ width: '15%', textAlign: 'right', fontWeight: '800', fontSize: '16px', color: '#059669' }}>-{formatCurrency(oCalc.discount)}</div>
+                                </div>
+                            )}
+
                             {/* Totals Section */}
                             <div style={{ width: '50%', marginLeft: 'auto', marginTop: '30px', breakInside: 'avoid' }}>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px', fontSize: '15px', color: '#475569' }}>
-                                    <span>Subtotal</span><span>{formatCurrency(oCalc.grossSubtotal)}</span>
+                                    <span>Subtotal</span><span>{formatCurrency(oCalc.discountedSubtotal)}</span>
                                 </div>
-                                
-                                {oCalc.totalDiscount > 0 && (
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px', color: '#059669', fontWeight: '800', fontSize: '15px' }}>
-                                        <span>Total Discount</span><span>-{formatCurrency(oCalc.totalDiscount)}</span>
-                                    </div>
-                                )}
                                 
                                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '15px', fontSize: '15px', color: '#475569' }}>
                                     <span>Tax ({oData.taxRate}%)</span><span>{formatCurrency(oCalc.tax)}</span>
