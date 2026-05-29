@@ -483,8 +483,8 @@
         // The new balance is the New Total minus whatever they already paid
         newBalance = Math.max(0, calc.grandTotal - amountAlreadyPaid);
         
-        // Preserve their original deposit amount on older orders
-        savedDeposit = existingOrder.depositAmount || calc.deposit;
+        // Only preserve historical deposit if they already paid. If it's still a Quote, recalculate it.
+        savedDeposit = existingOrder.stage === 'quote' ? calc.deposit : (existingOrder.depositAmount || calc.deposit);
     }
 
     const newOrder = {
@@ -1547,6 +1547,7 @@
 
                                 // Build a clean HTML table of the items for the email body (matching PDF)
                                 const { calc } = order.fullData;
+                                const oData = order.fullData.orderData;
                                 const itemsHtml = `
                                     <table style="width: 100%; border-collapse: collapse; font-family: sans-serif; color: #334155;">
                                         <thead>
@@ -1591,7 +1592,90 @@
                                                 }
                                                 return rowHtml;
                                             }).join('')}
+
+                                            <tr style="border-bottom: 1px solid #f1f5f9;">
+                                                <td style="padding: 15px 0 5px 0; vertical-align: top;">
+                                                    <div style="font-weight: bold; font-size: 15px; color: #0f172a; margin-bottom: 2px;">Setup / Art Prep</div>
+                                                    ${(calc.setup === 0 && oData.setupFeeReason && oData.setupFeeReason !== 'none') ? `<div style="font-size: 11px; color: #059669; font-weight: bold; text-transform: uppercase;">${oData.setupFeeReason}</div>` : ''}
+                                                </td>
+                                                <td style="padding: 15px 0 5px 0; text-align: center; vertical-align: top; font-weight: bold;">1</td>
+                                                <td style="padding: 15px 0 5px 0; text-align: right; vertical-align: top;">${formatCurrency(calc.setup)}</td>
+                                                <td style="padding: 15px 0 5px 0; text-align: right; vertical-align: top; font-weight: bold; color: ${(calc.setup === 0 && oData.setupFeeReason && oData.setupFeeReason !== 'none') ? '#059669' : '#0f172a'};">
+                                                    ${(calc.setup === 0 && oData.setupFeeReason && oData.setupFeeReason !== 'none') ? 'WAIVED' : formatCurrency(calc.setup)}
+                                                </td>
+                                            </tr>
+
+                                            <tr style="border-bottom: 1px solid #f1f5f9;">
+                                                <td style="padding: 10px 0 15px 0; vertical-align: top;">
+                                                    <div style="font-weight: bold; font-size: 15px; color: #0f172a; margin-bottom: 2px;">Digitizing / File Conversion</div>
+                                                    ${(calc.digitizing === 0 && oData.digitizingFeeReason && oData.digitizingFeeReason !== 'none') ? `<div style="font-size: 11px; color: #059669; font-weight: bold; text-transform: uppercase;">${oData.digitizingFeeReason}</div>` : ''}
+                                                </td>
+                                                <td style="padding: 10px 0 15px 0; text-align: center; vertical-align: top; font-weight: bold;">1</td>
+                                                <td style="padding: 10px 0 15px 0; text-align: right; vertical-align: top;">${formatCurrency(calc.digitizing)}</td>
+                                                <td style="padding: 10px 0 15px 0; text-align: right; vertical-align: top; font-weight: bold; color: ${(calc.digitizing === 0 && oData.digitizingFeeReason && oData.digitizingFeeReason !== 'none') ? '#059669' : '#0f172a'};">
+                                                    ${(calc.digitizing === 0 && oData.digitizingFeeReason && oData.digitizingFeeReason !== 'none') ? 'WAIVED' : formatCurrency(calc.digitizing)}
+                                                </td>
+                                            </tr>
+
+                                            ${(parseFloat(oData.rushFee) > 0 || oData.rushFeeWaived) ? `
+                                            <tr style="background-color: ${oData.rushFeeWaived ? '#ecfdf5' : '#fff1f2'};">
+                                                <td style="padding: 15px 10px; vertical-align: top; border-radius: 8px 0 0 8px;">
+                                                    <div style="font-weight: 800; font-size: 15px; color: ${oData.rushFeeWaived ? '#064e3b' : '#be123c'}; text-transform: uppercase; margin-bottom: 2px;">Rush Order Surcharge</div>
+                                                    <div style="font-size: 11px; font-weight: bold; color: ${oData.rushFeeWaived ? '#059669' : '#e11d48'};">
+                                                        ${oData.rushFeeWaived ? 'Fee Waived (Courtesy Discount)' : 'Applies to orders required in < 10 days.'}
+                                                    </div>
+                                                </td>
+                                                <td style="padding: 15px 0; text-align: center; vertical-align: top; font-weight: bold; color: ${oData.rushFeeWaived ? '#059669' : '#be123c'};">1</td>
+                                                <td style="padding: 15px 0; text-align: right; vertical-align: top; font-weight: bold; color: ${oData.rushFeeWaived ? '#059669' : '#be123c'};">
+                                                    ${oData.rushFeeWaived ? `<span style="text-decoration: line-through; opacity: 0.7;">${formatCurrency(parseFloat(oData.rushFee))}</span>` : formatCurrency(calc.rush)}
+                                                </td>
+                                                <td style="padding: 15px 10px 15px 0; text-align: right; vertical-align: top; font-weight: 900; color: ${oData.rushFeeWaived ? '#059669' : '#be123c'}; border-radius: 0 8px 8px 0;">
+                                                    ${oData.rushFeeWaived ? 'WAIVED' : formatCurrency(calc.rush)}
+                                                </td>
+                                            </tr>
+                                            ` : ''}
+
+                                            ${calc.discount > 0 ? `
+                                            <tr style="border-bottom: 1px solid #f1f5f9;">
+                                                <td style="padding: 15px 0; vertical-align: top;">
+                                                    <div style="font-weight: bold; font-size: 15px; color: #059669;">Order Discount</div>
+                                                </td>
+                                                <td style="padding: 15px 0; text-align: center; vertical-align: top; font-weight: bold; color: #059669;">1</td>
+                                                <td style="padding: 15px 0; text-align: right; vertical-align: top; font-weight: bold; color: #059669;">-${formatCurrency(calc.discount)}</td>
+                                                <td style="padding: 15px 0; text-align: right; vertical-align: top; font-weight: bold; color: #059669;">-${formatCurrency(calc.discount)}</td>
+                                            </tr>
+                                            ` : ''}
                                         </tbody>
+                                    </table>
+
+                                    <table style="width: 100%; border-collapse: collapse; font-family: sans-serif; margin-top: 30px;">
+                                        <tr>
+                                            <td style="width: 50%;"></td>
+                                            <td style="width: 50%;">
+                                                <table style="width: 100%; border-collapse: collapse; color: #475569;">
+                                                    <tr>
+                                                        <td style="padding-bottom: 8px; font-size: 15px; text-align: left;">Subtotal</td>
+                                                        <td style="padding-bottom: 8px; font-size: 15px; text-align: right;">${formatCurrency(calc.discountedSubtotal)}</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td style="padding-bottom: 15px; font-size: 15px; text-align: left;">Tax (${oData.taxRate}%)</td>
+                                                        <td style="padding-bottom: 15px; font-size: 15px; text-align: right;">${formatCurrency(calc.tax)}</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td style="padding-top: 15px; padding-bottom: 15px; border-top: 3px solid #0f172a; font-weight: 900; text-transform: uppercase; text-align: left; color: #0f172a; letter-spacing: 1px;">Total</td>
+                                                        <td style="padding-top: 15px; padding-bottom: 15px; border-top: 3px solid #0f172a; font-size: 26px; font-weight: 900; color: #4338ca; text-align: right;">${formatCurrency(order.total)}</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td colspan="2" style="padding-top: 10px;">
+                                                            <div style="background-color: #ecfdf5; border: 1px solid #a7f3d0; padding: 15px; border-radius: 12px; text-align: center;">
+                                                                <span style="font-weight: 900; text-transform: uppercase; color: #064e3b; font-size: 12px; display: block; margin-bottom: 5px; letter-spacing: 1px;">Deposit Required</span>
+                                                                <span style="font-size: 24px; font-weight: 900; color: #059669;">${formatCurrency(order.total / 2)}</span>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                </table>
+                                            </td>
+                                        </tr>
                                     </table>
                                 `;
 
