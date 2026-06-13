@@ -466,51 +466,52 @@
 
             // --- PIPELINE & MODAL ACTIONS ---
             const handleSendToPipeline = () => {
-    if(!orderData.customerName) return alert("Please add a Customer Name before sending to the Pipeline.");
-    
-    // 1. Look up the existing order if we are editing one
-    const existingOrder = editingOrderId ? orders.find(o=>o.id===editingOrderId) : null;
-    const currentStage = existingOrder ? existingOrder.stage : 'quote';
-    
-    // 2. Safely calculate the new balance by checking if they've already paid anything
-    let newBalance = calc.grandTotal;
-    let savedDeposit = calc.deposit;
-    
-    if (existingOrder) {
-        // Find out exactly how much they have paid to date (Old Total - Old Balance)
-        const amountAlreadyPaid = (existingOrder.total || 0) - (existingOrder.balance || 0);
-        
-        // The new balance is the New Total minus whatever they already paid
-        newBalance = Math.max(0, calc.grandTotal - amountAlreadyPaid);
-        
-        // Only preserve historical deposit if they already paid. If it's still a Quote, recalculate it.
-        savedDeposit = existingOrder.stage === 'quote' ? calc.deposit : (existingOrder.depositAmount || calc.deposit);
-    }
+                if(!orderData.customerName) return alert("Please add a Customer Name before sending to the Pipeline.");
 
-    const newOrder = {
-        id: editingOrderId || `JOB-${Date.now().toString().slice(-4)}`,
-        customer: orderData.customerName,
-        desc: orderData.orderName || `${calc.items.reduce((sum, item) => sum + item.calculatedQty, 0)}x Garments`,
-        stage: currentStage,
-        total: calc.grandTotal,
-        balance: newBalance,          // Updated: Uses our smart balance calculation
-        depositAmount: savedDeposit,  // Updated: Preserves historical deposit amounts
-        fullData: { orderData, items, calc },
-        dateAdded: existingOrder ? existingOrder.dateAdded : new Date().toLocaleDateString()
-    };
-    
-    if(editingOrderId) {
-        setOrders(orders.map(o => o.id === editingOrderId ? newOrder : o));
-        setEditingOrderId(null);
-    } else {
-        setOrders([newOrder, ...orders]);
-    }
-    
-    setOrderData(defaultOrderData);
-    setItems([defaultItem]);
-    setAppModule('pipeline');
-    setPipelineView('active');
-};
+                // 1. Look up the existing order if we are editing one
+                const existingOrder = editingOrderId ? orders.find(o=>o.id===editingOrderId) : null;
+                const currentStage = existingOrder ? existingOrder.stage : 'quote';
+
+                // 2. Safely calculate the new balance by checking if they've already paid anything
+                let newBalance = calc.grandTotal;
+                let savedDeposit = calc.deposit;
+                
+                if (existingOrder) {
+                    const amountAlreadyPaid = (existingOrder.total || 0) - (existingOrder.balance || 0);
+                    newBalance = Math.max(0, calc.grandTotal - amountAlreadyPaid);
+                    savedDeposit = existingOrder.stage === 'quote' ? calc.deposit : (existingOrder.depositAmount || calc.deposit);
+                }
+
+                // --- NEW CODE: Strip the heavy image data before saving to the database ---
+                const safeOrderData = { ...orderData };
+                delete safeOrderData.mockupImage;
+                // --------------------------------------------------------------------------
+
+                const newOrder = {
+                    id: editingOrderId || `JOB-${Date.now().toString().slice(-4)}`,
+                    customer: orderData.customerName,
+                    desc: orderData.orderName || `${calc.items.reduce((sum, item) => sum + item.calculatedQty, 0)}x Garments`,
+                    stage: currentStage,
+                    total: calc.grandTotal,
+                    balance: newBalance,
+                    depositAmount: savedDeposit,
+                    // --- UPDATED: Pass the safe, image-free copy here ---
+                    fullData: { orderData: safeOrderData, items, calc },
+                    dateAdded: existingOrder ? existingOrder.dateAdded : new Date().toLocaleDateString()
+                };
+                
+                if(editingOrderId) {
+                    setOrders(orders.map(o => o.id === editingOrderId ? newOrder : o));
+                    setEditingOrderId(null);
+                } else {
+                    setOrders([newOrder, ...orders]);
+                }
+                
+                setOrderData(defaultOrderData);
+                setItems([defaultItem]);
+                setAppModule('pipeline');
+                setPipelineView('active');
+            };
 
             const editQuote = (order) => {
                 setOrderData(order.fullData.orderData);
