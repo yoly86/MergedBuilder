@@ -208,6 +208,7 @@
 
             // --- UPGRADED: HYBRID LOCAL/CLOUD SYNC PLUMBING ---
             const syncData = async (action, dataPayload) => {
+                   return; // DELETE THIS KILL SWITCH
                 if (!cloudConfig.enabled || !cloudConfig.url || !cloudConfig.pin) return;
                 setIsSyncing(true);
                 try {
@@ -222,6 +223,7 @@
 
             // 1. Reusable Cloud Fetch Function
             const fetchCloudData = async (silent = false) => {
+                return; // DELETE THIS KILL SWITCH
                 if (!cloudConfig.enabled || !cloudConfig.url || !cloudConfig.pin) return;
                 setIsSyncing(true);
                 isFetchingRef.current = true;
@@ -243,7 +245,7 @@
             };
 // Fetch on Boot (KEEP THIS ONE)
             useEffect(() => {
-                fetchCloudData(true);
+               // fetchCloudData(true); // KILL SWITCH
             }, [cloudConfig.enabled, cloudConfig.url, cloudConfig.pin]);
 
             // Auto-Fetch when switching to the Pipeline or Ledger tabs (DELETE OR COMMENT OUT THIS ONE)
@@ -313,9 +315,11 @@
             const updateOrder = (field, value) => setOrderData(prev => ({ ...prev, [field]: value }));
             
             const handleImageUpload = async (e) => {
+                
     const file = e.target.files[0];
-    if (!file) return;
-
+       return; // <-- KILL SWITCH
+                if (!file) return;
+     
     if (!imageConfig.apiKey) {
         alert("Please add your ImgBB API Key in the Settings tab first.");
         e.target.value = null;
