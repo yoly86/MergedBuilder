@@ -5,9 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Mobile Quotes Pro</title>
     
-    <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js" crossorigin></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js" crossorigin></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.6/babel.min.js" crossorigin></script>
+    
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
@@ -35,32 +36,45 @@
         .fade-in { animation: fadeIn 0.2s ease-in-out; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         
-        /* --- GLOBAL READABILITY BOOST --- */
-        /* Darkens what you type into the boxes and makes it slightly bolder */
-        input, select, textarea { 
-            color: #0f172a !important; /* Almost black */
-            font-weight: 600 !important; 
-        }
-        
-        /* Darkens the empty placeholder text so it doesn't vanish into the background */
-        input::placeholder, textarea::placeholder { 
-            color: #64748b !important; /* Medium-dark grey */
-            font-weight: 500 !important; 
-            opacity: 1 !important; 
-        }
-        
-        /* Darkens all the tiny labels sitting above your input boxes */
-        label { 
-            color: #334155 !important; /* Dark slate */
-            font-weight: 800 !important; 
-        }
+        input, select, textarea { color: #0f172a !important; font-weight: 600 !important; }
+        input::placeholder, textarea::placeholder { color: #64748b !important; font-weight: 500 !important; opacity: 1 !important; }
+        label { color: #334155 !important; font-weight: 800 !important; }
     </style>
 </head>
 <body class="bg-slate-100 font-sans antialiased text-slate-900 selection:bg-indigo-100">
-    <div id="root"></div>
+    
+    <div id="root">
+        <div style="padding: 40px; font-family: sans-serif; text-align: center; color: #475569;">
+            <h2 style="color: #334155; font-weight: 900;">Booting Triple One OS...</h2>
+            <p>If this screen doesn't go away in a few seconds, your network or ad-blocker is preventing the application engines from downloading.</p>
+        </div>
+    </div>
 
     <script type="text/babel">
         const { useState, useEffect, useMemo, useRef } = React;
+
+        // --- ERROR BOUNDARY ---
+        class ErrorBoundary extends React.Component {
+            constructor(props) { super(props); this.state = { hasError: false, error: null, errorInfo: null }; }
+            static getDerivedStateFromError(error) { return { hasError: true, error }; }
+            componentDidCatch(error, errorInfo) { console.error("App Crashed:", error, errorInfo); this.setState({ errorInfo }); }
+            render() {
+                if (this.state.hasError) {
+                    return (
+                        <div style={{ padding: '30px', fontFamily: 'sans-serif', color: '#be123c', backgroundColor: '#fff1f2', minHeight: '100vh' }}>
+                            <h1 style={{ fontWeight: '900', fontSize: '28px', margin: '0 0 10px 0' }}>System Crash Detected</h1>
+                            <p style={{ fontWeight: 'bold', marginBottom: '20px' }}>Please screenshot this red box and send it to me:</p>
+                            <pre style={{ backgroundColor: 'white', padding: '20px', borderRadius: '12px', overflowX: 'auto', border: '2px solid #fecdd3', fontSize: '13px', lineHeight: '1.5' }}>
+                                <strong style={{color: 'black'}}>{this.state.error && this.state.error.toString()}</strong>
+                                <br/><br/>
+                                {this.state.errorInfo && this.state.errorInfo.componentStack}
+                            </pre>
+                        </div>
+                    );
+                }
+                return this.props.children;
+            }
+        }
 
         const Icon = ({ name, size = 24, className = "" }) => {
             const icons = {
@@ -142,13 +156,12 @@
         const formatCurrency = (val) => '$' + (val || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
         const generateEmptySizes = () => SIZES_LIST.reduce((acc, size) => { acc[size] = ''; return acc; }, {});
 
-        // --- MAIN APP COMPONENT ---
         function App() {
             const [emailConfig, setEmailConfig] = useState(() => {
-            try { return JSON.parse(localStorage.getItem('email_config')) || { url: '' }; } 
-            catch(e) { return { url: '' }; }
-        });
-        useEffect(() => { localStorage.setItem('email_config', JSON.stringify(emailConfig)); }, [emailConfig]);
+                try { return JSON.parse(localStorage.getItem('email_config')) || { url: '' }; } 
+                catch(e) { return { url: '' }; }
+            });
+            useEffect(() => { localStorage.setItem('email_config', JSON.stringify(emailConfig)); }, [emailConfig]);
 
             const [appModule, setAppModule] = useState('pipeline'); 
             const [pipelineView, setPipelineView] = useState('active'); 
@@ -161,25 +174,24 @@
             const [editingOrderId, setEditingOrderId] = useState(null);
             const [partialPayment, setPartialPayment] = useState('');
 
-            // --- NEW: CLOUD DATABASE STATE ---
             const [cloudConfig, setCloudConfig] = useState(() => {
                 try { return JSON.parse(localStorage.getItem('t1_cloud')) || { enabled: false, url: '', pin: '' }; } 
                 catch(e) { return { enabled: false, url: '', pin: '' }; }
             });
             const [isSyncing, setIsSyncing] = useState(false);
-            const isFetchingRef = useRef(false); // Prevents infinite sync loops on boot
+            const isFetchingRef = useRef(false); 
 
             useEffect(() => { localStorage.setItem('t1_cloud', JSON.stringify(cloudConfig)); }, [cloudConfig]);
-            // --- NEW: ImgBB API & Settings State ---
-                    const [imageConfig, setImageConfig] = useState(() => {
-                        try { return JSON.parse(localStorage.getItem('t1_imgbb')) || { apiKey: '' }; } 
-                        catch(e) { return { apiKey: '' }; }
-                    });
-                    useEffect(() => { localStorage.setItem('t1_imgbb', JSON.stringify(imageConfig)); }, [imageConfig]);
+            
+            const [imageConfig, setImageConfig] = useState(() => {
+                try { return JSON.parse(localStorage.getItem('t1_imgbb')) || { apiKey: '' }; } 
+                catch(e) { return { apiKey: '' }; }
+            });
+            useEffect(() => { localStorage.setItem('t1_imgbb', JSON.stringify(imageConfig)); }, [imageConfig]);
 
-                    const [isUploadingImage, setIsUploadingImage] = useState(false);
-                    const [expandedIntegration, setExpandedIntegration] = useState('cloud'); // Controls the accordion
-            // Safe Local Storage
+            const [isUploadingImage, setIsUploadingImage] = useState(false);
+            const [expandedIntegration, setExpandedIntegration] = useState('cloud'); 
+            
             const [orders, setOrders] = useState(() => {
                 try { return JSON.parse(localStorage.getItem('t1_orders')) || []; } catch(e) { return []; }
             });
@@ -206,9 +218,7 @@
                 } catch(e) { return defaults; }
             });
 
-            // --- UPGRADED: HYBRID LOCAL/CLOUD SYNC PLUMBING ---
             const syncData = async (action, dataPayload) => {
-                   return; // DELETE THIS KILL SWITCH
                 if (!cloudConfig.enabled || !cloudConfig.url || !cloudConfig.pin) return;
                 setIsSyncing(true);
                 try {
@@ -221,9 +231,7 @@
                 finally { setIsSyncing(false); }
             };
 
-            // 1. Reusable Cloud Fetch Function
             const fetchCloudData = async (silent = false) => {
-                return; // DELETE THIS KILL SWITCH
                 if (!cloudConfig.enabled || !cloudConfig.url || !cloudConfig.pin) return;
                 setIsSyncing(true);
                 isFetchingRef.current = true;
@@ -243,21 +251,11 @@
                     setTimeout(() => { isFetchingRef.current = false; setIsSyncing(false); }, 500); 
                 }
             };
-// Fetch on Boot (KEEP THIS ONE)
+
             useEffect(() => {
-               // fetchCloudData(true); // KILL SWITCH
+                fetchCloudData(true);
             }, [cloudConfig.enabled, cloudConfig.url, cloudConfig.pin]);
 
-            // Auto-Fetch when switching to the Pipeline or Ledger tabs (DELETE OR COMMENT OUT THIS ONE)
-            /*
-            useEffect(() => {
-                if (cloudConfig.enabled && (appModule === 'pipeline' || appModule === 'bookkeeping')) {
-                    fetchCloudData(true);
-                }
-            }, [appModule]);
-            */
-
-            // 2. Real-time Sync + Local Backup
             useEffect(() => {
                 localStorage.setItem('t1_orders', JSON.stringify(orders));
                 if (cloudConfig.enabled && !isFetchingRef.current) syncData('SYNC_ORDERS', orders);
@@ -309,49 +307,45 @@
                 setShopSettings(prev => ({ ...prev, quickFillGarments: (prev.quickFillGarments || []).filter(g => g.id !== id) }));
             };
 
-            // --- QUOTER LOGIC & MATH ---
             const updateBiz = (field, value) => setBusinessDetails(prev => ({ ...prev, [field]: value }));
             const updateSetting = (field, value) => setShopSettings(prev => ({ ...prev, [field]: parseFloat(value) || 0 }));
             const updateOrder = (field, value) => setOrderData(prev => ({ ...prev, [field]: value }));
             
             const handleImageUpload = async (e) => {
-                
-    const file = e.target.files[0];
-       return; // <-- KILL SWITCH
+                const file = e.target.files[0];
                 if (!file) return;
-     
-    if (!imageConfig.apiKey) {
-        alert("Please add your ImgBB API Key in the Settings tab first.");
-        e.target.value = null;
-        return;
-    }
 
-    setIsUploadingImage(true);
-    const formData = new FormData();
-    formData.append('image', file);
+                if (!imageConfig.apiKey) {
+                    alert("Please add your ImgBB API Key in the Settings tab first.");
+                    e.target.value = null;
+                    return;
+                }
 
-    try {
-        const response = await fetch(`https://api.imgbb.com/1/upload?key=${imageConfig.apiKey.trim()}`, {
-            method: 'POST',
-            body: formData
-        });
-        
-        const data = await response.json();
+                setIsUploadingImage(true);
+                const formData = new FormData();
+                formData.append('image', file);
 
-        if (data.success) {
-            // ImgBB gives us a clean URL. Save THIS to the order!
-            updateOrder('mockupImage', data.data.url);
-        } else {
-            alert("Image upload failed. Please check your API key.");
-        }
-    } catch (error) {
-        console.error("Upload error:", error);
-        alert("Error connecting to image server.");
-    } finally {
-        setIsUploadingImage(false);
-        e.target.value = null;
-    }
-};
+                try {
+                    const response = await fetch(`https://api.imgbb.com/1/upload?key=${imageConfig.apiKey.trim()}`, {
+                        method: 'POST',
+                        body: formData
+                    });
+                    
+                    const data = await response.json();
+
+                    if (data.success) {
+                        updateOrder('mockupImage', data.data.url);
+                    } else {
+                        alert("Image upload failed. Please check your API key.");
+                    }
+                } catch (error) {
+                    console.error("Upload error:", error);
+                    alert("Error connecting to image server.");
+                } finally {
+                    setIsUploadingImage(false);
+                    e.target.value = null;
+                }
+            };
             
             const updateItem = (itemId, field, value) => setItems(items.map(item => item.id === itemId ? { ...item, [field]: value } : item));
             const updateSize = (itemId, sizeKey, value) => setItems(items.map(item => item.id === itemId ? { ...item, sizes: { ...item.sizes, [sizeKey]: value } } : item));
@@ -449,13 +443,11 @@
                 const allocTax = discountedSubtotal * (shopSettings.fundTax / 100);
 
                 const grossProfit = discountedSubtotal - orderGarmentCostTotal;
-                // allocGrowth is removed from deductions since it is retained profit
                 const netProfit = grossProfit - orderDecoCostTotal - allocConsumables - allocTax - digitizingCost;
                 const deposit = Math.ceil(grandTotal) / 2;
                 
                 const overallMarginPercent = discountedSubtotal > 0 ? (netProfit / discountedSubtotal) * 100 : 0;
 
-                // --- NEW TIME MATH ---
                 const targetRate = shopSettings.targetHourlyRate || 75;
                 const maxAllowableTimeHours = netProfit > 0 && targetRate > 0 ? netProfit / targetRate : 0;
                 const hrs = Math.floor(maxAllowableTimeHours);
@@ -481,7 +473,6 @@
 
             const imageInputRef = useRef(null);
 
-            // --- CSV EXPORT ---
             const handleExportCSV = () => {
                 if (transactions.length === 0) {
                     alert("No transactions available to export.");
@@ -507,15 +498,12 @@
                 document.body.removeChild(link);
             };
 
-            // --- PIPELINE & MODAL ACTIONS ---
             const handleSendToPipeline = () => {
                 if(!orderData.customerName) return alert("Please add a Customer Name before sending to the Pipeline.");
 
-                // 1. Look up the existing order if we are editing one
                 const existingOrder = editingOrderId ? orders.find(o=>o.id===editingOrderId) : null;
                 const currentStage = existingOrder ? existingOrder.stage : 'quote';
 
-                // 2. Safely calculate the new balance by checking if they've already paid anything
                 let newBalance = calc.grandTotal;
                 let savedDeposit = calc.deposit;
                 
@@ -525,9 +513,7 @@
                     savedDeposit = existingOrder.stage === 'quote' ? calc.deposit : (existingOrder.depositAmount || calc.deposit);
                 }
 
-                // --- NEW CODE: Strip the heavy image data before saving to the database ---
                 const safeOrderData = { ...orderData };
-                // --------------------------------------------------------------------------
 
                 const newOrder = {
                     id: editingOrderId || `JOB-${Date.now().toString().slice(-4)}`,
@@ -537,7 +523,6 @@
                     total: calc.grandTotal,
                     balance: newBalance,
                     depositAmount: savedDeposit,
-                    // --- UPDATED: Pass the safe, image-free copy here ---
                     fullData: { orderData: safeOrderData, items, calc },
                     dateAdded: existingOrder ? existingOrder.dateAdded : new Date().toLocaleDateString()
                 };
@@ -577,42 +562,41 @@
                     moveOrderStage(order.id, STAGES[currentIndex + 1].id);
                 }
             };
+            
             const handleLogPartialPayment = (order) => {
                 const amount = parseFloat(partialPayment);
                 if (!amount || amount <= 0) return alert("Please enter a valid payment amount.");
                 if (amount > order.balance) return alert("Payment cannot exceed the remaining balance.");
 
                 if (confirm(`Log a payment of ${formatCurrency(amount)} for ${order.customer}?`)) {
-                    // Log to ledger
                     const newTx = { id: Date.now(), type: 'income', date: new Date().toISOString().split('T')[0], category: 'Product Sales', amount: amount, netAmount: amount, description: `Partial Payment: ${order.customer}` };
                     setTransactions(prev => [newTx, ...prev]);
 
-                    // Deduct from balance
                     const updatedOrder = { ...order, balance: order.balance - amount };
                     setOrders(orders.map(o => o.id === order.id ? updatedOrder : o));
                     setSelectedOrder(updatedOrder);
-                    setPartialPayment(''); // Reset the input box
+                    setPartialPayment(''); 
                 }
             };
+            
             const handleApproveQuote = (order) => {
-            // Safely fallback to 50% of the total if depositAmount is missing on older orders
-            const defaultDeposit = (order.depositAmount || (order.total / 2) || 0).toFixed(2);
-            const promptAmount = window.prompt(`Approve Quote and log deposit to Ledger.\n\nEnter amount paid today:`, defaultDeposit);
+                const defaultDeposit = (order.depositAmount || (order.total / 2) || 0).toFixed(2);
+                const promptAmount = window.prompt(`Approve Quote and log deposit to Ledger.\n\nEnter amount paid today:`, defaultDeposit);
 
-            if (promptAmount === null) return; // User clicked Cancel
+                if (promptAmount === null) return; 
 
-            const paidAmount = parseFloat(promptAmount);
-            if (isNaN(paidAmount) || paidAmount < 0) return alert("Invalid amount.");
+                const paidAmount = parseFloat(promptAmount);
+                if (isNaN(paidAmount) || paidAmount < 0) return alert("Invalid amount.");
 
-            if (paidAmount > 0) {
-                const newTx = { id: Date.now(), type: 'income', date: new Date().toISOString().split('T')[0], category: 'Product Sales', amount: paidAmount, netAmount: paidAmount, description: `Deposit: ${order.customer}` };
-                setTransactions(prev => [newTx, ...prev]);
-            }
+                if (paidAmount > 0) {
+                    const newTx = { id: Date.now(), type: 'income', date: new Date().toISOString().split('T')[0], category: 'Product Sales', amount: paidAmount, netAmount: paidAmount, description: `Deposit: ${order.customer}` };
+                    setTransactions(prev => [newTx, ...prev]);
+                }
 
-            const updatedOrder = { ...order, balance: order.total - paidAmount, stage: 'new' };
-            setOrders(orders.map(o => o.id === order.id ? updatedOrder : o));
-            setSelectedOrder(updatedOrder);
-        };
+                const updatedOrder = { ...order, balance: order.total - paidAmount, stage: 'new' };
+                setOrders(orders.map(o => o.id === order.id ? updatedOrder : o));
+                setSelectedOrder(updatedOrder);
+            };
 
             const handleClearBalanceAndArchive = (order) => {
                 if (confirm(`Log final payment of ${formatCurrency(order.balance)} and Archive this order?`)) {
@@ -633,7 +617,6 @@
                 }
             };
 
-            // --- PDF ENGINE ---
             useEffect(() => {
                 if (pdfConfig && pdfGenRef.current) {
                     const { order, type } = pdfConfig;
@@ -657,7 +640,6 @@
                 }
             }, [pdfConfig]);
 
-            // --- BOOKKEEPING & KPI LOGIC ---
             const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
             const ledCats = {
                 income: ['Product Sales', 'Service Income', 'Online Sales', 'Consulting / Freelance', 'Other Business Income'],
@@ -748,105 +730,99 @@
                 return 'bg-rose-50 border-rose-200';
             };
 
-            // --- UI RENDERS ---
             const renderSettings = () => (
                 <div className="fade-in max-w-2xl mx-auto space-y-6">
                     
-                    {/* --- INTEGRATIONS HUB --- */}
-<div className="bg-white rounded-2xl shadow-sm border border-slate-200 mb-6 overflow-hidden fade-in">
-    <div className="p-6 border-b border-slate-100 bg-slate-50 flex items-center gap-3">
-        <div className="p-2 bg-slate-800 rounded-lg text-white"><Icon name="settings" size={20}/></div>
-        <div>
-            <h2 className="text-lg font-black text-slate-800 uppercase tracking-widest">Integrations Hub</h2>
-            <p className="text-xs text-slate-500 mt-0.5">Manage your API connections and cloud sync scripts.</p>
-        </div>
-    </div>
-
-    <div className="divide-y divide-slate-100">
-        
-        {/* 1. Cloud Database Accordion */}
-        <div>
-            <button onClick={() => setExpandedIntegration(expandedIntegration === 'cloud' ? null : 'cloud')} className="w-full p-5 flex justify-between items-center hover:bg-slate-50 transition-colors text-left">
-                <div className="flex items-center gap-3">
-                    <Icon name="activity" size={18} className="text-blue-500"/>
-                    <span className="font-bold text-slate-700 text-sm">Google Sheets Database Sync</span>
-                    {cloudConfig.enabled && <span className="w-2 h-2 rounded-full bg-emerald-500"></span>}
-                </div>
-                <Icon name={expandedIntegration === 'cloud' ? "settings" : "plus"} size={16} className="text-slate-400"/>
-            </button>
-            
-            {expandedIntegration === 'cloud' && (
-                <div className="p-5 pt-0 bg-slate-50 border-t border-slate-100">
-                    <div className="flex items-center gap-4 mb-4 mt-2">
-                        <label className="relative inline-flex items-center cursor-pointer">
-                            <input type="checkbox" className="sr-only peer" checked={cloudConfig.enabled} onChange={e => setCloudConfig({...cloudConfig, enabled: e.target.checked})} />
-                            <div className="w-11 h-6 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                        </label>
-                        <span className="text-xs font-bold text-slate-600 uppercase">Enable Master Sync</span>
-                    </div>
-                    {cloudConfig.enabled && (
-                        <div className="space-y-4">
+                    <div className="bg-white rounded-2xl shadow-sm border border-slate-200 mb-6 overflow-hidden fade-in">
+                        <div className="p-6 border-b border-slate-100 bg-slate-50 flex items-center gap-3">
+                            <div className="p-2 bg-slate-800 rounded-lg text-white"><Icon name="settings" size={20}/></div>
                             <div>
-                                <label className="block text-[10px] font-bold text-slate-500 mb-1.5 uppercase">Google Web App URL</label>
-                                <input type="text" placeholder="https://script.google.com/macros/s/..." className="w-full p-3 soft-input rounded-xl text-sm font-mono text-blue-700" value={cloudConfig.url} onChange={e => setCloudConfig({...cloudConfig, url: e.target.value})} />
-                            </div>
-                            <div>
-                                <label className="block text-[10px] font-bold text-slate-500 mb-1.5 uppercase">Security PIN</label>
-                                <input type="password" placeholder="Enter PIN" className="w-full p-3 soft-input rounded-xl text-sm font-bold tracking-widest" value={cloudConfig.pin} onChange={e => setCloudConfig({...cloudConfig, pin: e.target.value})} />
+                                <h2 className="text-lg font-black text-slate-800 uppercase tracking-widest">Integrations Hub</h2>
+                                <p className="text-xs text-slate-500 mt-0.5">Manage your API connections and cloud sync scripts.</p>
                             </div>
                         </div>
-                    )}
-                </div>
-            )}
-        </div>
 
-        {/* 2. Email Automation Accordion */}
-        <div>
-            <button onClick={() => setExpandedIntegration(expandedIntegration === 'email' ? null : 'email')} className="w-full p-5 flex justify-between items-center hover:bg-slate-50 transition-colors text-left">
-                <div className="flex items-center gap-3">
-                    <Icon name="mail" size={18} className="text-purple-500"/>
-                    <span className="font-bold text-slate-700 text-sm">Automated Email Sender</span>
-                    {emailConfig.url && <span className="w-2 h-2 rounded-full bg-emerald-500"></span>}
-                </div>
-                <Icon name={expandedIntegration === 'email' ? "settings" : "plus"} size={16} className="text-slate-400"/>
-            </button>
-            
-            {expandedIntegration === 'email' && (
-                <div className="p-5 pt-0 bg-slate-50 border-t border-slate-100">
-                    <p className="text-xs text-slate-500 mb-4 mt-2">Connect your Google Web App URL to send proposals directly from the Quoter.</p>
-                    <div>
-                        <label className="block text-[10px] font-bold text-slate-500 mb-1.5 uppercase">Google Web App URL</label>
-                        <input type="text" placeholder="https://script.google.com/macros/s/..." className="w-full p-3 soft-input rounded-xl text-sm font-mono text-purple-700" value={emailConfig.url} onChange={e => setEmailConfig({...emailConfig, url: e.target.value})} />
+                        <div className="divide-y divide-slate-100">
+                            
+                            <div>
+                                <button onClick={() => setExpandedIntegration(expandedIntegration === 'cloud' ? null : 'cloud')} className="w-full p-5 flex justify-between items-center hover:bg-slate-50 transition-colors text-left">
+                                    <div className="flex items-center gap-3">
+                                        <Icon name="activity" size={18} className="text-blue-500"/>
+                                        <span className="font-bold text-slate-700 text-sm">Google Sheets Database Sync</span>
+                                        {cloudConfig.enabled && <span className="w-2 h-2 rounded-full bg-emerald-500"></span>}
+                                    </div>
+                                    <Icon name={expandedIntegration === 'cloud' ? "settings" : "plus"} size={16} className="text-slate-400"/>
+                                </button>
+                                
+                                {expandedIntegration === 'cloud' && (
+                                    <div className="p-5 pt-0 bg-slate-50 border-t border-slate-100">
+                                        <div className="flex items-center gap-4 mb-4 mt-2">
+                                            <label className="relative inline-flex items-center cursor-pointer">
+                                                <input type="checkbox" className="sr-only peer" checked={cloudConfig.enabled} onChange={e => setCloudConfig({...cloudConfig, enabled: e.target.checked})} />
+                                                <div className="w-11 h-6 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                                            </label>
+                                            <span className="text-xs font-bold text-slate-600 uppercase">Enable Master Sync</span>
+                                        </div>
+                                        {cloudConfig.enabled && (
+                                            <div className="space-y-4">
+                                                <div>
+                                                    <label className="block text-[10px] font-bold text-slate-500 mb-1.5 uppercase">Google Web App URL</label>
+                                                    <input type="text" placeholder="https://script.google.com/macros/s/..." className="w-full p-3 soft-input rounded-xl text-sm font-mono text-blue-700" value={cloudConfig.url} onChange={e => setCloudConfig({...cloudConfig, url: e.target.value})} />
+                                                </div>
+                                                <div>
+                                                    <label className="block text-[10px] font-bold text-slate-500 mb-1.5 uppercase">Security PIN</label>
+                                                    <input type="password" placeholder="Enter PIN" className="w-full p-3 soft-input rounded-xl text-sm font-bold tracking-widest" value={cloudConfig.pin} onChange={e => setCloudConfig({...cloudConfig, pin: e.target.value})} />
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+                            </div>
+
+                            <div>
+                                <button onClick={() => setExpandedIntegration(expandedIntegration === 'email' ? null : 'email')} className="w-full p-5 flex justify-between items-center hover:bg-slate-50 transition-colors text-left">
+                                    <div className="flex items-center gap-3">
+                                        <Icon name="mail" size={18} className="text-purple-500"/>
+                                        <span className="font-bold text-slate-700 text-sm">Automated Email Sender</span>
+                                        {emailConfig.url && <span className="w-2 h-2 rounded-full bg-emerald-500"></span>}
+                                    </div>
+                                    <Icon name={expandedIntegration === 'email' ? "settings" : "plus"} size={16} className="text-slate-400"/>
+                                </button>
+                                
+                                {expandedIntegration === 'email' && (
+                                    <div className="p-5 pt-0 bg-slate-50 border-t border-slate-100">
+                                        <p className="text-xs text-slate-500 mb-4 mt-2">Connect your Google Web App URL to send proposals directly from the Quoter.</p>
+                                        <div>
+                                            <label className="block text-[10px] font-bold text-slate-500 mb-1.5 uppercase">Google Web App URL</label>
+                                            <input type="text" placeholder="https://script.google.com/macros/s/..." className="w-full p-3 soft-input rounded-xl text-sm font-mono text-purple-700" value={emailConfig.url} onChange={e => setEmailConfig({...emailConfig, url: e.target.value})} />
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+
+                            <div>
+                                <button onClick={() => setExpandedIntegration(expandedIntegration === 'image' ? null : 'image')} className="w-full p-5 flex justify-between items-center hover:bg-slate-50 transition-colors text-left">
+                                    <div className="flex items-center gap-3">
+                                        <Icon name="image" size={18} className="text-emerald-500"/>
+                                        <span className="font-bold text-slate-700 text-sm">ImgBB Cloud Image Hosting</span>
+                                        {imageConfig.apiKey && <span className="w-2 h-2 rounded-full bg-emerald-500"></span>}
+                                    </div>
+                                    <Icon name={expandedIntegration === 'image' ? "settings" : "plus"} size={16} className="text-slate-400"/>
+                                </button>
+                                
+                                {expandedIntegration === 'image' && (
+                                    <div className="p-5 pt-0 bg-slate-50 border-t border-slate-100">
+                                        <p className="text-xs text-slate-500 mb-4 mt-2">Convert your mockups into lightweight URLs so they survive the pipeline without crashing your database.</p>
+                                        <div>
+                                            <label className="block text-[10px] font-bold text-slate-500 mb-1.5 uppercase">ImgBB API Key</label>
+                                            <input type="text" placeholder="Paste your API key here" className="w-full p-3 soft-input rounded-xl text-sm font-mono text-emerald-700" value={imageConfig.apiKey} onChange={e => setImageConfig({...imageConfig, apiKey: e.target.value})} />
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+
+                        </div>
                     </div>
-                </div>
-            )}
-        </div>
-
-        {/* 3. ImgBB Hosting Accordion */}
-        <div>
-            <button onClick={() => setExpandedIntegration(expandedIntegration === 'image' ? null : 'image')} className="w-full p-5 flex justify-between items-center hover:bg-slate-50 transition-colors text-left">
-                <div className="flex items-center gap-3">
-                    <Icon name="image" size={18} className="text-emerald-500"/>
-                    <span className="font-bold text-slate-700 text-sm">ImgBB Cloud Image Hosting</span>
-                    {imageConfig.apiKey && <span className="w-2 h-2 rounded-full bg-emerald-500"></span>}
-                </div>
-                <Icon name={expandedIntegration === 'image' ? "settings" : "plus"} size={16} className="text-slate-400"/>
-            </button>
-            
-            {expandedIntegration === 'image' && (
-                <div className="p-5 pt-0 bg-slate-50 border-t border-slate-100">
-                    <p className="text-xs text-slate-500 mb-4 mt-2">Convert your mockups into lightweight URLs so they survive the pipeline without crashing your database.</p>
-                    <div>
-                        <label className="block text-[10px] font-bold text-slate-500 mb-1.5 uppercase">ImgBB API Key</label>
-                        <input type="text" placeholder="Paste your API key here" className="w-full p-3 soft-input rounded-xl text-sm font-mono text-emerald-700" value={imageConfig.apiKey} onChange={e => setImageConfig({...imageConfig, apiKey: e.target.value})} />
-                    </div>
-                </div>
-            )}
-        </div>
-
-    </div>
-</div>
-{/* --- END INTEGRATIONS HUB --- */}
                     <div className="bg-white rounded-2xl shadow-sm p-6 md:p-8 border border-slate-200 mb-6 fade-in">
                         <div className="flex items-start gap-4 mb-6 border-b border-slate-100 pb-6">
                             <div className="p-3 bg-purple-50 rounded-xl text-purple-600"><Icon name="mail" size={24}/></div>
@@ -997,13 +973,13 @@
                                 <label className="block text-xs font-semibold text-slate-500 mb-1 flex items-center gap-1.5"><Icon name="image" size={14}/> Mockup Image</label>
                                 <input type="file" accept="image/*" style={{ display: 'none' }} ref={imageInputRef} onChange={handleImageUpload} />
                                 <button 
-    onClick={() => imageInputRef.current && imageInputRef.current.click()} 
-    disabled={isUploadingImage}
-    className={`w-full p-3 border border-dashed rounded-xl outline-none text-sm font-bold flex items-center justify-center gap-2 transition-colors ${isUploadingImage ? 'bg-slate-100 text-slate-400 border-slate-300 cursor-not-allowed' : 'bg-indigo-50 text-indigo-700 border-indigo-200 hover:bg-indigo-100 focus:ring-2 focus:ring-indigo-500'}`}
->
-    <Icon name={isUploadingImage ? "refresh" : "image"} size={18} className={isUploadingImage ? "animate-spin" : ""} /> 
-    {isUploadingImage ? 'Uploading to Cloud...' : orderData.mockupImage ? 'Replace Mockup' : 'Upload Mockup'}
-</button>
+                                    onClick={() => imageInputRef.current && imageInputRef.current.click()} 
+                                    disabled={isUploadingImage}
+                                    className={`w-full p-3 border border-dashed rounded-xl outline-none text-sm font-bold flex items-center justify-center gap-2 transition-colors ${isUploadingImage ? 'bg-slate-100 text-slate-400 border-slate-300 cursor-not-allowed' : 'bg-indigo-50 text-indigo-700 border-indigo-200 hover:bg-indigo-100 focus:ring-2 focus:ring-indigo-500'}`}
+                                >
+                                    <Icon name={isUploadingImage ? "refresh" : "image"} size={18} className={isUploadingImage ? "animate-spin" : ""} /> 
+                                    {isUploadingImage ? 'Uploading to Cloud...' : orderData.mockupImage ? 'Replace Mockup' : 'Upload Mockup'}
+                                </button>
                             </div>
 
                             {orderData.mockupImage && (
@@ -1017,7 +993,7 @@
                             <div className="md:col-span-2"><label className="block text-xs font-semibold text-indigo-500 mb-1">Design Notes / Proofing Disclaimers</label><textarea placeholder="Visible on Proposal..." className="w-full p-3 bg-indigo-50 border border-indigo-100 rounded-xl focus:ring-2 focus:ring-indigo-400 outline-none text-sm resize-none" rows="2" value={orderData.designNotes} onChange={e => updateOrder('designNotes', e.target.value)}></textarea></div>
                         </div>
 
-                       {calc.items.map((item, index) => (
+                        {calc.items.map((item, index) => (
                             <div key={item.id} className="bg-slate-50 rounded-xl border-2 border-slate-300 overflow-hidden mb-6 shadow-sm">
                                 <div className="p-3 md:p-4 flex flex-col md:flex-row justify-between items-start md:items-center bg-slate-700 gap-3">
                                     <div className="flex items-center gap-3 w-full md:w-auto">
@@ -1178,17 +1154,14 @@
                                         <button onClick={() => addLocation(item.id)} className="text-[10px] font-bold text-indigo-600 bg-indigo-50 px-3 py-1.5 rounded-md mt-2">+ Add Decor</button>
                                     </div>
                                     
-                                   {/* --- NEW: GARMENT SUMMARY FOOTER --- */}
                                     <div className="mt-6 -mx-3 md:-mx-4 -mb-3 md:-mb-4 bg-slate-800 p-4 md:p-5 border-t border-slate-900 rounded-b-xl shadow-inner">
                                         <div className="grid grid-cols-2 xl:grid-cols-4 gap-3 md:gap-4">
                                             
-                                            {/* 1. Price Per Garment */}
                                             <div className="bg-white border border-slate-300 rounded-lg p-3 flex flex-col justify-center items-center shadow-sm">
                                                 <span className="text-[9px] md:text-[10px] font-bold text-slate-500 uppercase tracking-widest text-center leading-tight mb-1">Price / Garment</span>
                                                 <span className="text-base md:text-lg font-black text-slate-700">{formatCurrency(item.lineTotalPerPiece)}</span>
                                             </div>
                                             
-                                            {/* 2. Profit Per Garment */}
                                             <div className={`rounded-lg p-3 flex flex-col justify-center items-center border shadow-sm ${getHealthBg(item.itemMarginPercent).replace('200', '300')}`}>
                                                 <span className={`text-[9px] md:text-[10px] font-bold uppercase tracking-widest text-center leading-tight mb-1 ${getHealthColor(item.itemMarginPercent)}`}>Profit / Garment</span>
                                                 <div className="flex items-baseline gap-1 md:gap-1.5">
@@ -1201,7 +1174,6 @@
                                                 </div>
                                             </div>
                                             
-                                            {/* 3. Total Style Revenue */}
                                             <div className="bg-indigo-50 border border-indigo-300 rounded-lg p-3 flex flex-col justify-center items-center relative overflow-hidden shadow-sm">
                                                 <div className="absolute -right-4 -top-4 opacity-10 text-indigo-600"><Icon name="shirt" size={60} /></div>
                                                 <span className="text-[9px] md:text-[10px] font-bold text-indigo-600 uppercase tracking-widest text-center relative z-10 leading-tight mb-1">Total Style Rev</span>
@@ -1210,7 +1182,6 @@
                                                 </div>
                                             </div>
 
-                                            {/* 4. NEW: Total Style Profit */}
                                             <div className={`rounded-lg p-3 flex flex-col justify-center items-center border shadow-sm relative overflow-hidden ${getHealthBg(item.itemMarginPercent).replace('200', '300')}`}>
                                                  <div className={`absolute -right-2 -bottom-2 opacity-10 ${getHealthColor(item.itemMarginPercent)}`}><Icon name="wallet" size={55} /></div>
                                                 <span className={`text-[9px] md:text-[10px] font-bold uppercase tracking-widest text-center relative z-10 leading-tight mb-1 ${getHealthColor(item.itemMarginPercent)}`}>Total Style Profit</span>
@@ -1223,7 +1194,6 @@
 
                                         </div>
                                     </div>
-                                    {/* --- END GARMENT SUMMARY FOOTER --- */}
 
                                 </div>
                             </div>
@@ -1299,7 +1269,6 @@
                                     {calc.items.map((item, idx) => {
                                         const sizeStr = getSizeString(item);
                                         
-                                        // Calculate true internal costs for the breakdown
                                         const decoMatCost = item.processedLocations.reduce((sum, loc) => sum + (loc.materialCost || 0), 0);
                                         const totalMatCost = item.landedCost + decoMatCost;
                                         const trueProfitEa = item.lineTotalPerPiece - totalMatCost;
@@ -1307,7 +1276,6 @@
                                         return (
                                         <div key={item.id} className="bg-slate-800 border border-slate-700 rounded-xl p-4 shadow-sm">
                                             
-                                            {/* Header: Item Name & Total Line Value */}
                                             <div className="flex flex-col sm:flex-row sm:justify-between items-start mb-4 border-b border-slate-700 pb-3 gap-2">
                                                 <div>
                                                     <h4 className="font-bold text-white text-sm md:text-base">{idx + 1}. {item.name || 'Unnamed Item'} {item.color ? `(${item.color})` : ''} (Qty: {item.calculatedQty})</h4>
@@ -1319,10 +1287,8 @@
                                                 </div>
                                             </div>
 
-                                            {/* The Math Story: Revenue vs Cost */}
                                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                                 
-                                                {/* Revenue Side (What Client Pays) */}
                                                 <div className="space-y-2">
                                                     <h5 className="text-[10px] font-black text-slate-500 uppercase tracking-widest border-b border-slate-700 pb-1 mb-2">Revenue /ea (Client Pays)</h5>
                                                     <div className="flex justify-between text-xs text-slate-300"><span>Garment Retail:</span><span className="font-semibold">{formatCurrency(item.clientGarmentPrice)}</span></div>
@@ -1341,7 +1307,6 @@
                                                     </div>
                                                 </div>
 
-                                                {/* Cost Side (Triple One Pays) */}
                                                 <div className="space-y-2">
                                                     <h5 className="text-[10px] font-black text-slate-500 uppercase tracking-widest border-b border-slate-700 pb-1 mb-2">Costs /ea (You Paid)</h5>
                                                     <div className="flex justify-between text-xs text-slate-300"><span>Blank Garment (Landed):</span><span className="font-semibold">{formatCurrency(item.landedCost)}</span></div>
@@ -1354,7 +1319,6 @@
 
                                             </div>
 
-                                            {/* Profit Bar */}
                                             <div className="mt-5 bg-slate-900 border border-slate-700 rounded-lg p-3 flex justify-between items-center">
                                                 <div className="flex flex-col">
                                                     <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Item Profit /ea</span>
@@ -1370,7 +1334,6 @@
                                         </div>
                                     )})}
 
-                                    {/* Setup / Art Fee Line Item */}
                                     <div className="bg-slate-800 border border-slate-700 rounded-xl p-4 shadow-sm flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
                                         <div>
                                             <h4 className="font-bold text-white text-sm md:text-base">Setup / Art Prep</h4>
@@ -1384,7 +1347,6 @@
                                         </div>
                                     </div>
 
-                                    {/* Digitizing Line Item */}
                                     <div className="bg-slate-800 border border-slate-700 rounded-xl p-4 shadow-sm flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
                                         <div>
                                             <h4 className="font-bold text-white text-sm md:text-base">Digitizing / File Conversion</h4>
@@ -1398,7 +1360,6 @@
                                         </div>
                                     </div>
 
-                                    {/* Rush Fee Line Item */}
                                     {(orderData.rushFee > 0 || orderData.rushFeeWaived) && (
                                         <div className="bg-slate-800 border border-slate-700 rounded-xl p-4 shadow-sm flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
                                             <div>
@@ -1427,7 +1388,6 @@
                                 </div>
                                 
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                                    {/* Deductions (Hits to Profit) */}
                                     <div className="bg-slate-800 p-3 rounded-xl border border-slate-700 space-y-2 text-xs md:text-sm">
                                         <h4 className="text-[10px] font-black text-rose-400 uppercase tracking-widest">Operating Deductions</h4>
                                         <div className="flex justify-between"><span className="text-slate-300">Consumables ({shopSettings.fundConsumables}%):</span><span className="font-bold text-rose-400">-{formatCurrency(calc.allocConsumables)}</span></div>
@@ -1441,7 +1401,6 @@
                                         )}
                                     </div>
 
-                                    {/* Savings (Part of Profit) */}
                                     <div className="bg-indigo-900/30 p-3 rounded-xl border border-indigo-800/50 space-y-2 text-xs md:text-sm">
                                         <h4 className="text-[10px] font-black text-indigo-400 uppercase tracking-widest">Retained Savings Allocations</h4>
                                         <div className="flex justify-between"><span className="text-indigo-200">Growth/Machine ({shopSettings.fundGrowth}%):</span><span className="font-bold text-indigo-400">{formatCurrency(calc.allocGrowth)}</span></div>
@@ -1644,175 +1603,174 @@
                     )}
                 </div>
             );
-                // --- EMAIL HANDLER ---
-                            const handleSendEmail = async (order) => {
-                                if (!emailConfig.url) return alert("Please set your Email Web App URL in Settings first.");
-                                
-                                const savedEmail = order.fullData.orderData.customerEmail || '';
-                                const email = prompt(`Enter email address for ${order.customer}:`, savedEmail);
-                                if (!email) return;
 
-                                // Build a clean HTML table of the items for the email body (matching PDF)
-                                const { calc } = order.fullData;
-                                        const oData = order.fullData.orderData;
-                                        const itemsHtml = `
-                                            ${oData.mockupImage ? `
-                                            <div style="margin-bottom: 20px;">
-                                                <h3 style="font-family: sans-serif; font-size: 14px; color: #64748b; text-transform: uppercase;">Design Mockup</h3>
-                                                <img src="${oData.mockupImage}" alt="Design Mockup" style="max-height: 250px; border-radius: 8px; border: 1px solid #e2e8f0; padding: 5px; background-color: #f8fafc;" />
-                                            </div>
-                                            ` : ''}
-                                            <table style="width: 100%; border-collapse: collapse; font-family: sans-serif; color: #334155;">
-                                                <thead>
-                                                    <tr style="border-bottom: 2px solid #cbd5e1; font-size: 12px; color: #64748b; text-transform: uppercase;">
-                                                <th style="text-align: left; padding-bottom: 10px; width: 55%;">Description</th>
-                                                <th style="text-align: center; padding-bottom: 10px; width: 15%;">Qty</th>
-                                                <th style="text-align: right; padding-bottom: 10px; width: 15%;">Price</th>
-                                                <th style="text-align: right; padding-bottom: 10px; width: 15%;">Total</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            ${calc.items.map(item => {
-                                                const sizeStr = getSizeString(item);
-                                                const decos = item.locations.filter(l => l.type !== 'none').map(l => {
-                                                    const pLabel = PLACEMENTS.find(p=>p.id===l.placement)?.label || 'Custom';
-                                                    const typeStr = l.type === 'embroidery' ? (l.isPuff ? '3D Puff Emb' : 'Embroidery') : 'DTF Print';
-                                                    return `<div style="font-size: 13px; color: #475569; margin-top: 4px;">&bull; <strong>${typeStr}</strong> - ${pLabel} ${l.desc ? `(${l.desc})` : ''}</div>`;
-                                                }).join('');
+            const handleSendEmail = async (order) => {
+                if (!emailConfig.url) return alert("Please set your Email Web App URL in Settings first.");
+                
+                const savedEmail = order.fullData.orderData.customerEmail || '';
+                const email = prompt(`Enter email address for ${order.customer}:`, savedEmail);
+                if (!email) return;
 
-                                                let rowHtml = `
-                                                    <tr style="border-bottom: 1px solid #f1f5f9;">
-                                                        <td style="padding: 15px 0; vertical-align: top;">
-                                                            <div style="font-weight: bold; font-size: 16px; color: #0f172a; margin-bottom: 4px;">${item.name} ${item.color ? `- ${item.color}` : ''}</div>
-                                                            ${sizeStr ? `<div style="font-size: 12px; color: #475569; margin-bottom: 8px;">Sizes: ${sizeStr}</div>` : ''}
-                                                            ${decos}
-                                                        </td>
-                                                        <td style="padding: 15px 0; text-align: center; vertical-align: top; font-weight: bold;">${item.calculatedQty}</td>
-                                                        <td style="padding: 15px 0; text-align: right; vertical-align: top;">${formatCurrency(item.undiscountedLineTotalPerPiece)}</td>
-                                                        <td style="padding: 15px 0; text-align: right; vertical-align: top; font-weight: bold; color: #0f172a;">${formatCurrency(item.undiscountedLineTotal)}</td>
-                                                    </tr>
-                                                `;
+                const { calc } = order.fullData;
+                const oData = order.fullData.orderData;
+                const itemsHtml = `
+                    ${oData.mockupImage ? `
+                    <div style="margin-bottom: 20px;">
+                        <h3 style="font-family: sans-serif; font-size: 14px; color: #64748b; text-transform: uppercase;">Design Mockup</h3>
+                        <img src="${oData.mockupImage}" alt="Design Mockup" style="max-height: 250px; border-radius: 8px; border: 1px solid #e2e8f0; padding: 5px; background-color: #f8fafc;" />
+                    </div>
+                    ` : ''}
+                    <table style="width: 100%; border-collapse: collapse; font-family: sans-serif; color: #334155;">
+                        <thead>
+                            <tr style="border-bottom: 2px solid #cbd5e1; font-size: 12px; color: #64748b; text-transform: uppercase;">
+                                <th style="text-align: left; padding-bottom: 10px; width: 55%;">Description</th>
+                                <th style="text-align: center; padding-bottom: 10px; width: 15%;">Qty</th>
+                                <th style="text-align: right; padding-bottom: 10px; width: 15%;">Price</th>
+                                <th style="text-align: right; padding-bottom: 10px; width: 15%;">Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${calc.items.map(item => {
+                                const sizeStr = getSizeString(item);
+                                const decos = item.locations.filter(l => l.type !== 'none').map(l => {
+                                    const pLabel = PLACEMENTS.find(p=>p.id===l.placement)?.label || 'Custom';
+                                    const typeStr = l.type === 'embroidery' ? (l.isPuff ? '3D Puff Emb' : 'Embroidery') : 'DTF Print';
+                                    return `<div style="font-size: 13px; color: #475569; margin-top: 4px;">&bull; <strong>${typeStr}</strong> - ${pLabel} ${l.desc ? `(${l.desc})` : ''}</div>`;
+                                }).join('');
 
-                                                if (item.explicitDecoDiscount > 0) {
-                                                    rowHtml += `
-                                                        <tr style="border-bottom: 1px solid #f1f5f9;">
-                                                            <td style="padding: 5px 0 15px 0; font-size: 13px; color: #059669; font-style: italic;">&#8627; Item Discount Applied (-${formatCurrency(item.explicitDecoDiscount)}/ea)</td>
-                                                            <td></td>
-                                                            <td></td>
-                                                            <td style="padding: 5px 0 15px 0; text-align: right; font-weight: bold; color: #059669;">-${formatCurrency(item.decoDiscountTotal)}</td>
-                                                        </tr>
-                                                    `;
-                                                }
-                                                return rowHtml;
-                                            }).join('')}
-
-                                            <tr style="border-bottom: 1px solid #f1f5f9;">
-                                                <td style="padding: 15px 0 5px 0; vertical-align: top;">
-                                                    <div style="font-weight: bold; font-size: 15px; color: #0f172a; margin-bottom: 2px;">Setup / Art Prep</div>
-                                                    ${(calc.setup === 0 && oData.setupFeeReason && oData.setupFeeReason !== 'none') ? `<div style="font-size: 11px; color: #059669; font-weight: bold; text-transform: uppercase;">${oData.setupFeeReason}</div>` : ''}
-                                                </td>
-                                                <td style="padding: 15px 0 5px 0; text-align: center; vertical-align: top; font-weight: bold;">1</td>
-                                                <td style="padding: 15px 0 5px 0; text-align: right; vertical-align: top;">${formatCurrency(calc.setup)}</td>
-                                                <td style="padding: 15px 0 5px 0; text-align: right; vertical-align: top; font-weight: bold; color: ${(calc.setup === 0 && oData.setupFeeReason && oData.setupFeeReason !== 'none') ? '#059669' : '#0f172a'};">
-                                                    ${(calc.setup === 0 && oData.setupFeeReason && oData.setupFeeReason !== 'none') ? 'WAIVED' : formatCurrency(calc.setup)}
-                                                </td>
-                                            </tr>
-
-                                            <tr style="border-bottom: 1px solid #f1f5f9;">
-                                                <td style="padding: 10px 0 15px 0; vertical-align: top;">
-                                                    <div style="font-weight: bold; font-size: 15px; color: #0f172a; margin-bottom: 2px;">Digitizing / File Conversion</div>
-                                                    ${(calc.digitizing === 0 && oData.digitizingFeeReason && oData.digitizingFeeReason !== 'none') ? `<div style="font-size: 11px; color: #059669; font-weight: bold; text-transform: uppercase;">${oData.digitizingFeeReason}</div>` : ''}
-                                                </td>
-                                                <td style="padding: 10px 0 15px 0; text-align: center; vertical-align: top; font-weight: bold;">1</td>
-                                                <td style="padding: 10px 0 15px 0; text-align: right; vertical-align: top;">${formatCurrency(calc.digitizing)}</td>
-                                                <td style="padding: 10px 0 15px 0; text-align: right; vertical-align: top; font-weight: bold; color: ${(calc.digitizing === 0 && oData.digitizingFeeReason && oData.digitizingFeeReason !== 'none') ? '#059669' : '#0f172a'};">
-                                                    ${(calc.digitizing === 0 && oData.digitizingFeeReason && oData.digitizingFeeReason !== 'none') ? 'WAIVED' : formatCurrency(calc.digitizing)}
-                                                </td>
-                                            </tr>
-
-                                            ${(parseFloat(oData.rushFee) > 0 || oData.rushFeeWaived) ? `
-                                            <tr style="background-color: ${oData.rushFeeWaived ? '#ecfdf5' : '#fff1f2'};">
-                                                <td style="padding: 15px 10px; vertical-align: top; border-radius: 8px 0 0 8px;">
-                                                    <div style="font-weight: 800; font-size: 15px; color: ${oData.rushFeeWaived ? '#064e3b' : '#be123c'}; text-transform: uppercase; margin-bottom: 2px;">Rush Order Surcharge</div>
-                                                    <div style="font-size: 11px; font-weight: bold; color: ${oData.rushFeeWaived ? '#059669' : '#e11d48'};">
-                                                        ${oData.rushFeeWaived ? 'Fee Waived (Courtesy Discount)' : 'Applies to orders required in < 10 days.'}
-                                                    </div>
-                                                </td>
-                                                <td style="padding: 15px 0; text-align: center; vertical-align: top; font-weight: bold; color: ${oData.rushFeeWaived ? '#059669' : '#be123c'};">1</td>
-                                                <td style="padding: 15px 0; text-align: right; vertical-align: top; font-weight: bold; color: ${oData.rushFeeWaived ? '#059669' : '#be123c'};">
-                                                    ${oData.rushFeeWaived ? `<span style="text-decoration: line-through; opacity: 0.7;">${formatCurrency(parseFloat(oData.rushFee))}</span>` : formatCurrency(calc.rush)}
-                                                </td>
-                                                <td style="padding: 15px 10px 15px 0; text-align: right; vertical-align: top; font-weight: 900; color: ${oData.rushFeeWaived ? '#059669' : '#be123c'}; border-radius: 0 8px 8px 0;">
-                                                    ${oData.rushFeeWaived ? 'WAIVED' : formatCurrency(calc.rush)}
-                                                </td>
-                                            </tr>
-                                            ` : ''}
-
-                                            ${calc.discount > 0 ? `
-                                            <tr style="border-bottom: 1px solid #f1f5f9;">
-                                                <td style="padding: 15px 0; vertical-align: top;">
-                                                    <div style="font-weight: bold; font-size: 15px; color: #059669;">Order Discount</div>
-                                                </td>
-                                                <td style="padding: 15px 0; text-align: center; vertical-align: top; font-weight: bold; color: #059669;">1</td>
-                                                <td style="padding: 15px 0; text-align: right; vertical-align: top; font-weight: bold; color: #059669;">-${formatCurrency(calc.discount)}</td>
-                                                <td style="padding: 15px 0; text-align: right; vertical-align: top; font-weight: bold; color: #059669;">-${formatCurrency(calc.discount)}</td>
-                                            </tr>
-                                            ` : ''}
-                                        </tbody>
-                                    </table>
-
-                                    <table style="width: 100%; border-collapse: collapse; font-family: sans-serif; margin-top: 30px;">
-                                        <tr>
-                                            <td style="width: 50%;"></td>
-                                            <td style="width: 50%;">
-                                                <table style="width: 100%; border-collapse: collapse; color: #475569;">
-                                                    <tr>
-                                                        <td style="padding-bottom: 8px; font-size: 15px; text-align: left;">Subtotal</td>
-                                                        <td style="padding-bottom: 8px; font-size: 15px; text-align: right;">${formatCurrency(calc.discountedSubtotal)}</td>
-                                                    </tr>
-                                                    <tr>
-                                                        <td style="padding-bottom: 15px; font-size: 15px; text-align: left;">Tax (${oData.taxRate}%)</td>
-                                                        <td style="padding-bottom: 15px; font-size: 15px; text-align: right;">${formatCurrency(calc.tax)}</td>
-                                                    </tr>
-                                                    <tr>
-                                                        <td style="padding-top: 15px; padding-bottom: 15px; border-top: 3px solid #0f172a; font-weight: 900; text-transform: uppercase; text-align: left; color: #0f172a; letter-spacing: 1px;">Total</td>
-                                                        <td style="padding-top: 15px; padding-bottom: 15px; border-top: 3px solid #0f172a; font-size: 26px; font-weight: 900; color: #4338ca; text-align: right;">${formatCurrency(order.total)}</td>
-                                                    </tr>
-                                                    <tr>
-                                                        <td colspan="2" style="padding-top: 10px;">
-                                                            <div style="background-color: #ecfdf5; border: 1px solid #a7f3d0; padding: 15px; border-radius: 12px; text-align: center;">
-                                                                <span style="font-weight: 900; text-transform: uppercase; color: #064e3b; font-size: 12px; display: block; margin-bottom: 5px; letter-spacing: 1px;">Deposit Required</span>
-                                                                <span style="font-size: 24px; font-weight: 900; color: #059669;">${formatCurrency(order.total / 2)}</span>
-                                                            </div>
-                                                        </td>
-                                                    </tr>
-                                                </table>
-                                            </td>
-                                        </tr>
-                                    </table>
+                                let rowHtml = `
+                                    <tr style="border-bottom: 1px solid #f1f5f9;">
+                                        <td style="padding: 15px 0; vertical-align: top;">
+                                            <div style="font-weight: bold; font-size: 16px; color: #0f172a; margin-bottom: 4px;">${item.name} ${item.color ? `- ${item.color}` : ''}</div>
+                                            ${sizeStr ? `<div style="font-size: 12px; color: #475569; margin-bottom: 8px;">Sizes: ${sizeStr}</div>` : ''}
+                                            ${decos}
+                                        </td>
+                                        <td style="padding: 15px 0; text-align: center; vertical-align: top; font-weight: bold;">${item.calculatedQty}</td>
+                                        <td style="padding: 15px 0; text-align: right; vertical-align: top;">${formatCurrency(item.undiscountedLineTotalPerPiece)}</td>
+                                        <td style="padding: 15px 0; text-align: right; vertical-align: top; font-weight: bold; color: #0f172a;">${formatCurrency(item.undiscountedLineTotal)}</td>
+                                    </tr>
                                 `;
 
-                                const payload = {
-                                    action: 'sendQuote',
-                                    clientEmail: email,
-                                    customerName: order.customer,
-                                    orderId: order.id,
-                                    total: formatCurrency(order.total),
-                                    itemsHtml: itemsHtml
-                                };
-
-                                try {
-                                    await fetch(emailConfig.url, {
-                                        method: 'POST',
-                                        headers: { 'Content-Type': 'text/plain' },
-                                        body: JSON.stringify(payload)
-                                    });
-                                    alert("Quote sent to customer successfully!");
-                                } catch (e) {
-                                    alert("Error sending email. Check your URL.");
+                                if (item.explicitDecoDiscount > 0) {
+                                    rowHtml += `
+                                        <tr style="border-bottom: 1px solid #f1f5f9;">
+                                            <td style="padding: 5px 0 15px 0; font-size: 13px; color: #059669; font-style: italic;">&#8627; Item Discount Applied (-${formatCurrency(item.explicitDecoDiscount)}/ea)</td>
+                                            <td></td>
+                                            <td></td>
+                                            <td style="padding: 5px 0 15px 0; text-align: right; font-weight: bold; color: #059669;">-${formatCurrency(item.decoDiscountTotal)}</td>
+                                        </tr>
+                                    `;
                                 }
-                            };
-            // --- THE PIPELINE MODAL ---
+                                return rowHtml;
+                            }).join('')}
+
+                            <tr style="border-bottom: 1px solid #f1f5f9;">
+                                <td style="padding: 15px 0 5px 0; vertical-align: top;">
+                                    <div style="font-weight: bold; font-size: 15px; color: #0f172a; margin-bottom: 2px;">Setup / Art Prep</div>
+                                    ${(calc.setup === 0 && oData.setupFeeReason && oData.setupFeeReason !== 'none') ? `<div style="font-size: 11px; color: #059669; font-weight: bold; text-transform: uppercase;">${oData.setupFeeReason}</div>` : ''}
+                                </td>
+                                <td style="padding: 15px 0 5px 0; text-align: center; vertical-align: top; font-weight: bold;">1</td>
+                                <td style="padding: 15px 0 5px 0; text-align: right; vertical-align: top;">${formatCurrency(calc.setup)}</td>
+                                <td style="padding: 15px 0 5px 0; text-align: right; vertical-align: top; font-weight: bold; color: ${(calc.setup === 0 && oData.setupFeeReason && oData.setupFeeReason !== 'none') ? '#059669' : '#0f172a'};">
+                                    ${(calc.setup === 0 && oData.setupFeeReason && oData.setupFeeReason !== 'none') ? 'WAIVED' : formatCurrency(calc.setup)}
+                                </td>
+                            </tr>
+
+                            <tr style="border-bottom: 1px solid #f1f5f9;">
+                                <td style="padding: 10px 0 15px 0; vertical-align: top;">
+                                    <div style="font-weight: bold; font-size: 15px; color: #0f172a; margin-bottom: 2px;">Digitizing / File Conversion</div>
+                                    ${(calc.digitizing === 0 && oData.digitizingFeeReason && oData.digitizingFeeReason !== 'none') ? `<div style="font-size: 11px; color: #059669; font-weight: bold; text-transform: uppercase;">${oData.digitizingFeeReason}</div>` : ''}
+                                </td>
+                                <td style="padding: 10px 0 15px 0; text-align: center; vertical-align: top; font-weight: bold;">1</td>
+                                <td style="padding: 10px 0 15px 0; text-align: right; vertical-align: top;">${formatCurrency(calc.digitizing)}</td>
+                                <td style="padding: 10px 0 15px 0; text-align: right; vertical-align: top; font-weight: bold; color: ${(calc.digitizing === 0 && oData.digitizingFeeReason && oData.digitizingFeeReason !== 'none') ? '#059669' : '#0f172a'};">
+                                    ${(calc.digitizing === 0 && oData.digitizingFeeReason && oData.digitizingFeeReason !== 'none') ? 'WAIVED' : formatCurrency(calc.digitizing)}
+                                </td>
+                            </tr>
+
+                            ${(parseFloat(oData.rushFee) > 0 || oData.rushFeeWaived) ? `
+                            <tr style="background-color: ${oData.rushFeeWaived ? '#ecfdf5' : '#fff1f2'};">
+                                <td style="padding: 15px 10px; vertical-align: top; border-radius: 8px 0 0 8px;">
+                                    <div style="font-weight: 800; font-size: 15px; color: ${oData.rushFeeWaived ? '#064e3b' : '#be123c'}; text-transform: uppercase; margin-bottom: 2px;">Rush Order Surcharge</div>
+                                    <div style="font-size: 11px; font-weight: bold; color: ${oData.rushFeeWaived ? '#059669' : '#e11d48'};">
+                                        ${oData.rushFeeWaived ? 'Fee Waived (Courtesy Discount)' : 'Applies to orders required in < 10 days.'}
+                                    </div>
+                                </td>
+                                <td style="padding: 15px 0; text-align: center; vertical-align: top; font-weight: bold; color: ${oData.rushFeeWaived ? '#059669' : '#be123c'};">1</td>
+                                <td style="padding: 15px 0; text-align: right; vertical-align: top; font-weight: bold; color: ${oData.rushFeeWaived ? '#059669' : '#be123c'};">
+                                    ${oData.rushFeeWaived ? `<span style="text-decoration: line-through; opacity: 0.7;">${formatCurrency(parseFloat(oData.rushFee))}</span>` : formatCurrency(calc.rush)}
+                                </td>
+                                <td style="padding: 15px 10px 15px 0; text-align: right; vertical-align: top; font-weight: 900; color: ${oData.rushFeeWaived ? '#059669' : '#be123c'}; border-radius: 0 8px 8px 0;">
+                                    ${oData.rushFeeWaived ? 'WAIVED' : formatCurrency(calc.rush)}
+                                </td>
+                            </tr>
+                            ` : ''}
+
+                            ${calc.discount > 0 ? `
+                            <tr style="border-bottom: 1px solid #f1f5f9;">
+                                <td style="padding: 15px 0; vertical-align: top;">
+                                    <div style="font-weight: bold; font-size: 15px; color: #059669;">Order Discount</div>
+                                </td>
+                                <td style="padding: 15px 0; text-align: center; vertical-align: top; font-weight: bold; color: #059669;">1</td>
+                                <td style="padding: 15px 0; text-align: right; vertical-align: top; font-weight: bold; color: #059669;">-${formatCurrency(calc.discount)}</td>
+                                <td style="padding: 15px 0; text-align: right; vertical-align: top; font-weight: bold; color: #059669;">-${formatCurrency(calc.discount)}</td>
+                            </tr>
+                            ` : ''}
+                        </tbody>
+                    </table>
+
+                    <table style="width: 100%; border-collapse: collapse; font-family: sans-serif; margin-top: 30px;">
+                        <tr>
+                            <td style="width: 50%;"></td>
+                            <td style="width: 50%;">
+                                <table style="width: 100%; border-collapse: collapse; color: #475569;">
+                                    <tr>
+                                        <td style="padding-bottom: 8px; font-size: 15px; text-align: left;">Subtotal</td>
+                                        <td style="padding-bottom: 8px; font-size: 15px; text-align: right;">${formatCurrency(calc.discountedSubtotal)}</td>
+                                    </tr>
+                                    <tr>
+                                        <td style="padding-bottom: 15px; font-size: 15px; text-align: left;">Tax (${oData.taxRate}%)</td>
+                                        <td style="padding-bottom: 15px; font-size: 15px; text-align: right;">${formatCurrency(calc.tax)}</td>
+                                    </tr>
+                                    <tr>
+                                        <td style="padding-top: 15px; padding-bottom: 15px; border-top: 3px solid #0f172a; font-weight: 900; text-transform: uppercase; text-align: left; color: #0f172a; letter-spacing: 1px;">Total</td>
+                                        <td style="padding-top: 15px; padding-bottom: 15px; border-top: 3px solid #0f172a; font-size: 26px; font-weight: 900; color: #4338ca; text-align: right;">${formatCurrency(order.total)}</td>
+                                    </tr>
+                                    <tr>
+                                        <td colspan="2" style="padding-top: 10px;">
+                                            <div style="background-color: #ecfdf5; border: 1px solid #a7f3d0; padding: 15px; border-radius: 12px; text-align: center;">
+                                                <span style="font-weight: 900; text-transform: uppercase; color: #064e3b; font-size: 12px; display: block; margin-bottom: 5px; letter-spacing: 1px;">Deposit Required</span>
+                                                <span style="font-size: 24px; font-weight: 900; color: #059669;">${formatCurrency(order.total / 2)}</span>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </td>
+                        </tr>
+                    </table>
+                `;
+
+                const payload = {
+                    action: 'sendQuote',
+                    clientEmail: email,
+                    customerName: order.customer,
+                    orderId: order.id,
+                    total: formatCurrency(order.total),
+                    itemsHtml: itemsHtml
+                };
+
+                try {
+                    await fetch(emailConfig.url, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'text/plain' },
+                        body: JSON.stringify(payload)
+                    });
+                    alert("Quote sent to customer successfully!");
+                } catch (e) {
+                    alert("Error sending email. Check your URL.");
+                }
+            };
+
             const renderModal = () => {
                 if (!selectedOrder) return null;
                 const { fullData, customer, id, stage, balance, total } = selectedOrder;
@@ -1838,7 +1796,6 @@
                                         </select>
                                     )}
                                 </div>
-                                {/* UPDATED: Clears partial payment input if they hit X */}
                                 <button onClick={() => { setSelectedOrder(null); setPartialPayment(''); }} className="bg-white p-2 rounded-full border border-slate-200 text-slate-400 hover:text-slate-800 active:scale-95"><Icon name="x" size={20} /></button>
                             </div>
 
@@ -1935,7 +1892,7 @@
                                 </div>
                             </div>
 
-                           
+                            
                             {/* ACTION BUTTONS AREA */}
                             <div className="p-5 border-t border-slate-200 bg-slate-50 space-y-3">
                                 {stage !== 'archived' && (
@@ -1950,14 +1907,12 @@
                                     {(balance === 0 || stage === 'archived') && <button onClick={() => setPdfConfig({ order: selectedOrder, type: 'receipt' })} className="flex-1 bg-white border border-slate-300 text-slate-700 py-2.5 rounded-xl text-xs font-bold hover:bg-slate-100 transition-colors flex justify-center items-center gap-1.5"><Icon name="fileCheck" size={14} /> Receipt PDF</button>}
                                 </div>
 
-                                {/* NEW: Email Proposal Button */}
                                 {stage === 'quote' && (
                                     <button onClick={() => handleSendEmail(selectedOrder)} className="w-full bg-purple-600 text-white py-3 rounded-xl text-sm font-bold shadow-md hover:bg-purple-700 active:scale-95 transition-all flex items-center justify-center gap-2">
                                         <Icon name="mail" size={16}/> Email Proposal to Customer
                                     </button>
                                 )}
 
-                                {/* NEW: Partial Payment UI Bar */}
                                 {stage !== 'quote' && stage !== 'archived' && balance > 0 && (
                                     <div className="bg-emerald-50 p-3 rounded-xl border border-emerald-100 flex items-center gap-3 mt-2 mb-2">
                                         <span className="text-[10px] font-black text-emerald-800 uppercase tracking-widest flex-1">Log Partial Pay:</span>
@@ -2013,9 +1968,8 @@
                         </div>
                     </div>
                 );
-            }; // <--- ADD THIS CLOSING BRACE RIGHT HERE
+            };
 
-            // --- HIDDEN PDF VIEWS (MATCHED TO QUOTER 2 STYLE) ---
             const renderHiddenPDF = () => {
                 if(!pdfConfig) return null;
                 const { order, type } = pdfConfig;
@@ -2246,54 +2200,56 @@
             };
 
             return (
-                <div className="min-h-screen pb-content flex flex-col relative z-10">
-                    <div className="bg-white border-b border-slate-200 shadow-sm sticky top-0 z-30 pt-safe no-print">
-                        <div className="max-w-4xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4 p-4">
-                            <div className="flex justify-between items-center w-full md:w-auto">
-                                <h1 className="text-2xl font-black flex items-center gap-2 tracking-tight text-slate-800"><Icon name="layers" size={28} className="text-indigo-600"/> Triple One OS</h1>
-                                {cloudConfig.enabled && (
-                                    <button onClick={() => fetchCloudData()} disabled={isSyncing} className={`md:hidden p-2 rounded-lg text-slate-500 hover:bg-slate-100 ${isSyncing ? 'opacity-50' : ''}`}>
-                                        <Icon name="refresh" size={20} className={isSyncing ? "animate-spin text-blue-500" : ""} />
-                                    </button>
-                                )}
-                            </div>
-                            
-                            <div className="flex flex-col md:flex-row items-center gap-3 w-full md:w-auto">
-                                {cloudConfig.enabled && (
-                                    <button onClick={() => fetchCloudData()} disabled={isSyncing} className={`hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold text-slate-500 hover:bg-slate-100 transition-colors ${isSyncing ? 'opacity-50' : ''}`}>
-                                        <Icon name="refresh" size={14} className={isSyncing ? "animate-spin text-blue-500" : ""} /> {isSyncing ? 'Syncing...' : 'Refresh'}
-                                    </button>
-                                )}
-                                <div className="flex bg-slate-100 p-1.5 rounded-xl border border-slate-200 w-full md:w-auto overflow-x-auto hide-scrollbar">
-                                    <button onClick={() => setAppModule('quoter')} className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-5 py-2 rounded-lg text-sm font-bold transition-all ${appModule === 'quoter' ? 'bg-white text-indigo-700 shadow-sm' : 'text-slate-500'}`}><Icon name="calculator" size={18} /> Quoter</button>
-                                    <button onClick={() => setAppModule('pipeline')} className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-5 py-2 rounded-lg text-sm font-bold transition-all ${appModule === 'pipeline' ? 'bg-white text-emerald-700 shadow-sm' : 'text-slate-500'}`}><Icon name="layers" size={18} /> Pipeline</button>
-                                    <button onClick={() => setAppModule('bookkeeping')} className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-5 py-2 rounded-lg text-sm font-bold transition-all ${appModule === 'bookkeeping' ? 'bg-white text-indigo-700 shadow-sm' : 'text-slate-500'}`}><Icon name="wallet" size={18} /> Ledger</button>
-                                    <button onClick={() => setAppModule('settings')} className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-5 py-2 rounded-lg text-sm font-bold transition-all ${appModule === 'settings' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500'}`}><Icon name="settings" size={18} /> Settings</button>
+                <ErrorBoundary>
+                    <div className="min-h-screen pb-content flex flex-col relative z-10">
+                        <div className="bg-white border-b border-slate-200 shadow-sm sticky top-0 z-30 pt-safe no-print">
+                            <div className="max-w-4xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4 p-4">
+                                <div className="flex justify-between items-center w-full md:w-auto">
+                                    <h1 className="text-2xl font-black flex items-center gap-2 tracking-tight text-slate-800"><Icon name="layers" size={28} className="text-indigo-600"/> Triple One OS</h1>
+                                    {cloudConfig.enabled && (
+                                        <button onClick={() => fetchCloudData()} disabled={isSyncing} className={`md:hidden p-2 rounded-lg text-slate-500 hover:bg-slate-100 ${isSyncing ? 'opacity-50' : ''}`}>
+                                            <Icon name="refresh" size={20} className={isSyncing ? "animate-spin text-blue-500" : ""} />
+                                        </button>
+                                    )}
+                                </div>
+                                
+                                <div className="flex flex-col md:flex-row items-center gap-3 w-full md:w-auto">
+                                    {cloudConfig.enabled && (
+                                        <button onClick={() => fetchCloudData()} disabled={isSyncing} className={`hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold text-slate-500 hover:bg-slate-100 transition-colors ${isSyncing ? 'opacity-50' : ''}`}>
+                                            <Icon name="refresh" size={14} className={isSyncing ? "animate-spin text-blue-500" : ""} /> {isSyncing ? 'Syncing...' : 'Refresh'}
+                                        </button>
+                                    )}
+                                    <div className="flex bg-slate-100 p-1.5 rounded-xl border border-slate-200 w-full md:w-auto overflow-x-auto hide-scrollbar">
+                                        <button onClick={() => setAppModule('quoter')} className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-5 py-2 rounded-lg text-sm font-bold transition-all ${appModule === 'quoter' ? 'bg-white text-indigo-700 shadow-sm' : 'text-slate-500'}`}><Icon name="calculator" size={18} /> Quoter</button>
+                                        <button onClick={() => setAppModule('pipeline')} className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-5 py-2 rounded-lg text-sm font-bold transition-all ${appModule === 'pipeline' ? 'bg-white text-emerald-700 shadow-sm' : 'text-slate-500'}`}><Icon name="layers" size={18} /> Pipeline</button>
+                                        <button onClick={() => setAppModule('bookkeeping')} className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-5 py-2 rounded-lg text-sm font-bold transition-all ${appModule === 'bookkeeping' ? 'bg-white text-indigo-700 shadow-sm' : 'text-slate-500'}`}><Icon name="wallet" size={18} /> Ledger</button>
+                                        <button onClick={() => setAppModule('settings')} className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-5 py-2 rounded-lg text-sm font-bold transition-all ${appModule === 'settings' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500'}`}><Icon name="settings" size={18} /> Settings</button>
+                                    </div>
                                 </div>
                             </div>
+
+                            {appModule === 'pipeline' && (
+                                <div className="bg-slate-50 border-t border-slate-200 flex justify-center p-2">
+                                    <div className="flex bg-slate-200/50 p-1 rounded-lg">
+                                        <button onClick={() => setPipelineView('active')} className={`px-6 py-1.5 text-xs font-bold rounded-md transition-all ${pipelineView === 'active' ? 'bg-white shadow-sm text-slate-800' : 'text-slate-500'}`}>Active Jobs</button>
+                                        <button onClick={() => setPipelineView('archive')} className={`px-6 py-1.5 text-xs font-bold rounded-md transition-all flex items-center gap-1 ${pipelineView === 'archive' ? 'bg-white shadow-sm text-slate-800' : 'text-slate-500'}`}><Icon name="archive" size={14}/> Completed Archives</button>
+                                    </div>
+                                </div>
+                            )}
                         </div>
 
-                        {appModule === 'pipeline' && (
-                            <div className="bg-slate-50 border-t border-slate-200 flex justify-center p-2">
-                                <div className="flex bg-slate-200/50 p-1 rounded-lg">
-                                    <button onClick={() => setPipelineView('active')} className={`px-6 py-1.5 text-xs font-bold rounded-md transition-all ${pipelineView === 'active' ? 'bg-white shadow-sm text-slate-800' : 'text-slate-500'}`}>Active Jobs</button>
-                                    <button onClick={() => setPipelineView('archive')} className={`px-6 py-1.5 text-xs font-bold rounded-md transition-all flex items-center gap-1 ${pipelineView === 'archive' ? 'bg-white shadow-sm text-slate-800' : 'text-slate-500'}`}><Icon name="archive" size={14}/> Completed Archives</button>
-                                </div>
-                            </div>
-                        )}
-                    </div>
+                        <div className="p-4 md:p-6 max-w-4xl w-full mx-auto flex-1 h-full relative z-20">
+                            {appModule === 'quoter' && renderQuoter()}
+                            {appModule === 'pipeline' && pipelineView === 'active' && renderPipelineBoard()}
+                            {appModule === 'pipeline' && pipelineView === 'archive' && renderPipelineArchive()}
+                            {appModule === 'bookkeeping' && renderBookkeeping()}
+                            {appModule === 'settings' && renderSettings()}
+                        </div>
 
-                    <div className="p-4 md:p-6 max-w-4xl w-full mx-auto flex-1 h-full relative z-20">
-                        {appModule === 'quoter' && renderQuoter()}
-                        {appModule === 'pipeline' && pipelineView === 'active' && renderPipelineBoard()}
-                        {appModule === 'pipeline' && pipelineView === 'archive' && renderPipelineArchive()}
-                        {appModule === 'bookkeeping' && renderBookkeeping()}
-                        {appModule === 'settings' && renderSettings()}
+                        {renderModal()}
+                        {renderHiddenPDF()}
                     </div>
-
-                    {renderModal()}
-                    {renderHiddenPDF()}
-                </div>
+                </ErrorBoundary>
             );
         }
 
