@@ -334,7 +334,7 @@
                     const data = await response.json();
 
                     if (data.success) {
-                        updateOrder('mockupImage', data.data.url);
+                        updateOrder('mockupImage', data.data.image.url);
                     } else {
                         alert("Image upload failed. Please check your API key.");
                     }
@@ -1615,10 +1615,12 @@
                 const oData = order.fullData.orderData;
                 const itemsHtml = `
                     ${oData.mockupImage ? `
-                    <div style="margin-bottom: 20px;">
-                        <h3 style="font-family: sans-serif; font-size: 14px; color: #64748b; text-transform: uppercase;">Design Mockup</h3>
-                        <img src="${oData.mockupImage}" alt="Design Mockup" style="max-height: 250px; border-radius: 8px; border: 1px solid #e2e8f0; padding: 5px; background-color: #f8fafc;" />
-                    </div>
+                        <div style="margin: 20px 0; text-align: center;">
+                            <a href="${oData.mockupImage}" target="_blank" 
+                            style="background-color: #4f46e5; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; font-family: sans-serif;">
+                            View Design Mockup
+                            </a>
+                        </div>
                     ` : ''}
                     <table style="width: 100%; border-collapse: collapse; font-family: sans-serif; color: #334155;">
                         <thead>
