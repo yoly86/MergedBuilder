@@ -295,6 +295,10 @@
             const [items, setItems] = useState([defaultItem]);
 
             const [newGarment, setNewGarment] = useState({ name: '', cost: '', shipping: '1.00', margin: '45' });
+            const [optimizerOpen, setOptimizerOpen] = useState({});
+            const [optimizeTargets, setOptimizeTargets] = useState({});
+            const toggleOptimizer = (itemId) => setOptimizerOpen(prev => ({ ...prev, [itemId]: !prev[itemId] }));
+            const setOptimizeTarget = (itemId, value) => setOptimizeTargets(prev => ({ ...prev, [itemId]: value }));
             
             const handleAddQuickFill = () => {
                 if (!newGarment.name) return;
@@ -724,6 +728,38 @@
                 if (margin >= shopSettings.marginYellow) return 'text-amber-500';
                 return 'text-rose-500';
             };
+            const getOptimizerData = (item, targetMargin) => {
+                const target = Math.min(Math.max(parseFloat(targetMargin) || 0, 0), 99.9);
+                const floor = Math.min(Math.max(shopSettings.marginYellow || 0, 0), 99.9);
+                const totalCostPerEa = item.landedCost + item.itemDecoCostPerPiece;
+                const currentPrice = item.lineTotalPerPiece;
+                const currentMargin = item.itemMarginPercent;
+
+                const priceForMargin = (m) => (m < 100 && m >= 0) ? totalCostPerEa / (1 - m / 100) : Infinity;
+
+                // Required blank markup to hit a given all-in price, holding decoration price where it is.
+                // Never suggest a markup that would sell the blank at or below what it cost to buy.
+                const marginNeededForPrice = (price) => {
+                    const requiredGarmentPrice = price - item.itemDecoPerPiece;
+                    if (requiredGarmentPrice <= item.landedCost) return { value: null, reason: 'belowCost' };
+                    const m = (1 - item.landedCost / requiredGarmentPrice) * 100;
+                    if (m >= 99.9) return { value: null, reason: 'tooHigh' };
+                    return { value: m, reason: 'ok' };
+                };
+
+                const targetPrice = priceForMargin(target);
+                const floorPrice = priceForMargin(floor);
+
+                return {
+                    totalCostPerEa, currentPrice, currentMargin, target, floor,
+                    targetPrice, floorPrice,
+                    wiggleRoom: currentPrice - floorPrice,
+                    priceDelta: targetPrice - currentPrice,
+                    requiredMarginForTarget: marginNeededForPrice(targetPrice),
+                    requiredMarginForFloor: marginNeededForPrice(floorPrice)
+                };
+            };
+
             const getHealthBg = (margin) => {
                 if (margin >= shopSettings.marginGreen) return 'bg-emerald-50 border-emerald-200';
                 if (margin >= shopSettings.marginYellow) return 'bg-amber-50 border-amber-200';
@@ -1025,24 +1061,31 @@
                                         <div><label className="block text-[10px] font-bold text-slate-500 mb-1">Margin %</label><input type="number" className="w-full p-2 soft-input rounded-md text-sm text-indigo-700 font-bold" value={item.margin} onChange={e => updateItem(item.id, 'margin', e.target.value)} /></div>
                                         
                                         <div className="bg-indigo-50 border border-indigo-100 rounded-md p-2 flex flex-col justify-center">
-                                            <label className="block text-[9px] font-bold text-indigo-600 mb-1 uppercase text-center leading-none">Garment Sell Price</label>
+                                            <label className="block text-[9px] font-bold text-indigo-600 mb-1 uppercase text-center leading-none">Blank Sell Price</label>
                                             <div className="text-sm font-black text-indigo-700 text-center">
                                                 {formatCurrency(item.clientGarmentPrice)}
                                             </div>
                                         </div>
 
                                         <div className="bg-emerald-50 border border-emerald-100 rounded-md p-2 flex flex-col justify-center">
-                                            <label className="block text-[9px] font-bold text-emerald-600 mb-1 uppercase text-center leading-none">Profit/ea</label>
+                                            <label className="block text-[9px] font-bold text-emerald-600 mb-1 uppercase text-center leading-none">Blank Profit/ea</label>
                                             <div className="text-sm font-black text-emerald-700 text-center">
                                                 {formatCurrency(item.clientGarmentPrice - item.landedCost)}
                                             </div>
                                         </div>
                                     </div>
+                                    <p className="text-[9px] text-slate-400 -mt-2 italic">^ Blank garment only. Decoration is added below.</p>
 
                                     <div>
-                                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Decorations</p>
+                                        <div className="flex items-center justify-between mb-2">
+                                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Decorations</p>
+                                            {item.validPlacementCount > 0 && (
+                                                <span className="text-[10px] font-black text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full">
+                                                    {item.validPlacementCount} placement{item.validPlacementCount !== 1 ? 's' : ''} · +{formatCurrency(item.itemDecoPerPiece)}/ea
+                                                </span>
+                                            )}
+                                        </div>
                                         {item.processedLocations.map((loc, lIdx) => {
-                                            const marginPct = loc.cost > 0 ? ((loc.cost - loc.materialCost) / loc.cost) * 100 : 0;
                                             return (
                                             
                                             <div key={loc.id} className="bg-white border border-slate-200 rounded-lg p-2 md:p-3 mb-2 flex flex-col xl:flex-row gap-2 md:gap-3 items-start xl:items-center relative pr-8">
@@ -1099,8 +1142,8 @@
                                                                 <span className="text-indigo-600 font-black">{formatCurrency(loc.cost)}</span>
                                                             </div>
                                                             <div className="flex flex-col items-end">
-                                                                <span className="text-slate-400 font-bold uppercase">Profit/ea</span>
-                                                                <span className={`font-black ${marginPct >= shopSettings.marginGreen ? 'text-emerald-600' : marginPct >= shopSettings.marginYellow ? 'text-amber-500' : 'text-rose-500'}`}>
+                                                                <span className="text-slate-400 font-bold uppercase">Adds/ea</span>
+                                                                <span className="font-black text-slate-700">
                                                                     {formatCurrency(loc.cost - loc.materialCost)}
                                                                 </span>
                                                             </div>
@@ -1110,47 +1153,57 @@
                                             </div>
                                         )})}
 
-                                        {item.processedLocations.length > 0 && (
-                                            <div className="mt-3 p-3 bg-slate-100 rounded-lg border border-slate-200 flex flex-col md:flex-row justify-between items-center gap-3">
-                                                <div className="flex gap-4 w-full md:w-auto">
-                                                    <div className="flex flex-col">
-                                                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">My Decor Cost/ea</span>
-                                                        <span className="text-sm font-black text-rose-500">{formatCurrency(item.itemDecoCostPerPiece)}</span>
-                                                    </div>
-                                                    <div className="flex flex-col">
-                                                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Decor Sold Price/ea</span>
-                                                        <span className="text-sm font-black text-slate-700">{formatCurrency(item.grossDecoPerPiece)}</span>
-                                                    </div>
-                                                </div>
-                                                
-                                                <div className="flex items-center gap-3 bg-white p-2 rounded-md border border-slate-200 w-full md:w-auto">
-                                                    <div className="flex-1 md:w-32">
-                                                        <label className="block text-[9px] font-bold text-emerald-600 uppercase mb-0.5">Deco Disc/ea</label>
-                                                        <div className="relative">
-                                                            <span className="absolute left-2 top-1.5 text-emerald-600 font-bold text-xs">-$</span>
-                                                            <input type="number" placeholder="0.00" className="w-full pl-6 p-1.5 soft-input border-emerald-100 rounded text-xs text-emerald-700 font-bold focus:ring-emerald-500" value={item.decoDiscount} onChange={e => updateItem(item.id, 'decoDiscount', e.target.value)} />
-                                                        </div>
-                                                    </div>
-                                                    <div className="flex flex-col items-end pl-3 border-l border-slate-200">
-                                                        <span className="text-[10px] font-bold text-indigo-500 uppercase tracking-widest">Net Deco/ea</span>
-                                                        <span className="text-sm font-black text-indigo-600">{formatCurrency(item.itemDecoPerPiece)}</span>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        )}
                                         <button onClick={() => addLocation(item.id)} className="text-[10px] font-bold text-indigo-600 bg-indigo-50 px-3 py-1.5 rounded-md mt-2">+ Add Decor</button>
                                     </div>
                                     
                                     <div className="mt-6 -mx-3 md:-mx-4 -mb-3 md:-mb-4 bg-slate-800 p-4 md:p-5 border-t border-slate-900 rounded-b-xl shadow-inner">
-                                        <div className="grid grid-cols-2 xl:grid-cols-4 gap-3 md:gap-4">
-                                            
-                                            <div className="bg-white border border-slate-300 rounded-lg p-3 flex flex-col justify-center items-center shadow-sm">
-                                                <span className="text-[9px] md:text-[10px] font-bold text-slate-500 uppercase tracking-widest text-center leading-tight mb-1">Price / Garment</span>
-                                                <span className="text-base md:text-lg font-black text-slate-700">{formatCurrency(item.lineTotalPerPiece)}</span>
+                                        <div className="flex items-center justify-between mb-3">
+                                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Style Summary &middot; {item.calculatedQty} pcs</p>
+                                            <button onClick={() => toggleOptimizer(item.id)} className={`text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-md flex items-center gap-1.5 transition-colors ${optimizerOpen[item.id] ? 'bg-indigo-600 text-white' : 'bg-indigo-900/50 text-indigo-300 hover:bg-indigo-900'}`}>
+                                                <Icon name="percent" size={12} /> Optimize
+                                            </button>
+                                        </div>
+
+                                        <div className="bg-slate-900/50 rounded-lg border border-slate-700 overflow-hidden mb-3 text-xs md:text-sm">
+                                            <div className="grid grid-cols-3 text-[9px] md:text-[10px] font-bold text-slate-400 uppercase tracking-widest px-3 py-1.5 border-b border-slate-700">
+                                                <span>Per Garment</span>
+                                                <span className="text-right">My Cost</span>
+                                                <span className="text-right">Customer Price</span>
                                             </div>
-                                            
+                                            <div className="grid grid-cols-3 px-3 py-1.5 text-slate-300">
+                                                <span>Garment</span>
+                                                <span className="text-right font-semibold">{formatCurrency(item.landedCost)}</span>
+                                                <span className="text-right font-semibold text-indigo-300">{formatCurrency(item.clientGarmentPrice)}</span>
+                                            </div>
+                                            {item.processedLocations.filter(loc => loc.type !== 'none').map((loc, dIdx) => (
+                                                <div key={loc.id} className="grid grid-cols-3 px-3 py-1.5 text-slate-300 border-t border-slate-700/50">
+                                                    <span>Decoration {dIdx + 1}</span>
+                                                    <span className="text-right font-semibold">{formatCurrency(loc.materialCost)}</span>
+                                                    <span className="text-right font-semibold text-indigo-300">{formatCurrency(loc.cost)}</span>
+                                                </div>
+                                            ))}
+                                            {item.validPlacementCount > 0 && (
+                                                <div className="grid grid-cols-3 px-3 py-1.5 items-center text-emerald-400 border-t border-slate-700/50">
+                                                    <span>Decoration Discount</span>
+                                                    <span className="text-right">&mdash;</span>
+                                                    <div className="flex justify-end">
+                                                        <div className="relative w-20">
+                                                            <span className="absolute left-1.5 top-1.5 text-emerald-600 font-bold text-[10px]">-$</span>
+                                                            <input type="number" placeholder="0.00" className="w-full pl-4 pr-1 py-1 soft-input rounded text-xs text-emerald-700 font-bold text-right" value={item.decoDiscount} onChange={e => updateItem(item.id, 'decoDiscount', e.target.value)} />
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            )}
+                                            <div className="grid grid-cols-3 px-3 py-2 text-white font-black border-t border-slate-600 bg-slate-900/60">
+                                                <span>Total / ea</span>
+                                                <span className="text-right">{formatCurrency(item.landedCost + item.itemDecoCostPerPiece)}</span>
+                                                <span className="text-right text-indigo-300">{formatCurrency(item.lineTotalPerPiece)}</span>
+                                            </div>
+                                        </div>
+
+                                        <div className="grid grid-cols-2 gap-3 md:gap-4">
                                             <div className={`rounded-lg p-3 flex flex-col justify-center items-center border shadow-sm ${getHealthBg(item.itemMarginPercent).replace('200', '300')}`}>
-                                                <span className={`text-[9px] md:text-[10px] font-bold uppercase tracking-widest text-center leading-tight mb-1 ${getHealthColor(item.itemMarginPercent)}`}>Profit / Garment</span>
+                                                <span className={`text-[9px] md:text-[10px] font-bold uppercase tracking-widest text-center leading-tight mb-1 ${getHealthColor(item.itemMarginPercent)}`}>Profit / ea (All-In)</span>
                                                 <div className="flex items-baseline gap-1 md:gap-1.5">
                                                     <span className={`text-base md:text-lg font-black ${getHealthColor(item.itemMarginPercent)}`}>
                                                         {formatCurrency(item.lineTotalPerPiece - (item.landedCost + item.itemDecoCostPerPiece))}
@@ -1160,25 +1213,82 @@
                                                     </span>
                                                 </div>
                                             </div>
-                                            
-                                            <div className="bg-indigo-50 border border-indigo-300 rounded-lg p-3 flex flex-col justify-center items-center relative overflow-hidden shadow-sm">
-                                                <div className="absolute -right-4 -top-4 opacity-10 text-indigo-600"><Icon name="shirt" size={60} /></div>
-                                                <span className="text-[9px] md:text-[10px] font-bold text-indigo-600 uppercase tracking-widest text-center relative z-10 leading-tight mb-1">Total Style Rev</span>
-                                                <div className="flex items-baseline gap-1 relative z-10">
-                                                    <span className="text-lg md:text-xl font-black text-indigo-700">{formatCurrency(item.lineTotal)}</span>
-                                                </div>
-                                            </div>
 
                                             <div className={`rounded-lg p-3 flex flex-col justify-center items-center border shadow-sm relative overflow-hidden ${getHealthBg(item.itemMarginPercent).replace('200', '300')}`}>
                                                  <div className={`absolute -right-2 -bottom-2 opacity-10 ${getHealthColor(item.itemMarginPercent)}`}><Icon name="wallet" size={55} /></div>
-                                                <span className={`text-[9px] md:text-[10px] font-bold uppercase tracking-widest text-center relative z-10 leading-tight mb-1 ${getHealthColor(item.itemMarginPercent)}`}>Total Style Profit</span>
+                                                <span className={`text-[9px] md:text-[10px] font-bold uppercase tracking-widest text-center relative z-10 leading-tight mb-1 ${getHealthColor(item.itemMarginPercent)}`}>Total Profit (Style)</span>
                                                 <div className="flex items-baseline gap-1 relative z-10">
                                                     <span className={`text-lg md:text-xl font-black ${getHealthColor(item.itemMarginPercent)}`}>
                                                         {formatCurrency((item.lineTotalPerPiece - (item.landedCost + item.itemDecoCostPerPiece)) * item.calculatedQty)}
                                                     </span>
                                                 </div>
                                             </div>
+                                        </div>
 
+                                        {optimizerOpen[item.id] && (() => {
+                                            const targetInput = optimizeTargets[item.id] ?? shopSettings.marginGreen;
+                                            const opt = getOptimizerData(item, targetInput);
+                                            return (
+                                                <div className="mt-3 bg-indigo-950/40 border border-indigo-800 rounded-lg p-3 md:p-4 space-y-3">
+                                                    <div className="flex items-center justify-between flex-wrap gap-2">
+                                                        <p className="text-[10px] font-black text-indigo-300 uppercase tracking-widest">Price Optimizer</p>
+                                                        <div className="flex items-center gap-1.5">
+                                                            <span className="text-[9px] font-bold text-slate-400 uppercase">Target Margin</span>
+                                                            <div className="relative">
+                                                                <input type="number" className="w-16 p-1 pr-4 soft-input rounded text-xs font-bold text-center" value={targetInput} onChange={e => setOptimizeTarget(item.id, e.target.value)} />
+                                                                <span className="absolute right-1.5 top-1.5 text-[9px] text-slate-500">%</span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    <div className="grid grid-cols-2 gap-3 text-xs">
+                                                        <div className="bg-slate-900/60 rounded p-2">
+                                                            <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1">Current Price</p>
+                                                            <p className="font-black text-white">{formatCurrency(opt.currentPrice)}/ea <span className="text-slate-400 font-bold">@ {opt.currentMargin.toFixed(1)}%</span></p>
+                                                        </div>
+                                                        <div className="bg-slate-900/60 rounded p-2">
+                                                            <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1">Absolute Floor ({shopSettings.marginYellow}%)</p>
+                                                            <p className="font-black text-rose-300">{formatCurrency(opt.floorPrice)}/ea</p>
+                                                        </div>
+                                                    </div>
+
+                                                    {opt.priceDelta <= 0 ? (
+                                                        <div className="bg-emerald-900/30 border border-emerald-700 rounded-lg p-2.5">
+                                                            <p className="text-xs text-emerald-300">You have <span className="font-black">{formatCurrency(-opt.priceDelta)}/ea</span> of room to come down on price and still hit your {opt.target}% target &mdash; that's your wiggle room to be competitive.
+                                                            {opt.requiredMarginForTarget.reason === 'belowCost' && " That room lives in your decoration pricing, though \u2014 your blank is already at (or would have to go below) your purchase cost, so we won't suggest cutting the blank markup any further."}</p>
+                                                        </div>
+                                                    ) : (
+                                                        <div className="bg-amber-900/30 border border-amber-700 rounded-lg p-2.5">
+                                                            <p className="text-xs text-amber-300">You're under target &mdash; raise price by <span className="font-black">{formatCurrency(opt.priceDelta)}/ea</span> (or trim cost) to hit {opt.target}%.</p>
+                                                        </div>
+                                                    )}
+
+                                                    <div className="flex flex-wrap gap-2">
+                                                        {opt.requiredMarginForTarget.value !== null && (
+                                                            <button onClick={() => updateItem(item.id, 'margin', opt.requiredMarginForTarget.value.toFixed(1))} className="text-[10px] font-bold text-indigo-200 bg-indigo-800 hover:bg-indigo-700 px-3 py-1.5 rounded-md transition-colors">
+                                                                Set Blank Markup to {opt.requiredMarginForTarget.value.toFixed(1)}% &middot; hits {opt.target}% target
+                                                            </button>
+                                                        )}
+                                                        {opt.requiredMarginForFloor.value !== null && (
+                                                            <button onClick={() => updateItem(item.id, 'margin', opt.requiredMarginForFloor.value.toFixed(1))} className="text-[10px] font-bold text-rose-200 bg-rose-900/60 hover:bg-rose-900 px-3 py-1.5 rounded-md transition-colors">
+                                                                Set Blank Markup to {opt.requiredMarginForFloor.value.toFixed(1)}% &middot; most competitive
+                                                            </button>
+                                                        )}
+                                                    </div>
+
+                                                    {opt.requiredMarginForTarget.reason === 'belowCost' && (
+                                                        <p className="text-[10px] text-slate-400 italic">No blank-markup suggestion shown for the target &mdash; hitting it would mean pricing the blank at or under your {formatCurrency(item.landedCost)} cost. Your decoration pricing is already covering the rest.</p>
+                                                    )}
+                                                    {opt.requiredMarginForTarget.reason === 'tooHigh' && (
+                                                        <p className="text-[10px] text-rose-400 italic">Even at a very high blank markup, decoration cost alone keeps you under this target. Raise the target, or trim decoration cost/discount.</p>
+                                                    )}
+                                                </div>
+                                            );
+                                        })()}
+
+                                        <div className="flex justify-between items-center mt-3 pt-3 border-t border-slate-700">
+                                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Total Style Revenue</span>
+                                            <span className="text-sm font-black text-indigo-300">{formatCurrency(item.lineTotal)}</span>
                                         </div>
                                     </div>
 
