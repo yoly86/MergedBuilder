@@ -170,6 +170,7 @@
         const DTF_MATERIAL_COSTS = { xs: 0.35, small: 0.67, medium: 2.67, sleeve: 1.75, large: 5.04, xlarge: 8.67, jumbo: 12.50 };
 
         const genId = () => Math.random().toString(36).substr(2, 9);
+        const roundCents = (n) => Math.round((n + Number.EPSILON) * 100) / 100;
         const formatCurrency = (val) => '$' + (val || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
         const generateEmptySizes = () => SIZES_LIST.reduce((acc, size) => { acc[size] = ''; return acc; }, {});
 
@@ -391,7 +392,7 @@
 
                     const landedCost = rawCost + shipping;
                     const effectiveMargin = Math.min(margin, 99.9);
-                    const clientGarmentPrice = landedCost / (1 - (effectiveMargin / 100));
+                    const clientGarmentPrice = roundCents(landedCost / (1 - (effectiveMargin / 100)));
                     
                     let dtfCount = 0, itemDecoPerPiece = 0, itemDecoCostPerPiece = 0, itemDtfCost = 0, itemThreadCost = 0, itemStabilizerCost = 0;
                     
@@ -401,7 +402,7 @@
                             baseCost = getEmbroideryCostPerPiece(parseInt(loc.stitches) || 0, calculatedQty);
                             if (loc.isPuff) baseCost += parseFloat(loc.puffMarkup) || 0;
                             let stabCost = 1.00;
-                            let threadCost = ((parseInt(loc.stitches) || 0) / 2500);
+                            let threadCost = roundCents((parseInt(loc.stitches) || 0) / 2500);
                             matCost = stabCost + threadCost;
                             itemStabilizerCost += stabCost; itemThreadCost += threadCost;
                         } else if (loc.type === 'dtf') {
@@ -417,8 +418,8 @@
                         return { ...loc, baseCost, cost, materialCost: matCost, isFirstDtf: loc.type === 'dtf' && dtfCount === 1 };
                     });
                     
-                    const grossDecoPerPiece = itemDecoPerPiece;
-                    itemDecoPerPiece = Math.max(0, itemDecoPerPiece - explicitDecoDiscount);
+                    const grossDecoPerPiece = roundCents(itemDecoPerPiece);
+                    itemDecoPerPiece = Math.max(0, roundCents(itemDecoPerPiece - explicitDecoDiscount));
 
                     const totalGarmentCost = landedCost * calculatedQty;
                     const totalGarmentRetail = clientGarmentPrice * calculatedQty;
@@ -786,45 +787,45 @@
             const renderSettings = () => (
                 <div className="fade-in max-w-2xl mx-auto space-y-6">
                     
-                    <div className="bg-white rounded-2xl shadow-sm border border-slate-200 mb-6 overflow-hidden fade-in">
-                        <div className="p-6 border-b border-slate-100 bg-slate-50 flex items-center gap-3">
-                            <div className="p-2 bg-slate-800 rounded-lg text-white"><Icon name="settings" size={20}/></div>
+                    <div className="ka-card mb-6 overflow-hidden fade-in">
+                        <div className="p-6 border-b border-[#e3e1d9] bg-[#faf9f6] flex items-center gap-3">
+                            <div className="p-2.5 border border-[#e3e1d9] rounded text-[#8a8a80]"><Icon name="settings" size={20}/></div>
                             <div>
-                                <h2 className="text-lg font-black text-slate-800 uppercase tracking-widest">Integrations Hub</h2>
-                                <p className="text-xs text-slate-500 mt-0.5">Manage your API connections and cloud sync scripts.</p>
+                                <h2 className="ka-serif text-xl text-[#1a1a1a]">Integrations Hub</h2>
+                                <p className="text-xs text-[#8a8a80] mt-0.5">Manage your API connections and cloud sync scripts.</p>
                             </div>
                         </div>
 
-                        <div className="divide-y divide-slate-100">
+                        <div className="divide-y divide-[#e3e1d9]">
                             
                             <div>
-                                <button onClick={() => setExpandedIntegration(expandedIntegration === 'cloud' ? null : 'cloud')} className="w-full p-5 flex justify-between items-center hover:bg-slate-50 transition-colors text-left">
+                                <button onClick={() => setExpandedIntegration(expandedIntegration === 'cloud' ? null : 'cloud')} className="w-full p-5 flex justify-between items-center hover:bg-[#faf9f6] transition-colors text-left">
                                     <div className="flex items-center gap-3">
-                                        <Icon name="activity" size={18} className="text-blue-500"/>
-                                        <span className="font-bold text-slate-700 text-sm">Google Sheets Database Sync</span>
-                                        {cloudConfig.enabled && <span className="w-2 h-2 rounded-full bg-emerald-500"></span>}
+                                        <Icon name="activity" size={18} className="text-[#8a8a80]"/>
+                                        <span className="font-semibold text-[#1a1a1a] text-sm">Google Sheets Database Sync</span>
+                                        {cloudConfig.enabled && <span className="w-2 h-2 rounded-full bg-[#4b6b45]"></span>}
                                     </div>
-                                    <Icon name={expandedIntegration === 'cloud' ? "settings" : "plus"} size={16} className="text-slate-400"/>
+                                    <Icon name={expandedIntegration === 'cloud' ? "settings" : "plus"} size={16} className="text-[#8a8a80]"/>
                                 </button>
                                 
                                 {expandedIntegration === 'cloud' && (
-                                    <div className="p-5 pt-0 bg-slate-50 border-t border-slate-100">
+                                    <div className="p-5 pt-0 bg-[#faf9f6] border-t border-[#e3e1d9]">
                                         <div className="flex items-center gap-4 mb-4 mt-2">
                                             <label className="relative inline-flex items-center cursor-pointer">
                                                 <input type="checkbox" className="sr-only peer" checked={cloudConfig.enabled} onChange={e => setCloudConfig({...cloudConfig, enabled: e.target.checked})} />
-                                                <div className="w-11 h-6 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                                                <div className="w-11 h-6 bg-[#d8d6cd] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-[#d8d6cd] after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#1a1a1a]"></div>
                                             </label>
-                                            <span className="text-xs font-bold text-slate-600 uppercase">Enable Master Sync</span>
+                                            <span className="text-xs font-semibold text-[#4a4a44] uppercase">Enable Master Sync</span>
                                         </div>
                                         {cloudConfig.enabled && (
                                             <div className="space-y-4">
                                                 <div>
-                                                    <label className="block text-[10px] font-bold text-slate-500 mb-1.5 uppercase">Google Web App URL</label>
-                                                    <input type="text" placeholder="https://script.google.com/macros/s/..." className="w-full p-3 soft-input rounded-xl text-sm font-mono text-blue-700" value={cloudConfig.url} onChange={e => setCloudConfig({...cloudConfig, url: e.target.value})} />
+                                                    <label className="ka-label">Google Web App URL</label>
+                                                    <input type="text" placeholder="https://script.google.com/macros/s/..." className="w-full p-3 ka-input text-sm font-mono" value={cloudConfig.url} onChange={e => setCloudConfig({...cloudConfig, url: e.target.value})} />
                                                 </div>
                                                 <div>
-                                                    <label className="block text-[10px] font-bold text-slate-500 mb-1.5 uppercase">Security PIN</label>
-                                                    <input type="password" placeholder="Enter PIN" className="w-full p-3 soft-input rounded-xl text-sm font-bold tracking-widest" value={cloudConfig.pin} onChange={e => setCloudConfig({...cloudConfig, pin: e.target.value})} />
+                                                    <label className="ka-label">Security PIN</label>
+                                                    <input type="password" placeholder="Enter PIN" className="w-full p-3 ka-input text-sm font-bold tracking-widest" value={cloudConfig.pin} onChange={e => setCloudConfig({...cloudConfig, pin: e.target.value})} />
                                                 </div>
                                             </div>
                                         )}
@@ -833,42 +834,42 @@
                             </div>
 
                             <div>
-                                <button onClick={() => setExpandedIntegration(expandedIntegration === 'email' ? null : 'email')} className="w-full p-5 flex justify-between items-center hover:bg-slate-50 transition-colors text-left">
+                                <button onClick={() => setExpandedIntegration(expandedIntegration === 'email' ? null : 'email')} className="w-full p-5 flex justify-between items-center hover:bg-[#faf9f6] transition-colors text-left">
                                     <div className="flex items-center gap-3">
-                                        <Icon name="mail" size={18} className="text-purple-500"/>
-                                        <span className="font-bold text-slate-700 text-sm">Automated Email Sender</span>
-                                        {emailConfig.url && <span className="w-2 h-2 rounded-full bg-emerald-500"></span>}
+                                        <Icon name="mail" size={18} className="text-[#8a8a80]"/>
+                                        <span className="font-semibold text-[#1a1a1a] text-sm">Automated Email Sender</span>
+                                        {emailConfig.url && <span className="w-2 h-2 rounded-full bg-[#4b6b45]"></span>}
                                     </div>
-                                    <Icon name={expandedIntegration === 'email' ? "settings" : "plus"} size={16} className="text-slate-400"/>
+                                    <Icon name={expandedIntegration === 'email' ? "settings" : "plus"} size={16} className="text-[#8a8a80]"/>
                                 </button>
                                 
                                 {expandedIntegration === 'email' && (
-                                    <div className="p-5 pt-0 bg-slate-50 border-t border-slate-100">
-                                        <p className="text-xs text-slate-500 mb-4 mt-2">Connect your Google Web App URL to send proposals directly from the Quoter.</p>
+                                    <div className="p-5 pt-0 bg-[#faf9f6] border-t border-[#e3e1d9]">
+                                        <p className="text-xs text-[#8a8a80] mb-4 mt-2">Connect your Google Web App URL to send proposals directly from the Quoter.</p>
                                         <div>
-                                            <label className="block text-[10px] font-bold text-slate-500 mb-1.5 uppercase">Google Web App URL</label>
-                                            <input type="text" placeholder="https://script.google.com/macros/s/..." className="w-full p-3 soft-input rounded-xl text-sm font-mono text-purple-700" value={emailConfig.url} onChange={e => setEmailConfig({...emailConfig, url: e.target.value})} />
+                                            <label className="ka-label">Google Web App URL</label>
+                                            <input type="text" placeholder="https://script.google.com/macros/s/..." className="w-full p-3 ka-input text-sm font-mono" value={emailConfig.url} onChange={e => setEmailConfig({...emailConfig, url: e.target.value})} />
                                         </div>
                                     </div>
                                 )}
                             </div>
 
                             <div>
-                                <button onClick={() => setExpandedIntegration(expandedIntegration === 'image' ? null : 'image')} className="w-full p-5 flex justify-between items-center hover:bg-slate-50 transition-colors text-left">
+                                <button onClick={() => setExpandedIntegration(expandedIntegration === 'image' ? null : 'image')} className="w-full p-5 flex justify-between items-center hover:bg-[#faf9f6] transition-colors text-left">
                                     <div className="flex items-center gap-3">
-                                        <Icon name="image" size={18} className="text-emerald-500"/>
-                                        <span className="font-bold text-slate-700 text-sm">ImgBB Cloud Image Hosting</span>
-                                        {imageConfig.apiKey && <span className="w-2 h-2 rounded-full bg-emerald-500"></span>}
+                                        <Icon name="image" size={18} className="text-[#8a8a80]"/>
+                                        <span className="font-semibold text-[#1a1a1a] text-sm">ImgBB Cloud Image Hosting</span>
+                                        {imageConfig.apiKey && <span className="w-2 h-2 rounded-full bg-[#4b6b45]"></span>}
                                     </div>
-                                    <Icon name={expandedIntegration === 'image' ? "settings" : "plus"} size={16} className="text-slate-400"/>
+                                    <Icon name={expandedIntegration === 'image' ? "settings" : "plus"} size={16} className="text-[#8a8a80]"/>
                                 </button>
                                 
                                 {expandedIntegration === 'image' && (
-                                    <div className="p-5 pt-0 bg-slate-50 border-t border-slate-100">
-                                        <p className="text-xs text-slate-500 mb-4 mt-2">Convert your mockups into lightweight URLs so they survive the pipeline without crashing your database.</p>
+                                    <div className="p-5 pt-0 bg-[#faf9f6] border-t border-[#e3e1d9]">
+                                        <p className="text-xs text-[#8a8a80] mb-4 mt-2">Convert your mockups into lightweight URLs so they survive the pipeline without crashing your database.</p>
                                         <div>
-                                            <label className="block text-[10px] font-bold text-slate-500 mb-1.5 uppercase">ImgBB API Key</label>
-                                            <input type="text" placeholder="Paste your API key here" className="w-full p-3 soft-input rounded-xl text-sm font-mono text-emerald-700" value={imageConfig.apiKey} onChange={e => setImageConfig({...imageConfig, apiKey: e.target.value})} />
+                                            <label className="ka-label">ImgBB API Key</label>
+                                            <input type="text" placeholder="Paste your API key here" className="w-full p-3 ka-input text-sm font-mono" value={imageConfig.apiKey} onChange={e => setImageConfig({...imageConfig, apiKey: e.target.value})} />
                                         </div>
                                     </div>
                                 )}
@@ -876,117 +877,117 @@
 
                         </div>
                     </div>
-                    <div className="bg-white rounded-2xl shadow-sm p-6 md:p-8 border border-slate-200">
-                        <div className="flex items-start gap-4 mb-6 border-b border-slate-100 pb-6">
-                            <div className="p-3 bg-indigo-50 rounded-xl text-indigo-600"><Icon name="building" size={24}/></div>
+                    <div className="ka-card p-6 md:p-8">
+                        <div className="flex items-start gap-4 mb-6 border-b border-[#e3e1d9] pb-6">
+                            <div className="p-3 border border-[#e3e1d9] rounded text-[#8a8a80]"><Icon name="building" size={24}/></div>
                             <div>
-                                <h2 className="text-lg font-black text-slate-800 uppercase tracking-widest">Business Profile</h2>
-                                <p className="text-xs text-slate-500 mt-1 leading-relaxed">These details appear on your customer-facing Proposals, Invoices, and Receipts.</p>
+                                <h2 className="ka-serif text-xl text-[#1a1a1a]">Business Profile</h2>
+                                <p className="text-xs text-[#8a8a80] mt-1 leading-relaxed">These details appear on your customer-facing Proposals, Invoices, and Receipts.</p>
                             </div>
                         </div>
                         <div className="space-y-5">
-                            <div><label className="block text-[11px] font-bold text-slate-500 mb-1.5 uppercase">Business Name</label><input type="text" placeholder="e.g. Name" className="w-full p-3 soft-input rounded-xl text-sm font-semibold text-slate-800" value={businessDetails.name} onChange={e => updateBiz('name', e.target.value)} /></div>
-                            <div><label className="block text-[11px] font-bold text-slate-500 mb-1.5 uppercase">Address / Location</label><input type="text" placeholder="e.g. Cityville" className="w-full p-3 soft-input rounded-xl text-sm" value={businessDetails.address} onChange={e => updateBiz('address', e.target.value)} /></div>
+                            <div><label className="ka-label">Business Name</label><input type="text" placeholder="e.g. Name" className="w-full p-3 ka-input text-sm" value={businessDetails.name} onChange={e => updateBiz('name', e.target.value)} /></div>
+                            <div><label className="ka-label">Address / Location</label><input type="text" placeholder="e.g. Cityville" className="w-full p-3 ka-input text-sm" value={businessDetails.address} onChange={e => updateBiz('address', e.target.value)} /></div>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                                <div><label className="block text-[11px] font-bold text-slate-500 mb-1.5 uppercase">Phone Number</label><input type="text" placeholder="(555) 123-4567" className="w-full p-3 soft-input rounded-xl text-sm" value={businessDetails.phone} onChange={e => updateBiz('phone', e.target.value)} /></div>
-                                <div><label className="block text-[11px] font-bold text-slate-500 mb-1.5 uppercase">Email Address</label><input type="text" placeholder="hello@mybusiness.com" className="w-full p-3 soft-input rounded-xl text-sm" value={businessDetails.email} onChange={e => updateBiz('email', e.target.value)} /></div>
+                                <div><label className="ka-label">Phone Number</label><input type="text" placeholder="(555) 123-4567" className="w-full p-3 ka-input text-sm" value={businessDetails.phone} onChange={e => updateBiz('phone', e.target.value)} /></div>
+                                <div><label className="ka-label">Email Address</label><input type="text" placeholder="hello@mybusiness.com" className="w-full p-3 ka-input text-sm" value={businessDetails.email} onChange={e => updateBiz('email', e.target.value)} /></div>
                             </div>
-                            <div><label className="block text-[11px] font-bold text-slate-500 mb-1.5 uppercase">Website / Social URL</label><input type="text" placeholder="website.com" className="w-full p-3 soft-input rounded-xl text-sm text-indigo-600" value={businessDetails.website} onChange={e => updateBiz('website', e.target.value)} /></div>
+                            <div><label className="ka-label">Website / Social URL</label><input type="text" placeholder="website.com" className="w-full p-3 ka-input text-sm" value={businessDetails.website} onChange={e => updateBiz('website', e.target.value)} /></div>
                         </div>
                     </div>
 
-                    <div className="bg-white rounded-2xl shadow-sm p-6 md:p-8 border border-slate-200">
-                        <div className="flex items-start gap-4 mb-6 border-b border-slate-100 pb-6">
-                            <div className="p-3 bg-emerald-50 rounded-xl text-emerald-600"><Icon name="pieChart" size={24}/></div>
+                    <div className="ka-card p-6 md:p-8">
+                        <div className="flex items-start gap-4 mb-6 border-b border-[#e3e1d9] pb-6">
+                            <div className="p-3 border border-[#e3e1d9] rounded text-[#8a8a80]"><Icon name="pieChart" size={24}/></div>
                             <div>
-                                <h2 className="text-lg font-black text-slate-800 uppercase tracking-widest">Financial Margins & Funds</h2>
-                                <p className="text-xs text-slate-500 mt-1 leading-relaxed">Set your health meter targets and automate how much cash gets transferred to savings per job.</p>
+                                <h2 className="ka-serif text-xl text-[#1a1a1a]">Financial Margins & Funds</h2>
+                                <p className="text-xs text-[#8a8a80] mt-1 leading-relaxed">Set your health meter targets and automate how much cash gets transferred to savings per job.</p>
                             </div>
                         </div>
                         
                         <div className="mb-6">
-                            <h3 className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-3">Profit Margin "Health Meter" Targets</h3>
+                            <h3 className="ka-label">Profit Margin "Health Meter" Targets</h3>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                                <div className="bg-emerald-50 p-4 rounded-xl border border-emerald-100">
-                                    <label className="block text-[11px] font-bold text-emerald-700 mb-1.5 uppercase">Green Margin (Target)</label>
-                                    <div className="flex items-center gap-2"><span className="text-sm font-bold text-emerald-600">&gt;</span><input type="number" className="w-full p-2 soft-input rounded-lg text-sm text-emerald-700 font-bold" value={shopSettings.marginGreen} onChange={e => updateSetting('marginGreen', e.target.value)} /><span className="text-sm font-bold text-emerald-600">%</span></div>
+                                <div className="bg-[#eef2ea] p-4 rounded border border-[#cfdcc4]">
+                                    <label className="block text-[11px] font-semibold text-[#4b6b45] mb-1.5 uppercase tracking-wide">Green Margin (Target)</label>
+                                    <div className="flex items-center gap-2"><span className="text-sm font-semibold text-[#4b6b45]">&gt;</span><input type="number" className="w-full p-2 ka-input text-sm" value={shopSettings.marginGreen} onChange={e => updateSetting('marginGreen', e.target.value)} /><span className="text-sm font-semibold text-[#4b6b45]">%</span></div>
                                 </div>
-                                <div className="bg-amber-50 p-4 rounded-xl border border-amber-100">
-                                    <label className="block text-[11px] font-bold text-amber-700 mb-1.5 uppercase">Yellow Margin (Warning)</label>
-                                    <div className="flex items-center gap-2"><span className="text-sm font-bold text-amber-600">&gt;</span><input type="number" className="w-full p-2 soft-input rounded-lg text-sm text-amber-700 font-bold" value={shopSettings.marginYellow} onChange={e => updateSetting('marginYellow', e.target.value)} /><span className="text-sm font-bold text-amber-600">%</span></div>
+                                <div className="bg-[#f7f0df] p-4 rounded border border-[#e6d7a8]">
+                                    <label className="block text-[11px] font-semibold text-[#8a6a1f] mb-1.5 uppercase tracking-wide">Yellow Margin (Warning)</label>
+                                    <div className="flex items-center gap-2"><span className="text-sm font-semibold text-[#8a6a1f]">&gt;</span><input type="number" className="w-full p-2 ka-input text-sm" value={shopSettings.marginYellow} onChange={e => updateSetting('marginYellow', e.target.value)} /><span className="text-sm font-semibold text-[#8a6a1f]">%</span></div>
                                 </div>
-                                <p className="text-[10px] text-slate-400 md:col-span-2 italic">Anything below the Yellow Margin target will automatically trigger the Red (Danger) warning on quotes.</p>
+                                <p className="text-[10px] text-[#8a8a80] md:col-span-2 italic">Anything below the Yellow Margin target will automatically trigger the Red (Danger) warning on quotes.</p>
                             </div>
                         </div>
 
                         <div>
-                            <h3 className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-3">Automated Fund Allocations</h3>
-                            <p className="text-[11px] text-slate-500 mb-4">These percentages are deducted from a job's gross subtotal to calculate your true Net Operating Profit.</p>
+                            <h3 className="ka-label">Automated Fund Allocations</h3>
+                            <p className="text-[11px] text-[#8a8a80] mb-4">These percentages are deducted from a job's gross subtotal to calculate your true Net Operating Profit.</p>
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-                                <div><label className="block text-[11px] font-bold text-slate-500 mb-1.5 uppercase">Consumables Fund (%)</label><input type="number" className="w-full p-3 soft-input rounded-xl text-sm" value={shopSettings.fundConsumables} onChange={e => updateSetting('fundConsumables', e.target.value)} /></div>
-                                <div><label className="block text-[11px] font-bold text-slate-500 mb-1.5 uppercase">Growth / Machine (%)</label><input type="number" className="w-full p-3 soft-input rounded-xl text-sm" value={shopSettings.fundGrowth} onChange={e => updateSetting('fundGrowth', e.target.value)} /></div>
-                                <div><label className="block text-[11px] font-bold text-slate-500 mb-1.5 uppercase">Tax Reserve (%)</label><input type="number" className="w-full p-3 soft-input rounded-xl text-sm" value={shopSettings.fundTax} onChange={e => updateSetting('fundTax', e.target.value)} /></div>
+                                <div><label className="ka-label">Consumables Fund (%)</label><input type="number" className="w-full p-3 ka-input text-sm" value={shopSettings.fundConsumables} onChange={e => updateSetting('fundConsumables', e.target.value)} /></div>
+                                <div><label className="ka-label">Growth / Machine (%)</label><input type="number" className="w-full p-3 ka-input text-sm" value={shopSettings.fundGrowth} onChange={e => updateSetting('fundGrowth', e.target.value)} /></div>
+                                <div><label className="ka-label">Tax Reserve (%)</label><input type="number" className="w-full p-3 ka-input text-sm" value={shopSettings.fundTax} onChange={e => updateSetting('fundTax', e.target.value)} /></div>
                             </div>
                             
-                            <div className="mt-8 border-t border-slate-100 pt-6">
-                                <h3 className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-3">Shop Rate Target</h3>
-                                <div className="bg-indigo-50 p-4 md:p-5 rounded-xl border border-indigo-100 md:w-1/2">
-                                    <label className="block text-[11px] font-bold text-indigo-700 mb-2 uppercase">Target Hourly Rate ($)</label>
+                            <div className="mt-8 border-t border-[#e3e1d9] pt-6">
+                                <h3 className="ka-label">Shop Rate Target</h3>
+                                <div className="bg-[#eef1f5] p-4 md:p-5 rounded border border-[#c7d2e0] md:w-1/2">
+                                    <label className="block text-[11px] font-semibold text-[#26344d] mb-2 uppercase tracking-wide">Target Hourly Rate ($)</label>
                                     <div className="flex items-center gap-2">
-                                        <span className="text-base font-black text-indigo-400">$</span>
-                                        <input type="number" className="w-full p-2.5 soft-input rounded-lg text-sm text-indigo-700 font-black focus:ring-indigo-500" value={shopSettings.targetHourlyRate || 75} onChange={e => updateSetting('targetHourlyRate', e.target.value)} />
-                                        <span className="text-sm font-bold text-indigo-500">/ hr</span>
+                                        <span className="ka-serif text-base text-[#26344d]">$</span>
+                                        <input type="number" className="w-full p-2.5 ka-input text-sm" value={shopSettings.targetHourlyRate || 75} onChange={e => updateSetting('targetHourlyRate', e.target.value)} />
+                                        <span className="text-sm font-medium text-[#26344d]">/ hr</span>
                                     </div>
-                                    <p className="text-[10px] text-indigo-500/80 mt-2 font-medium leading-relaxed">Used in the Quoter to calculate the maximum allowable time you can spend on a job while maintaining profitability.</p>
+                                    <p className="text-[10px] text-[#26344d]/80 mt-2 font-medium leading-relaxed">Used in the Quoter to calculate the maximum allowable time you can spend on a job while maintaining profitability.</p>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <div className="bg-white rounded-2xl shadow-sm p-6 md:p-8 border border-slate-200">
-                        <div className="flex items-start gap-4 mb-6 border-b border-slate-100 pb-6">
-                            <div className="p-3 bg-indigo-50 rounded-xl text-indigo-600"><Icon name="shirt" size={24}/></div>
+                    <div className="ka-card p-6 md:p-8">
+                        <div className="flex items-start gap-4 mb-6 border-b border-[#e3e1d9] pb-6">
+                            <div className="p-3 border border-[#e3e1d9] rounded text-[#8a8a80]"><Icon name="shirt" size={24}/></div>
                             <div>
-                                <h2 className="text-lg font-black text-slate-800 uppercase tracking-widest">Quick Fill Garment Catalog</h2>
-                                <p className="text-xs text-slate-500 mt-1 leading-relaxed">Save your most frequently used blanks to auto-populate prices and margins in the Quoter.</p>
+                                <h2 className="ka-serif text-xl text-[#1a1a1a]">Quick Fill Garment Catalog</h2>
+                                <p className="text-xs text-[#8a8a80] mt-1 leading-relaxed">Save your most frequently used blanks to auto-populate prices and margins in the Quoter.</p>
                             </div>
                         </div>
 
                         <div className="space-y-3 mb-6">
                             {(shopSettings.quickFillGarments || []).map(g => (
-                                <div key={g.id} className="flex justify-between items-center bg-slate-50 border border-slate-200 p-3 rounded-xl">
+                                <div key={g.id} className="flex justify-between items-center bg-[#faf9f6] border border-[#e3e1d9] rounded p-3">
                                     <div>
-                                        <p className="font-bold text-slate-800 text-sm">{g.name}</p>
-                                        <p className="text-[10px] text-slate-500 font-semibold uppercase tracking-widest">Cost: {formatCurrency(g.cost)} | Frt: {formatCurrency(g.shipping)} | Margin: {g.margin}%</p>
+                                        <p className="font-semibold text-[#1a1a1a] text-sm">{g.name}</p>
+                                        <p className="text-[10px] text-[#8a8a80] font-semibold uppercase tracking-widest">Cost: {formatCurrency(g.cost)} | Frt: {formatCurrency(g.shipping)} | Margin: {g.margin}%</p>
                                     </div>
-                                    <button onClick={() => handleRemoveQuickFill(g.id)} className="p-2 text-slate-400 hover:text-red-500 transition-colors"><Icon name="trash" size={16}/></button>
+                                    <button onClick={() => handleRemoveQuickFill(g.id)} className="p-2 text-[#8a8a80] hover:text-[#9a3f2e] transition-colors"><Icon name="trash" size={16}/></button>
                                 </div>
                             ))}
                         </div>
 
-                        <div className="bg-indigo-50/50 border border-indigo-100 p-4 rounded-xl">
-                            <h3 className="text-[11px] font-black text-indigo-700 uppercase tracking-widest mb-3">Add New Favorite</h3>
+                        <div className="bg-[#faf9f6] border border-[#e3e1d9] rounded p-4">
+                            <h3 className="text-[11px] font-semibold text-[#8a8a80] uppercase tracking-widest mb-3">Add New Favorite</h3>
                             <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-                                <div className="col-span-2 md:col-span-2"><input type="text" placeholder="Item Name (e.g. Gildan 5000)" className="w-full p-2 soft-input rounded-lg text-xs" value={newGarment.name} onChange={e => setNewGarment({...newGarment, name: e.target.value})} /></div>
-                                <div><input type="number" placeholder="Cost ($)" className="w-full p-2 soft-input rounded-lg text-xs" value={newGarment.cost} onChange={e => setNewGarment({...newGarment, cost: e.target.value})} /></div>
-                                <div><input type="number" placeholder="Freight ($)" className="w-full p-2 soft-input rounded-lg text-xs" value={newGarment.shipping} onChange={e => setNewGarment({...newGarment, shipping: e.target.value})} /></div>
-                                <div><input type="number" placeholder="Margin (%)" className="w-full p-2 soft-input rounded-lg text-xs text-indigo-700 font-bold" value={newGarment.margin} onChange={e => setNewGarment({...newGarment, margin: e.target.value})} /></div>
+                                <div className="col-span-2 md:col-span-2"><input type="text" placeholder="Item Name (e.g. Gildan 5000)" className="w-full p-2 ka-input text-xs" value={newGarment.name} onChange={e => setNewGarment({...newGarment, name: e.target.value})} /></div>
+                                <div><input type="number" placeholder="Cost ($)" className="w-full p-2 ka-input text-xs" value={newGarment.cost} onChange={e => setNewGarment({...newGarment, cost: e.target.value})} /></div>
+                                <div><input type="number" placeholder="Freight ($)" className="w-full p-2 ka-input text-xs" value={newGarment.shipping} onChange={e => setNewGarment({...newGarment, shipping: e.target.value})} /></div>
+                                <div><input type="number" placeholder="Margin (%)" className="w-full p-2 ka-input text-xs" value={newGarment.margin} onChange={e => setNewGarment({...newGarment, margin: e.target.value})} /></div>
                             </div>
-                            <button onClick={handleAddQuickFill} className="mt-3 w-full py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold active:scale-95 transition-all flex items-center justify-center gap-2">
+                            <button onClick={handleAddQuickFill} className="ka-btn ka-btn-dark mt-3 w-full py-2.5">
                                 <Icon name="plus" size={14} /> Add to Catalog
                             </button>
                         </div>
                     </div>
 
-                    <div className="bg-white rounded-2xl shadow-sm p-6 md:p-8 border border-slate-200">
-                        <div className="flex items-start gap-4 mb-6 border-b border-slate-100 pb-6">
-                            <div className="p-3 bg-slate-50 rounded-xl text-slate-600"><Icon name="download" size={24}/></div>
+                    <div className="ka-card p-6 md:p-8">
+                        <div className="flex items-start gap-4 mb-6 border-b border-[#e3e1d9] pb-6">
+                            <div className="p-3 border border-[#e3e1d9] rounded text-[#8a8a80]"><Icon name="download" size={24}/></div>
                             <div>
-                                <h2 className="text-lg font-black text-slate-800 uppercase tracking-widest">Data & Accountant Export</h2>
-                                <p className="text-xs text-slate-500 mt-1 leading-relaxed">Export your complete financial ledger as a CSV file to share with your accountant.</p>
+                                <h2 className="ka-serif text-xl text-[#1a1a1a]">Data & Accountant Export</h2>
+                                <p className="text-xs text-[#8a8a80] mt-1 leading-relaxed">Export your complete financial ledger as a CSV file to share with your accountant.</p>
                             </div>
                         </div>
-                        <button onClick={handleExportCSV} className="w-full md:w-auto px-6 py-3 bg-slate-800 text-white rounded-xl font-bold hover:bg-slate-900 transition-colors flex items-center justify-center gap-2 active:scale-95 shadow-sm">
+                        <button onClick={handleExportCSV} className="ka-btn ka-btn-dark w-full md:w-auto px-6 py-3">
                             <Icon name="download" size={18} /> Export Complete Ledger (CSV)
                         </button>
                     </div>
@@ -2303,37 +2304,37 @@
             return (
                 <ErrorBoundary>
                     <div className="min-h-screen pb-content flex flex-col relative z-10">
-                        <div className="bg-white border-b border-slate-200 shadow-sm sticky top-0 z-30 pt-safe no-print">
+                        <div className="bg-white border-b border-[#e3e1d9] sticky top-0 z-30 pt-safe no-print">
                             <div className="max-w-4xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4 p-4">
                                 <div className="flex justify-between items-center w-full md:w-auto">
-                                    <h1 className="text-2xl font-black flex items-center gap-2 tracking-tight text-slate-800"><Icon name="layers" size={28} className="text-indigo-600"/> Triple One OS</h1>
+                                    <h1 className="ka-serif text-2xl flex items-center gap-2 text-[#1a1a1a]"><Icon name="layers" size={26} className="text-[#8a8a80]"/> Triple One OS</h1>
                                     {cloudConfig.enabled && (
-                                        <button onClick={() => fetchCloudData()} disabled={isSyncing} className={`md:hidden p-2 rounded-lg text-slate-500 hover:bg-slate-100 ${isSyncing ? 'opacity-50' : ''}`}>
-                                            <Icon name="refresh" size={20} className={isSyncing ? "animate-spin text-blue-500" : ""} />
+                                        <button onClick={() => fetchCloudData()} disabled={isSyncing} className={`md:hidden p-2 rounded text-[#8a8a80] hover:text-[#1a1a1a] ${isSyncing ? 'opacity-50' : ''}`}>
+                                            <Icon name="refresh" size={20} className={isSyncing ? "animate-spin text-[#26344d]" : ""} />
                                         </button>
                                     )}
                                 </div>
                                 
                                 <div className="flex flex-col md:flex-row items-center gap-3 w-full md:w-auto">
                                     {cloudConfig.enabled && (
-                                        <button onClick={() => fetchCloudData()} disabled={isSyncing} className={`hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold text-slate-500 hover:bg-slate-100 transition-colors ${isSyncing ? 'opacity-50' : ''}`}>
-                                            <Icon name="refresh" size={14} className={isSyncing ? "animate-spin text-blue-500" : ""} /> {isSyncing ? 'Syncing...' : 'Refresh'}
+                                        <button onClick={() => fetchCloudData()} disabled={isSyncing} className={`hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-semibold text-[#8a8a80] hover:text-[#1a1a1a] transition-colors ${isSyncing ? 'opacity-50' : ''}`}>
+                                            <Icon name="refresh" size={14} className={isSyncing ? "animate-spin text-[#26344d]" : ""} /> {isSyncing ? 'Syncing...' : 'Refresh'}
                                         </button>
                                     )}
-                                    <div className="flex bg-slate-100 p-1.5 rounded-xl border border-slate-200 w-full md:w-auto overflow-x-auto hide-scrollbar">
-                                        <button onClick={() => setAppModule('quoter')} className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-5 py-2 rounded-lg text-sm font-bold transition-all ${appModule === 'quoter' ? 'bg-white text-indigo-700 shadow-sm' : 'text-slate-500'}`}><Icon name="calculator" size={18} /> Quoter</button>
-                                        <button onClick={() => setAppModule('pipeline')} className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-5 py-2 rounded-lg text-sm font-bold transition-all ${appModule === 'pipeline' ? 'bg-white text-emerald-700 shadow-sm' : 'text-slate-500'}`}><Icon name="layers" size={18} /> Pipeline</button>
-                                        <button onClick={() => setAppModule('bookkeeping')} className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-5 py-2 rounded-lg text-sm font-bold transition-all ${appModule === 'bookkeeping' ? 'bg-white text-indigo-700 shadow-sm' : 'text-slate-500'}`}><Icon name="wallet" size={18} /> Ledger</button>
-                                        <button onClick={() => setAppModule('settings')} className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-5 py-2 rounded-lg text-sm font-bold transition-all ${appModule === 'settings' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500'}`}><Icon name="settings" size={18} /> Settings</button>
+                                    <div className="flex bg-[#faf9f6] p-1.5 rounded border border-[#e3e1d9] w-full md:w-auto overflow-x-auto hide-scrollbar">
+                                        <button onClick={() => setAppModule('quoter')} className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-5 py-2 rounded text-sm font-semibold transition-all ${appModule === 'quoter' ? 'bg-white text-[#1a1a1a] shadow-sm' : 'text-[#8a8a80]'}`}><Icon name="calculator" size={18} /> Quoter</button>
+                                        <button onClick={() => setAppModule('pipeline')} className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-5 py-2 rounded text-sm font-semibold transition-all ${appModule === 'pipeline' ? 'bg-white text-[#1a1a1a] shadow-sm' : 'text-[#8a8a80]'}`}><Icon name="layers" size={18} /> Pipeline</button>
+                                        <button onClick={() => setAppModule('bookkeeping')} className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-5 py-2 rounded text-sm font-semibold transition-all ${appModule === 'bookkeeping' ? 'bg-white text-[#1a1a1a] shadow-sm' : 'text-[#8a8a80]'}`}><Icon name="wallet" size={18} /> Ledger</button>
+                                        <button onClick={() => setAppModule('settings')} className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-5 py-2 rounded text-sm font-semibold transition-all ${appModule === 'settings' ? 'bg-white text-[#1a1a1a] shadow-sm' : 'text-[#8a8a80]'}`}><Icon name="settings" size={18} /> Settings</button>
                                     </div>
                                 </div>
                             </div>
 
                             {appModule === 'pipeline' && (
-                                <div className="bg-slate-50 border-t border-slate-200 flex justify-center p-2">
-                                    <div className="flex bg-slate-200/50 p-1 rounded-lg">
-                                        <button onClick={() => setPipelineView('active')} className={`px-6 py-1.5 text-xs font-bold rounded-md transition-all ${pipelineView === 'active' ? 'bg-white shadow-sm text-slate-800' : 'text-slate-500'}`}>Active Jobs</button>
-                                        <button onClick={() => setPipelineView('archive')} className={`px-6 py-1.5 text-xs font-bold rounded-md transition-all flex items-center gap-1 ${pipelineView === 'archive' ? 'bg-white shadow-sm text-slate-800' : 'text-slate-500'}`}><Icon name="archive" size={14}/> Completed Archives</button>
+                                <div className="bg-[#faf9f6] border-t border-[#e3e1d9] flex justify-center p-2">
+                                    <div className="flex bg-white border border-[#e3e1d9] p-1 rounded">
+                                        <button onClick={() => setPipelineView('active')} className={`px-6 py-1.5 text-xs font-semibold rounded transition-all ${pipelineView === 'active' ? 'bg-[#1a1a1a] text-white' : 'text-[#8a8a80]'}`}>Active Jobs</button>
+                                        <button onClick={() => setPipelineView('archive')} className={`px-6 py-1.5 text-xs font-semibold rounded transition-all flex items-center gap-1 ${pipelineView === 'archive' ? 'bg-[#1a1a1a] text-white' : 'text-[#8a8a80]'}`}><Icon name="archive" size={14}/> Completed Archives</button>
                                     </div>
                                 </div>
                             )}
