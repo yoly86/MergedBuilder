@@ -170,7 +170,11 @@
         const DTF_MATERIAL_COSTS = { xs: 0.35, small: 0.67, medium: 2.67, sleeve: 1.75, large: 5.04, xlarge: 8.67, jumbo: 12.50 };
 
         const genId = () => Math.random().toString(36).substr(2, 9);
-        const roundCents = (n) => Math.round((n + Number.EPSILON) * 100) / 100;
+        const roundCents = (n) => {
+            const num = Number(n);
+            if (!isFinite(num)) return 0;
+            return Number(Math.round(Number(num + 'e2')) + 'e-2');
+        };
         const formatCurrency = (val) => '$' + (val || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
         const generateEmptySizes = () => SIZES_LIST.reduce((acc, size) => { acc[size] = ''; return acc; }, {});
 
