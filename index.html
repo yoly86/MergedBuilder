@@ -11,6 +11,9 @@
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
     <style>
         input[type="text"], input[type="number"], input[type="date"], select, textarea { font-size: 16px !important; }
@@ -39,6 +42,20 @@
         input, select, textarea { color: #0f172a !important; font-weight: 600 !important; }
         input::placeholder, textarea::placeholder { color: #64748b !important; font-weight: 500 !important; opacity: 1 !important; }
         label { color: #334155 !important; font-weight: 800 !important; }
+
+        /* --- Quoter design system, inspired by kahandcrafted.com --- */
+        .ka-serif { font-family: 'Playfair Display', Georgia, serif; }
+        .ka-card { background: #ffffff; border: 1px solid #e3e1d9; border-radius: 6px; box-shadow: none; }
+        .ka-label { display: block; font-family: 'Inter', sans-serif; font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: #8a8a80 !important; font-weight: 600 !important; margin-bottom: 6px; }
+        .ka-input { background: #ffffff !important; border: 1px solid #d8d6cd; border-radius: 3px; padding: 0.65rem 0.85rem; font-size: 0.875rem; color: #1a1a1a !important; font-weight: 400 !important; transition: border-color .15s ease; }
+        .ka-input:focus { border-color: #17181a; outline: none; box-shadow: none; }
+        .ka-input::placeholder { color: #a3a29a !important; font-weight: 400 !important; }
+        .ka-btn { display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; font-family: 'Inter', sans-serif; font-size: 0.7rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; border-radius: 2px; padding: 0.85rem 1.5rem; transition: all .15s ease; cursor: pointer; }
+        .ka-btn-dark { background: #17181a; color: #fff; }
+        .ka-btn-dark:hover { background: #000; }
+        .ka-btn-outline { background: transparent; color: #17181a; border: 1px solid #17181a; }
+        .ka-btn-outline:hover { background: #17181a; color: #fff; }
+        .ka-btn-sm { padding: 0.5rem 0.9rem; font-size: 0.62rem; }
     </style>
 </head>
 <body class="bg-slate-100 font-sans antialiased text-slate-900 selection:bg-indigo-100">
@@ -724,9 +741,9 @@
             );
 
             const getHealthColor = (margin) => {
-                if (margin >= shopSettings.marginGreen) return 'text-emerald-500';
-                if (margin >= shopSettings.marginYellow) return 'text-amber-500';
-                return 'text-rose-500';
+                if (margin >= shopSettings.marginGreen) return 'text-[#4b6b45]';
+                if (margin >= shopSettings.marginYellow) return 'text-[#8a6a1f]';
+                return 'text-[#9a3f2e]';
             };
             const getOptimizerData = (item, targetMargin) => {
                 const target = Math.min(Math.max(parseFloat(targetMargin) || 0, 0), 99.9);
@@ -761,9 +778,9 @@
             };
 
             const getHealthBg = (margin) => {
-                if (margin >= shopSettings.marginGreen) return 'bg-emerald-50 border-emerald-200';
-                if (margin >= shopSettings.marginYellow) return 'bg-amber-50 border-amber-200';
-                return 'bg-rose-50 border-rose-200';
+                if (margin >= shopSettings.marginGreen) return 'bg-[#eef2ea] border-[#cfdcc4]';
+                if (margin >= shopSettings.marginYellow) return 'bg-[#f7f0df] border-[#e6d7a8]';
+                return 'bg-[#f7e9e5] border-[#e5c3b8]';
             };
 
             const renderSettings = () => (
@@ -978,27 +995,27 @@
 
             const renderQuoter = () => (
                 <div className="space-y-6 pb-6 fade-in">
-                    <div className="bg-white rounded-2xl shadow-sm p-4 md:p-6 border border-slate-200">
+                    <div className="ka-card p-4 md:p-6">
                         <div className="flex justify-between items-center mb-6">
-                            <h2 className="text-sm font-bold text-slate-800 flex items-center gap-2 uppercase tracking-wider"><Icon name="calculator" size={18} className="text-indigo-500" /> Build Quote</h2>
-                            <button onClick={() => setShowInternalBreakdown(!showInternalBreakdown)} className="text-xs font-bold text-indigo-600 bg-indigo-50 px-3 py-1.5 rounded-lg border border-indigo-100">
+                            <h2 className="ka-serif text-xl md:text-2xl text-[#1a1a1a] flex items-center gap-2.5"><Icon name="calculator" size={18} className="text-[#8a8a80]" /> Build Quote</h2>
+                            <button onClick={() => setShowInternalBreakdown(!showInternalBreakdown)} className="ka-btn ka-btn-outline ka-btn-sm">
                                 {showInternalBreakdown ? 'Hide Math' : 'View Line Items & Math'}
                             </button>
                         </div>
                         
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-5 mb-6">
-                            <div><label className="block text-xs font-semibold text-slate-500 mb-1 flex items-center gap-1.5"><Icon name="user" size={14}/> Customer / Company</label><input type="text" className="w-full p-3 soft-input rounded-xl text-sm" value={orderData.customerName} onChange={e => updateOrder('customerName', e.target.value)} /></div>
-                            <div><label className="block text-xs font-semibold text-slate-500 mb-1 flex items-center gap-1.5"><Icon name="mail" size={14}/> Customer Email</label><input type="email" placeholder="client@email.com" className="w-full p-3 soft-input rounded-xl text-sm" value={orderData.customerEmail} onChange={e => updateOrder('customerEmail', e.target.value)} /></div>
-                            <div><label className="block text-xs font-semibold text-slate-500 mb-1 flex items-center gap-1.5"><Icon name="fileText" size={14}/> Order Name</label><input type="text" placeholder="e.g. Summer Staff Gear" className="w-full p-3 soft-input rounded-xl text-sm" value={orderData.orderName} onChange={e => updateOrder('orderName', e.target.value)} /></div>
-                            <div><label className="block text-xs font-semibold text-slate-500 mb-1 flex items-center gap-1.5"><Icon name="calendar" size={14}/> Date Required</label><input type="date" className="w-full p-3 soft-input rounded-xl text-sm text-slate-600" value={orderData.dateRequired} onChange={e => updateOrder('dateRequired', e.target.value)} /></div>
+                            <div><label className="ka-label flex items-center gap-1.5"><Icon name="user" size={14}/> Customer / Company</label><input type="text" className="w-full p-3 ka-input text-sm" value={orderData.customerName} onChange={e => updateOrder('customerName', e.target.value)} /></div>
+                            <div><label className="ka-label flex items-center gap-1.5"><Icon name="mail" size={14}/> Customer Email</label><input type="email" placeholder="client@email.com" className="w-full p-3 ka-input text-sm" value={orderData.customerEmail} onChange={e => updateOrder('customerEmail', e.target.value)} /></div>
+                            <div><label className="ka-label flex items-center gap-1.5"><Icon name="fileText" size={14}/> Order Name</label><input type="text" placeholder="e.g. Summer Staff Gear" className="w-full p-3 ka-input text-sm" value={orderData.orderName} onChange={e => updateOrder('orderName', e.target.value)} /></div>
+                            <div><label className="ka-label flex items-center gap-1.5"><Icon name="calendar" size={14}/> Date Required</label><input type="date" className="ka-input w-full p-3 text-sm" value={orderData.dateRequired} onChange={e => updateOrder('dateRequired', e.target.value)} /></div>
                             
                             <div>
-                                <label className="block text-xs font-semibold text-slate-500 mb-1 flex items-center gap-1.5"><Icon name="image" size={14}/> Mockup Image</label>
+                                <label className="ka-label flex items-center gap-1.5"><Icon name="image" size={14}/> Mockup Image</label>
                                 <input type="file" accept="image/*" style={{ display: 'none' }} ref={imageInputRef} onChange={handleImageUpload} />
                                 <button 
                                     onClick={() => imageInputRef.current && imageInputRef.current.click()} 
                                     disabled={isUploadingImage}
-                                    className={`w-full p-3 border border-dashed rounded-xl outline-none text-sm font-bold flex items-center justify-center gap-2 transition-colors ${isUploadingImage ? 'bg-slate-100 text-slate-400 border-slate-300 cursor-not-allowed' : 'bg-indigo-50 text-indigo-700 border-indigo-200 hover:bg-indigo-100 focus:ring-2 focus:ring-indigo-500'}`}
+                                    className={`ka-btn ka-btn-outline w-full py-3 normal-case tracking-normal font-semibold text-sm ${isUploadingImage ? 'opacity-50 cursor-not-allowed' : ''}`}
                                 >
                                     <Icon name={isUploadingImage ? "refresh" : "image"} size={18} className={isUploadingImage ? "animate-spin" : ""} /> 
                                     {isUploadingImage ? 'Uploading to Cloud...' : orderData.mockupImage ? 'Replace Mockup' : 'Upload Mockup'}
@@ -1006,22 +1023,22 @@
                             </div>
 
                             {orderData.mockupImage && (
-                                <div className="md:col-span-2 relative bg-slate-50 p-2 rounded-xl border border-slate-200 flex justify-center">
+                                <div className="md:col-span-2 relative bg-[#faf9f6] p-2 rounded border border-[#e3e1d9] flex justify-center">
                                     <img src={orderData.mockupImage} alt="Mockup" className="max-h-48 rounded-lg object-contain shadow-sm" />
                                     <button onClick={() => updateOrder('mockupImage', null)} className="absolute top-4 right-4 bg-red-500 hover:bg-red-600 text-white p-2 rounded-full shadow-md transition-transform active:scale-95"><Icon name="trash" size={16} /></button>
                                 </div>
                             )}
 
-                            <div className="md:col-span-2"><label className="block text-xs font-semibold text-slate-500 mb-1">Job Description / Overview</label><textarea placeholder="Visible on Proposal..." className="w-full p-3 soft-input rounded-xl text-sm resize-none" rows="2" value={orderData.orderDescription} onChange={e => updateOrder('orderDescription', e.target.value)}></textarea></div>
-                            <div className="md:col-span-2"><label className="block text-xs font-semibold text-indigo-500 mb-1">Design Notes / Proofing Disclaimers</label><textarea placeholder="Visible on Proposal..." className="w-full p-3 bg-indigo-50 border border-indigo-100 rounded-xl focus:ring-2 focus:ring-indigo-400 outline-none text-sm resize-none" rows="2" value={orderData.designNotes} onChange={e => updateOrder('designNotes', e.target.value)}></textarea></div>
+                            <div className="md:col-span-2"><label className="ka-label">Job Description / Overview</label><textarea placeholder="Visible on Proposal..." className="w-full p-3 ka-input text-sm resize-none" rows="2" value={orderData.orderDescription} onChange={e => updateOrder('orderDescription', e.target.value)}></textarea></div>
+                            <div className="md:col-span-2"><label className="ka-label">Design Notes / Proofing Disclaimers</label><textarea placeholder="Visible on Proposal..." className="ka-input w-full resize-none" rows="2" value={orderData.designNotes} onChange={e => updateOrder('designNotes', e.target.value)}></textarea></div>
                         </div>
 
                         {calc.items.map((item, index) => (
-                            <div key={item.id} className="bg-slate-50 rounded-xl border-2 border-slate-300 overflow-hidden mb-6 shadow-sm">
-                                <div className="p-3 md:p-4 flex flex-col md:flex-row justify-between items-start md:items-center bg-slate-700 gap-3">
+                            <div key={item.id} className="ka-card overflow-hidden mb-6">
+                                <div className="p-3 md:p-4 flex flex-col md:flex-row justify-between items-start md:items-center border-b border-[#e3e1d9] gap-3">
                                     <div className="flex items-center gap-3 w-full md:w-auto">
-                                        <h3 className="font-extrabold text-white text-xs uppercase tracking-wide flex items-center gap-2 whitespace-nowrap"><Icon name="shirt" size={16} className="text-slate-300"/> Garment Style {index + 1}</h3>
-                                        <select className="p-1.5 border border-slate-500 bg-slate-600 rounded-md text-[10px] font-bold text-white cursor-pointer shadow-sm outline-none focus:ring-2 focus:ring-indigo-400" onChange={(e) => {
+                                        <h3 className="ka-serif text-base md:text-lg text-[#1a1a1a] flex items-center gap-2 whitespace-nowrap"><Icon name="shirt" size={16} className="text-[#8a8a80]"/> Garment Style {index + 1}</h3>
+                                        <select className="ka-input py-1.5 px-2 text-[10px] cursor-pointer" onChange={(e) => {
                                             const g = (shopSettings.quickFillGarments || []).find(f => f.id === e.target.value);
                                             if(g) {
                                                 setItems(items.map(i => i.id === item.id ? { ...i, name: g.name, rawCost: g.cost, shippingCost: g.shipping, margin: g.margin } : i));
@@ -1032,55 +1049,48 @@
                                             {(shopSettings.quickFillGarments || []).map(g => <option key={g.id} value={g.id}>{g.name}</option>)}
                                         </select>
                                     </div>
-                                    <div className="flex gap-2 self-end md:self-auto">
-                                        <button onClick={() => duplicateItem(item)} className="text-slate-300 hover:text-white transition-colors"><Icon name="copy" size={16} /></button>
-                                        {items.length > 1 && <button onClick={() => removeItem(item.id)} className="text-slate-300 hover:text-rose-400 transition-colors"><Icon name="trash" size={16} /></button>}
+                                    <div className="flex gap-3 self-end md:self-auto">
+                                        <button onClick={() => duplicateItem(item)} className="text-[#8a8a80] hover:text-[#1a1a1a] transition-colors"><Icon name="copy" size={16} /></button>
+                                        {items.length > 1 && <button onClick={() => removeItem(item.id)} className="text-[#8a8a80] hover:text-[#9a3f2e] transition-colors"><Icon name="trash" size={16} /></button>}
                                     </div>
                                 </div>
                                 <div className="p-3 md:p-4 space-y-4">
                                     <div className="flex flex-col md:flex-row gap-3 md:gap-4">
-                                        <div className="flex-[2]"><label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase">Item Desc</label><input type="text" placeholder="e.g. Gildan 5000" className="w-full p-2 md:p-2.5 soft-input rounded-lg text-sm" value={item.name} onChange={e => updateItem(item.id, 'name', e.target.value)} /></div>
-                                        <div className="flex-1"><label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase">Color</label><input type="text" placeholder="Black" className="w-full p-2 md:p-2.5 soft-input rounded-lg text-sm" value={item.color} onChange={e => updateItem(item.id, 'color', e.target.value)} /></div>
-                                        <div className="flex-1"><label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase">Total Qty</label><input type="number" className={`w-full p-2 md:p-2.5 rounded-lg text-sm font-bold text-center ${item.sizeSum > 0 ? 'bg-slate-100 text-slate-400 border border-slate-200 cursor-not-allowed' : 'bg-white text-indigo-700 border border-indigo-200'}`} value={item.sizeSum > 0 ? item.sizeSum : item.qty} readOnly={item.sizeSum > 0} onChange={e => updateItem(item.id, 'qty', e.target.value)} /></div>
+                                        <div className="flex-[2]"><label className="ka-label">Item Desc</label><input type="text" placeholder="e.g. Gildan 5000" className="w-full p-2 md:p-2.5 ka-input text-sm" value={item.name} onChange={e => updateItem(item.id, 'name', e.target.value)} /></div>
+                                        <div className="flex-1"><label className="ka-label">Color</label><input type="text" placeholder="Black" className="w-full p-2 md:p-2.5 ka-input text-sm" value={item.color} onChange={e => updateItem(item.id, 'color', e.target.value)} /></div>
+                                        <div className="flex-1"><label className="ka-label">Total Qty</label><input type="number" className={`ka-input w-full p-2 md:p-2.5 text-sm font-semibold text-center ${item.sizeSum > 0 ? 'opacity-50 cursor-not-allowed' : ''}`} value={item.sizeSum > 0 ? item.sizeSum : item.qty} readOnly={item.sizeSum > 0} onChange={e => updateItem(item.id, 'qty', e.target.value)} /></div>
                                     </div>
                                     <div className="mt-1">
-                                        <label className="block text-[10px] font-bold text-slate-400 mb-2 uppercase tracking-wider">Size Breakdown (Overrides Total Qty)</label>
+                                        <label className="ka-label">Size Breakdown (Overrides Total Qty)</label>
                                         <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
                                             {SIZES_LIST.map(size => (
                                                 <div key={size} className="flex-1 min-w-[3rem]">
-                                                    <div className="text-[10px] text-center text-slate-500 font-bold mb-1.5">{size}</div>
-                                                    <input type="number" placeholder="-" className="w-full p-2 text-center soft-input rounded-lg text-sm font-semibold text-slate-700" value={item.sizes?.[size] || ''} onFocus={e => e.target.select()} onChange={e => updateSize(item.id, size, e.target.value)} />
+                                                    <div className="text-[10px] text-center text-[#8a8a80] font-semibold mb-1.5">{size}</div>
+                                                    <input type="number" placeholder="-" className="ka-input w-full p-2 text-center text-sm" value={item.sizes?.[size] || ''} onFocus={e => e.target.select()} onChange={e => updateSize(item.id, size, e.target.value)} />
                                                 </div>
                                             ))}
                                         </div>
                                     </div>
                                     
-                                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2 md:gap-3 bg-white p-2 md:p-3 rounded-lg border border-slate-200">
-                                        <div><label className="block text-[10px] font-bold text-slate-500 mb-1">Wholesale $</label><input type="number" className="w-full p-2 soft-input rounded-md text-sm" value={item.rawCost} onChange={e => updateItem(item.id, 'rawCost', e.target.value)} /></div>
-                                        <div><label className="block text-[10px] font-bold text-slate-500 mb-1">Freight $</label><input type="number" className="w-full p-2 soft-input rounded-md text-sm" value={item.shippingCost} onChange={e => updateItem(item.id, 'shippingCost', e.target.value)} /></div>
-                                        <div><label className="block text-[10px] font-bold text-slate-500 mb-1">Margin %</label><input type="number" className="w-full p-2 soft-input rounded-md text-sm text-indigo-700 font-bold" value={item.margin} onChange={e => updateItem(item.id, 'margin', e.target.value)} /></div>
+                                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 md:gap-3 bg-[#faf9f6] p-2 md:p-3 rounded border border-[#e3e1d9]">
+                                        <div><label className="ka-label">Wholesale $</label><input type="number" className="w-full p-2 ka-input text-sm" value={item.rawCost} onChange={e => updateItem(item.id, 'rawCost', e.target.value)} /></div>
+                                        <div><label className="ka-label">Freight $</label><input type="number" className="w-full p-2 ka-input text-sm" value={item.shippingCost} onChange={e => updateItem(item.id, 'shippingCost', e.target.value)} /></div>
+                                        <div><label className="ka-label">Margin %</label><input type="number" className="ka-input w-full p-2 text-sm" value={item.margin} onChange={e => updateItem(item.id, 'margin', e.target.value)} /></div>
                                         
-                                        <div className="bg-indigo-50 border border-indigo-100 rounded-md p-2 flex flex-col justify-center">
-                                            <label className="block text-[9px] font-bold text-indigo-600 mb-1 uppercase text-center leading-none">Blank Sell Price</label>
-                                            <div className="text-sm font-black text-indigo-700 text-center">
+                                        <div className="bg-white border border-[#e3e1d9] rounded p-2 flex flex-col justify-center">
+                                            <label className="ka-label text-center leading-none">Blank Price</label>
+                                            <div className="ka-serif text-sm text-[#1a1a1a] text-center">
                                                 {formatCurrency(item.clientGarmentPrice)}
                                             </div>
                                         </div>
-
-                                        <div className="bg-emerald-50 border border-emerald-100 rounded-md p-2 flex flex-col justify-center">
-                                            <label className="block text-[9px] font-bold text-emerald-600 mb-1 uppercase text-center leading-none">Blank Profit/ea</label>
-                                            <div className="text-sm font-black text-emerald-700 text-center">
-                                                {formatCurrency(item.clientGarmentPrice - item.landedCost)}
-                                            </div>
-                                        </div>
                                     </div>
-                                    <p className="text-[9px] text-slate-400 -mt-2 italic">^ Blank garment only. Decoration is added below.</p>
+                                    <p className="text-[9px] text-[#8a8a80] -mt-2 italic">^ Blank garment only &mdash; full cost vs. price for this style, decoration included, is in the Style Summary below.</p>
 
                                     <div>
                                         <div className="flex items-center justify-between mb-2">
-                                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Decorations</p>
+                                            <p className="ka-label mb-0">Decorations</p>
                                             {item.validPlacementCount > 0 && (
-                                                <span className="text-[10px] font-black text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full">
+                                                <span className="text-[10px] font-semibold text-[#1a1a1a] bg-[#faf9f6] border border-[#e3e1d9] px-2 py-0.5 rounded-full">
                                                     {item.validPlacementCount} placement{item.validPlacementCount !== 1 ? 's' : ''} · +{formatCurrency(item.itemDecoPerPiece)}/ea
                                                 </span>
                                             )}
@@ -1088,11 +1098,11 @@
                                         {item.processedLocations.map((loc, lIdx) => {
                                             return (
                                             
-                                            <div key={loc.id} className="bg-white border border-slate-200 rounded-lg p-2 md:p-3 mb-2 flex flex-col xl:flex-row gap-2 md:gap-3 items-start xl:items-center relative pr-8">
-                                                {item.locations.length > 1 && <button onClick={() => removeLocation(item.id, loc.id)} className="absolute right-2 top-2 text-slate-300 hover:text-red-500"><Icon name="x" size={14} /></button>}
+                                            <div key={loc.id} className="bg-white border border-[#e3e1d9] rounded p-2 md:p-3 mb-2 flex flex-col xl:flex-row gap-2 md:gap-3 items-start xl:items-center relative pr-8">
+                                                {item.locations.length > 1 && <button onClick={() => removeLocation(item.id, loc.id)} className="absolute right-2 top-2 text-[#c4c2b8] hover:text-[#9a3f2e]"><Icon name="x" size={14} /></button>}
                                                 
                                                 <div className="flex flex-col md:flex-row gap-2 w-full xl:w-auto">
-                                                    <select className="w-full md:w-32 p-2 soft-input rounded-md text-xs font-bold shrink-0" value={loc.type} onChange={e => updateLocation(item.id, loc.id, 'type', e.target.value)}>
+                                                    <select className="w-full md:w-32 p-2 ka-input text-xs font-bold shrink-0" value={loc.type} onChange={e => updateLocation(item.id, loc.id, 'type', e.target.value)}>
                                                         <option value="none">None</option>
                                                         <option value="embroidery">Embroidery</option>
                                                         <option value="dtf">DTF Print</option>
@@ -1100,125 +1110,107 @@
                                                     
                                                     {loc.type === 'embroidery' && (
                                                         <div className="w-full flex items-center gap-2 shrink-0">
-                                                            <input type="number" placeholder="Stitches" className="w-24 p-2 soft-input rounded-md text-xs" value={loc.stitches} onChange={e => updateLocation(item.id, loc.id, 'stitches', e.target.value)} />
-                                                            <label className="flex items-center gap-1 text-[10px] font-bold text-slate-500 cursor-pointer whitespace-nowrap">
-                                                                <input type="checkbox" checked={loc.isPuff} onChange={e => updateLocation(item.id, loc.id, 'isPuff', e.target.checked)} className="rounded text-indigo-600 focus:ring-indigo-500" />
+                                                            <input type="number" placeholder="Stitches" className="w-24 p-2 ka-input text-xs" value={loc.stitches} onChange={e => updateLocation(item.id, loc.id, 'stitches', e.target.value)} />
+                                                            <label className="flex items-center gap-1 text-[10px] font-semibold text-[#6e6d66] cursor-pointer whitespace-nowrap">
+                                                                <input type="checkbox" checked={loc.isPuff} onChange={e => updateLocation(item.id, loc.id, 'isPuff', e.target.checked)} className="accent-[#1a1a1a]" />
                                                                 3D Puff
                                                             </label>
-                                                            {loc.isPuff && <input type="number" className="w-16 p-2 soft-input rounded-md text-xs text-indigo-700 font-bold" value={loc.puffMarkup} onChange={e => updateLocation(item.id, loc.id, 'puffMarkup', e.target.value)} placeholder="+$" />}
+                                                            {loc.isPuff && <input type="number" className="ka-input w-16 p-2 text-xs" value={loc.puffMarkup} onChange={e => updateLocation(item.id, loc.id, 'puffMarkup', e.target.value)} placeholder="+$" />}
                                                         </div>
                                                     )}
                                                     
                                                     {loc.type === 'dtf' && (
-                                                        <select className="w-full md:w-40 p-2 soft-input rounded-md text-xs shrink-0" value={loc.dtfSize} onChange={e => updateLocation(item.id, loc.id, 'dtfSize', e.target.value)}>
+                                                        <select className="w-full md:w-40 p-2 ka-input text-xs shrink-0" value={loc.dtfSize} onChange={e => updateLocation(item.id, loc.id, 'dtfSize', e.target.value)}>
                                                             {DTF_SIZES.map(s => <option key={s.id} value={s.id}>{s.label}</option>)}
                                                         </select>
                                                     )}
                                                     
                                                     {loc.type !== 'none' && (
-                                                        <select className="w-full md:w-40 p-2 soft-input rounded-md text-xs shrink-0" value={loc.placement} onChange={e => updateLocation(item.id, loc.id, 'placement', e.target.value)}>
+                                                        <select className="w-full md:w-40 p-2 ka-input text-xs shrink-0" value={loc.placement} onChange={e => updateLocation(item.id, loc.id, 'placement', e.target.value)}>
                                                             {PLACEMENTS.map(p => <option key={p.id} value={p.id}>{p.label}</option>)}
                                                         </select>
                                                     )}
                                                 </div>
                                                 
                                                 {loc.type !== 'none' && (
-                                                    <input type="text" placeholder="Custom notes..." className="w-full xl:flex-1 p-2 soft-input rounded-md text-xs min-w-[100px]" value={loc.desc} onChange={e => updateLocation(item.id, loc.id, 'desc', e.target.value)} />
+                                                    <input type="text" placeholder="Custom notes..." className="w-full xl:flex-1 p-2 ka-input text-xs min-w-[100px]" value={loc.desc} onChange={e => updateLocation(item.id, loc.id, 'desc', e.target.value)} />
                                                 )}
 
                                                 {loc.type !== 'none' && (
-                                                    <div className="w-full xl:w-auto flex flex-wrap justify-between md:justify-end gap-2 md:gap-4 shrink-0 bg-slate-50 p-2 rounded-md border border-slate-200 items-center mt-1 xl:mt-0">
-                                                        <div className="flex flex-col items-center border-r border-slate-200 pr-2 md:pr-4">
-                                                            <span className="text-[9px] font-bold text-slate-400 uppercase">Adj $</span>
-                                                            <input type="number" className="w-12 md:w-14 p-1 soft-input rounded text-xs font-bold text-slate-700 text-center" placeholder="0.00" value={loc.adjustment} onChange={e => updateLocation(item.id, loc.id, 'adjustment', e.target.value)} />
-                                                        </div>
-                                                        <div className="flex gap-3 md:gap-4 text-[9px] md:text-[10px]">
-                                                            <div className="flex flex-col items-end">
-                                                                <span className="text-slate-400 font-bold uppercase">Mat. Cost</span>
-                                                                <span className="text-rose-500 font-bold">{formatCurrency(loc.materialCost)}</span>
-                                                            </div>
-                                                            <div className="flex flex-col items-end">
-                                                                <span className="text-slate-400 font-bold uppercase">Sell Price</span>
-                                                                <span className="text-indigo-600 font-black">{formatCurrency(loc.cost)}</span>
-                                                            </div>
-                                                            <div className="flex flex-col items-end">
-                                                                <span className="text-slate-400 font-bold uppercase">Adds/ea</span>
-                                                                <span className="font-black text-slate-700">
-                                                                    {formatCurrency(loc.cost - loc.materialCost)}
-                                                                </span>
-                                                            </div>
-                                                        </div>
+                                                    <div className="flex items-center gap-1.5 shrink-0 mt-1 xl:mt-0">
+                                                        <span className="text-[9px] font-semibold text-[#8a8a80] uppercase whitespace-nowrap">Adj $</span>
+                                                        <input type="number" className="ka-input w-16 p-1.5 text-xs text-center" placeholder="0.00" value={loc.adjustment} onChange={e => updateLocation(item.id, loc.id, 'adjustment', e.target.value)} />
                                                     </div>
                                                 )}
                                             </div>
                                         )})}
 
-                                        <button onClick={() => addLocation(item.id)} className="text-[10px] font-bold text-indigo-600 bg-indigo-50 px-3 py-1.5 rounded-md mt-2">+ Add Decor</button>
+                                        <button onClick={() => addLocation(item.id)} className="ka-btn ka-btn-outline ka-btn-sm mt-2">+ Add Decor</button>
                                     </div>
                                     
-                                    <div className="mt-6 -mx-3 md:-mx-4 -mb-3 md:-mb-4 bg-slate-800 p-4 md:p-5 border-t border-slate-900 rounded-b-xl shadow-inner">
+                                    <div className="mt-6 -mx-3 md:-mx-4 -mb-3 md:-mb-4 bg-[#faf9f6] p-4 md:p-5 border-t border-[#e3e1d9]">
                                         <div className="flex items-center justify-between mb-3">
-                                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Style Summary &middot; {item.calculatedQty} pcs</p>
-                                            <button onClick={() => toggleOptimizer(item.id)} className={`text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-md flex items-center gap-1.5 transition-colors ${optimizerOpen[item.id] ? 'bg-indigo-600 text-white' : 'bg-indigo-900/50 text-indigo-300 hover:bg-indigo-900'}`}>
+                                            <p className="ka-label mb-0">Style Summary &middot; {item.calculatedQty} pcs</p>
+                                            <button onClick={() => toggleOptimizer(item.id)} className={`ka-btn ka-btn-sm ${optimizerOpen[item.id] ? 'ka-btn-dark' : 'ka-btn-outline'}`}>
                                                 <Icon name="percent" size={12} /> Optimize
                                             </button>
                                         </div>
 
-                                        <div className="bg-slate-900/50 rounded-lg border border-slate-700 overflow-hidden mb-3 text-xs md:text-sm">
-                                            <div className="grid grid-cols-3 text-[9px] md:text-[10px] font-bold text-slate-400 uppercase tracking-widest px-3 py-1.5 border-b border-slate-700">
+                                        <div className="bg-white rounded border border-[#e3e1d9] overflow-hidden mb-3 text-xs md:text-sm">
+                                            <div className="grid grid-cols-3 text-[9px] md:text-[10px] font-semibold text-[#8a8a80] uppercase tracking-widest px-3 py-1.5 border-b border-[#e3e1d9]">
                                                 <span>Per Garment</span>
                                                 <span className="text-right">My Cost</span>
                                                 <span className="text-right">Customer Price</span>
                                             </div>
-                                            <div className="grid grid-cols-3 px-3 py-1.5 text-slate-300">
+                                            <div className="grid grid-cols-3 px-3 py-1.5 text-[#4a4a44]">
                                                 <span>Garment</span>
-                                                <span className="text-right font-semibold">{formatCurrency(item.landedCost)}</span>
-                                                <span className="text-right font-semibold text-indigo-300">{formatCurrency(item.clientGarmentPrice)}</span>
+                                                <span className="text-right font-medium">{formatCurrency(item.landedCost)}</span>
+                                                <span className="text-right font-medium text-[#1a1a1a]">{formatCurrency(item.clientGarmentPrice)}</span>
                                             </div>
                                             {item.processedLocations.filter(loc => loc.type !== 'none').map((loc, dIdx) => (
-                                                <div key={loc.id} className="grid grid-cols-3 px-3 py-1.5 text-slate-300 border-t border-slate-700/50">
+                                                <div key={loc.id} className="grid grid-cols-3 px-3 py-1.5 text-[#4a4a44] border-t border-[#efeee8]">
                                                     <span>Decoration {dIdx + 1}</span>
-                                                    <span className="text-right font-semibold">{formatCurrency(loc.materialCost)}</span>
-                                                    <span className="text-right font-semibold text-indigo-300">{formatCurrency(loc.cost)}</span>
+                                                    <span className="text-right font-medium">{formatCurrency(loc.materialCost)}</span>
+                                                    <span className="text-right font-medium text-[#1a1a1a]">{formatCurrency(loc.cost)}</span>
                                                 </div>
                                             ))}
                                             {item.validPlacementCount > 0 && (
-                                                <div className="grid grid-cols-3 px-3 py-1.5 items-center text-emerald-400 border-t border-slate-700/50">
+                                                <div className="grid grid-cols-3 px-3 py-1.5 items-center text-[#4b6b45] border-t border-[#efeee8]">
                                                     <span>Decoration Discount</span>
                                                     <span className="text-right">&mdash;</span>
                                                     <div className="flex justify-end">
                                                         <div className="relative w-20">
-                                                            <span className="absolute left-1.5 top-1.5 text-emerald-600 font-bold text-[10px]">-$</span>
-                                                            <input type="number" placeholder="0.00" className="w-full pl-4 pr-1 py-1 soft-input rounded text-xs text-emerald-700 font-bold text-right" value={item.decoDiscount} onChange={e => updateItem(item.id, 'decoDiscount', e.target.value)} />
+                                                            <span className="absolute left-1.5 top-1.5 text-[#4b6b45] font-semibold text-[10px]">-$</span>
+                                                            <input type="number" placeholder="0.00" className="ka-input w-full pl-4 pr-1 py-1 text-xs text-right" value={item.decoDiscount} onChange={e => updateItem(item.id, 'decoDiscount', e.target.value)} />
                                                         </div>
                                                     </div>
                                                 </div>
                                             )}
-                                            <div className="grid grid-cols-3 px-3 py-2 text-white font-black border-t border-slate-600 bg-slate-900/60">
-                                                <span>Total / ea</span>
+                                            <div className="grid grid-cols-3 px-3 py-2 text-[#1a1a1a] font-semibold border-t border-[#e3e1d9] bg-[#faf9f6]">
+                                                <span className="ka-serif">Total / ea</span>
                                                 <span className="text-right">{formatCurrency(item.landedCost + item.itemDecoCostPerPiece)}</span>
-                                                <span className="text-right text-indigo-300">{formatCurrency(item.lineTotalPerPiece)}</span>
+                                                <span className="text-right">{formatCurrency(item.lineTotalPerPiece)}</span>
                                             </div>
                                         </div>
 
                                         <div className="grid grid-cols-2 gap-3 md:gap-4">
-                                            <div className={`rounded-lg p-3 flex flex-col justify-center items-center border shadow-sm ${getHealthBg(item.itemMarginPercent).replace('200', '300')}`}>
-                                                <span className={`text-[9px] md:text-[10px] font-bold uppercase tracking-widest text-center leading-tight mb-1 ${getHealthColor(item.itemMarginPercent)}`}>Profit / ea (All-In)</span>
+                                            <div className={`rounded p-3 flex flex-col justify-center items-center border ${getHealthBg(item.itemMarginPercent)}`}>
+                                                <span className={`text-[9px] md:text-[10px] font-semibold uppercase tracking-widest text-center leading-tight mb-1 ${getHealthColor(item.itemMarginPercent)}`}>Profit / ea (All-In)</span>
                                                 <div className="flex items-baseline gap-1 md:gap-1.5">
-                                                    <span className={`text-base md:text-lg font-black ${getHealthColor(item.itemMarginPercent)}`}>
+                                                    <span className={`ka-serif text-base md:text-lg ${getHealthColor(item.itemMarginPercent)}`}>
                                                         {formatCurrency(item.lineTotalPerPiece - (item.landedCost + item.itemDecoCostPerPiece))}
                                                     </span>
-                                                    <span className={`text-[9px] md:text-[10px] font-bold ${getHealthColor(item.itemMarginPercent)} opacity-80`}>
+                                                    <span className={`text-[9px] md:text-[10px] font-semibold ${getHealthColor(item.itemMarginPercent)} opacity-80`}>
                                                         ({item.itemMarginPercent.toFixed(1)}%)
                                                     </span>
                                                 </div>
                                             </div>
 
-                                            <div className={`rounded-lg p-3 flex flex-col justify-center items-center border shadow-sm relative overflow-hidden ${getHealthBg(item.itemMarginPercent).replace('200', '300')}`}>
+                                            <div className={`rounded p-3 flex flex-col justify-center items-center border relative overflow-hidden ${getHealthBg(item.itemMarginPercent)}`}>
                                                  <div className={`absolute -right-2 -bottom-2 opacity-10 ${getHealthColor(item.itemMarginPercent)}`}><Icon name="wallet" size={55} /></div>
-                                                <span className={`text-[9px] md:text-[10px] font-bold uppercase tracking-widest text-center relative z-10 leading-tight mb-1 ${getHealthColor(item.itemMarginPercent)}`}>Total Profit (Style)</span>
+                                                <span className={`text-[9px] md:text-[10px] font-semibold uppercase tracking-widest text-center relative z-10 leading-tight mb-1 ${getHealthColor(item.itemMarginPercent)}`}>Total Profit (Style)</span>
                                                 <div className="flex items-baseline gap-1 relative z-10">
-                                                    <span className={`text-lg md:text-xl font-black ${getHealthColor(item.itemMarginPercent)}`}>
+                                                    <span className={`ka-serif text-lg md:text-xl ${getHealthColor(item.itemMarginPercent)}`}>
                                                         {formatCurrency((item.lineTotalPerPiece - (item.landedCost + item.itemDecoCostPerPiece)) * item.calculatedQty)}
                                                     </span>
                                                 </div>
@@ -1229,83 +1221,83 @@
                                             const targetInput = optimizeTargets[item.id] ?? shopSettings.marginGreen;
                                             const opt = getOptimizerData(item, targetInput);
                                             return (
-                                                <div className="mt-3 bg-indigo-950/40 border border-indigo-800 rounded-lg p-3 md:p-4 space-y-3">
+                                                <div className="mt-3 bg-white border border-[#e3e1d9] rounded p-3 md:p-4 space-y-3">
                                                     <div className="flex items-center justify-between flex-wrap gap-2">
-                                                        <p className="text-[10px] font-black text-indigo-300 uppercase tracking-widest">Price Optimizer</p>
+                                                        <p className="ka-serif text-sm text-[#1a1a1a]">Price Optimizer</p>
                                                         <div className="flex items-center gap-1.5">
-                                                            <span className="text-[9px] font-bold text-slate-400 uppercase">Target Margin</span>
+                                                            <span className="text-[9px] font-semibold text-[#8a8a80] uppercase tracking-wide">Target Margin</span>
                                                             <div className="relative">
-                                                                <input type="number" className="w-16 p-1 pr-4 soft-input rounded text-xs font-bold text-center" value={targetInput} onChange={e => setOptimizeTarget(item.id, e.target.value)} />
-                                                                <span className="absolute right-1.5 top-1.5 text-[9px] text-slate-500">%</span>
+                                                                <input type="number" className="ka-input w-16 py-1 pl-2 pr-4 text-xs text-center" value={targetInput} onChange={e => setOptimizeTarget(item.id, e.target.value)} />
+                                                                <span className="absolute right-1.5 top-1.5 text-[9px] text-[#8a8a80]">%</span>
                                                             </div>
                                                         </div>
                                                     </div>
 
                                                     <div className="grid grid-cols-2 gap-3 text-xs">
-                                                        <div className="bg-slate-900/60 rounded p-2">
-                                                            <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1">Current Price</p>
-                                                            <p className="font-black text-white">{formatCurrency(opt.currentPrice)}/ea <span className="text-slate-400 font-bold">@ {opt.currentMargin.toFixed(1)}%</span></p>
+                                                        <div className="bg-[#faf9f6] border border-[#e3e1d9] rounded p-2">
+                                                            <p className="text-[9px] font-semibold text-[#8a8a80] uppercase tracking-widest mb-1">Current Price</p>
+                                                            <p className="font-semibold text-[#1a1a1a]">{formatCurrency(opt.currentPrice)}/ea <span className="text-[#8a8a80] font-medium">@ {opt.currentMargin.toFixed(1)}%</span></p>
                                                         </div>
-                                                        <div className="bg-slate-900/60 rounded p-2">
-                                                            <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1">Absolute Floor ({shopSettings.marginYellow}%)</p>
-                                                            <p className="font-black text-rose-300">{formatCurrency(opt.floorPrice)}/ea</p>
+                                                        <div className="bg-[#faf9f6] border border-[#e3e1d9] rounded p-2">
+                                                            <p className="text-[9px] font-semibold text-[#8a8a80] uppercase tracking-widest mb-1">Absolute Floor ({shopSettings.marginYellow}%)</p>
+                                                            <p className="font-semibold text-[#9a3f2e]">{formatCurrency(opt.floorPrice)}/ea</p>
                                                         </div>
                                                     </div>
 
                                                     {opt.priceDelta <= 0 ? (
-                                                        <div className="bg-emerald-900/30 border border-emerald-700 rounded-lg p-2.5">
-                                                            <p className="text-xs text-emerald-300">You have <span className="font-black">{formatCurrency(-opt.priceDelta)}/ea</span> of room to come down on price and still hit your {opt.target}% target &mdash; that's your wiggle room to be competitive.
+                                                        <div className="bg-[#eef2ea] border border-[#cfdcc4] rounded p-2.5">
+                                                            <p className="text-xs text-[#4b6b45]">You have <span className="font-semibold">{formatCurrency(-opt.priceDelta)}/ea</span> of room to come down on price and still hit your {opt.target}% target &mdash; that's your wiggle room to be competitive.
                                                             {opt.requiredMarginForTarget.reason === 'belowCost' && " That room lives in your decoration pricing, though \u2014 your blank is already at (or would have to go below) your purchase cost, so we won't suggest cutting the blank markup any further."}</p>
                                                         </div>
                                                     ) : (
-                                                        <div className="bg-amber-900/30 border border-amber-700 rounded-lg p-2.5">
-                                                            <p className="text-xs text-amber-300">You're under target &mdash; raise price by <span className="font-black">{formatCurrency(opt.priceDelta)}/ea</span> (or trim cost) to hit {opt.target}%.</p>
+                                                        <div className="bg-[#f7f0df] border border-[#e6d7a8] rounded p-2.5">
+                                                            <p className="text-xs text-[#8a6a1f]">You're under target &mdash; raise price by <span className="font-semibold">{formatCurrency(opt.priceDelta)}/ea</span> (or trim cost) to hit {opt.target}%.</p>
                                                         </div>
                                                     )}
 
                                                     <div className="flex flex-wrap gap-2">
                                                         {opt.requiredMarginForTarget.value !== null && (
-                                                            <button onClick={() => updateItem(item.id, 'margin', opt.requiredMarginForTarget.value.toFixed(1))} className="text-[10px] font-bold text-indigo-200 bg-indigo-800 hover:bg-indigo-700 px-3 py-1.5 rounded-md transition-colors">
+                                                            <button onClick={() => updateItem(item.id, 'margin', opt.requiredMarginForTarget.value.toFixed(1))} className="ka-btn ka-btn-outline ka-btn-sm">
                                                                 Set Blank Markup to {opt.requiredMarginForTarget.value.toFixed(1)}% &middot; hits {opt.target}% target
                                                             </button>
                                                         )}
                                                         {opt.requiredMarginForFloor.value !== null && (
-                                                            <button onClick={() => updateItem(item.id, 'margin', opt.requiredMarginForFloor.value.toFixed(1))} className="text-[10px] font-bold text-rose-200 bg-rose-900/60 hover:bg-rose-900 px-3 py-1.5 rounded-md transition-colors">
+                                                            <button onClick={() => updateItem(item.id, 'margin', opt.requiredMarginForFloor.value.toFixed(1))} className="ka-btn ka-btn-outline ka-btn-sm">
                                                                 Set Blank Markup to {opt.requiredMarginForFloor.value.toFixed(1)}% &middot; most competitive
                                                             </button>
                                                         )}
                                                     </div>
 
                                                     {opt.requiredMarginForTarget.reason === 'belowCost' && (
-                                                        <p className="text-[10px] text-slate-400 italic">No blank-markup suggestion shown for the target &mdash; hitting it would mean pricing the blank at or under your {formatCurrency(item.landedCost)} cost. Your decoration pricing is already covering the rest.</p>
+                                                        <p className="text-[10px] text-[#8a8a80] italic">No blank-markup suggestion shown for the target &mdash; hitting it would mean pricing the blank at or under your {formatCurrency(item.landedCost)} cost. Your decoration pricing is already covering the rest.</p>
                                                     )}
                                                     {opt.requiredMarginForTarget.reason === 'tooHigh' && (
-                                                        <p className="text-[10px] text-rose-400 italic">Even at a very high blank markup, decoration cost alone keeps you under this target. Raise the target, or trim decoration cost/discount.</p>
+                                                        <p className="text-[10px] text-[#9a3f2e] italic">Even at a very high blank markup, decoration cost alone keeps you under this target. Raise the target, or trim decoration cost/discount.</p>
                                                     )}
                                                 </div>
                                             );
                                         })()}
 
-                                        <div className="flex justify-between items-center mt-3 pt-3 border-t border-slate-700">
-                                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Total Style Revenue</span>
-                                            <span className="text-sm font-black text-indigo-300">{formatCurrency(item.lineTotal)}</span>
+                                        <div className="flex justify-between items-center mt-3 pt-3 border-t border-[#e3e1d9]">
+                                            <span className="ka-label mb-0">Total Style Revenue</span>
+                                            <span className="ka-serif text-sm text-[#1a1a1a]">{formatCurrency(item.lineTotal)}</span>
                                         </div>
                                     </div>
 
                                 </div>
                             </div>
                         ))}
-                        <button onClick={addItem} className="w-full py-3 border-2 border-dashed border-slate-300 rounded-xl text-slate-500 font-bold text-sm hover:border-indigo-400 hover:text-indigo-600 hover:bg-indigo-50 transition-all">+ Add Garment Style</button>
+                        <button onClick={addItem} className="w-full py-3 border border-dashed border-[#c9c7bd] rounded text-[#6e6d66] font-semibold text-sm hover:border-[#1a1a1a] hover:text-[#1a1a1a] transition-all">+ Add Garment Style</button>
                     </div>
 
-                    <div className="bg-white rounded-2xl shadow-sm p-4 md:p-6 border border-slate-200">
-                        <h2 className="text-sm font-bold text-slate-800 mb-4 md:mb-5 flex items-center gap-2 uppercase tracking-wider"><Icon name="settings" size={18} className="text-indigo-500" /> Fees & Discounts</h2>
+                    <div className="ka-card p-4 md:p-6">
+                        <h2 className="ka-serif text-xl md:text-2xl text-[#1a1a1a] mb-4 md:mb-5 flex items-center gap-2.5"><Icon name="settings" size={18} className="text-[#8a8a80]" /> Fees & Discounts</h2>
                         <div className="grid grid-cols-2 md:grid-cols-5 gap-3 md:gap-4 items-start">
                             <div>
-                                <label className="block text-[10px] md:text-[11px] font-semibold text-slate-500 mb-1.5 uppercase">Setup / Art Fee</label>
-                                <input type="number" className="w-full p-2.5 md:p-3 soft-input rounded-xl text-sm" value={orderData.setupFees} onFocus={(e) => e.target.select()} onChange={e => updateOrder('setupFees', e.target.value)} />
+                                <label className="ka-label">Setup / Art Fee</label>
+                                <input type="number" className="w-full p-2.5 md:p-3 ka-input text-sm" value={orderData.setupFees} onFocus={(e) => e.target.select()} onChange={e => updateOrder('setupFees', e.target.value)} />
                                 {(!orderData.setupFees || parseFloat(orderData.setupFees) === 0) && (
-                                    <select className="mt-2 w-full p-1.5 bg-slate-50 border border-slate-200 rounded-md text-[10px] text-slate-600 font-bold outline-none focus:ring-1 focus:ring-indigo-400" value={orderData.setupFeeReason || 'none'} onChange={e => updateOrder('setupFeeReason', e.target.value)}>
+                                    <select className="ka-input mt-2 w-full py-1.5 px-2 text-[10px]" value={orderData.setupFeeReason || 'none'} onChange={e => updateOrder('setupFeeReason', e.target.value)}>
                                         <option value="none">Standard ($0.00)</option>
                                         <option value="Waived (Courtesy)">Show: Waived (Courtesy)</option>
                                         <option value="Print-Ready Art Provided">Show: Print-Ready Art</option>
@@ -1313,55 +1305,55 @@
                                 )}
                             </div>
                             
-                            <div className="bg-slate-50 p-2 -m-2 rounded-xl border border-slate-100">
-                                <label className="block text-[10px] md:text-[11px] font-semibold text-slate-500 mb-1.5 uppercase">Digitizing Fee</label>
-                                <input type="number" className="w-full p-2 md:p-2.5 soft-input rounded-lg text-sm mb-2" value={orderData.digitizingFee} onFocus={(e) => e.target.select()} onChange={e => updateOrder('digitizingFee', e.target.value)} />
+                            <div className="bg-[#faf9f6] p-2 -m-2 rounded border border-[#e3e1d9]">
+                                <label className="ka-label">Digitizing Fee</label>
+                                <input type="number" className="w-full p-2 md:p-2.5 ka-input text-sm mb-2" value={orderData.digitizingFee} onFocus={(e) => e.target.select()} onChange={e => updateOrder('digitizingFee', e.target.value)} />
                                 {(!orderData.digitizingFee || parseFloat(orderData.digitizingFee) === 0) && (
-                                    <select className="mb-3 w-full p-1.5 bg-slate-50 border border-slate-200 rounded-md text-[10px] text-slate-600 font-bold outline-none focus:ring-1 focus:ring-indigo-400" value={orderData.digitizingFeeReason || 'none'} onChange={e => updateOrder('digitizingFeeReason', e.target.value)}>
+                                    <select className="ka-input mb-3 w-full py-1.5 px-2 text-[10px]" value={orderData.digitizingFeeReason || 'none'} onChange={e => updateOrder('digitizingFeeReason', e.target.value)}>
                                         <option value="none">Standard ($0.00)</option>
                                         <option value="File on Record">Show: File on Record</option>
                                         <option value="Waived (Courtesy)">Show: Waived (Courtesy)</option>
                                     </select>
                                 )}
                                 <div className="flex items-center justify-between mt-auto">
-                                    <span className="text-[9px] text-slate-400 font-bold uppercase">Outsourced Cost:</span>
-                                    <input type="number" className="w-14 p-1 bg-rose-50 text-rose-600 border border-rose-100 rounded text-[10px] font-bold text-center focus:ring-rose-400" placeholder="$0" value={orderData.digitizingCost} onFocus={(e) => e.target.select()} onChange={e => updateOrder('digitizingCost', e.target.value)} />
+                                    <span className="text-[9px] text-[#8a8a80] font-semibold uppercase">Outsourced Cost:</span>
+                                    <input type="number" className="ka-input w-14 p-1 text-[10px] text-center" placeholder="$0" value={orderData.digitizingCost} onFocus={(e) => e.target.select()} onChange={e => updateOrder('digitizingCost', e.target.value)} />
                                 </div>
                             </div>
 
                             <div>
                                 <div className="flex justify-between items-end mb-1.5">
-                                    <label className="block text-[10px] md:text-[11px] font-semibold text-slate-500 uppercase">Rush Order</label>
+                                    <label className="ka-label">Rush Order</label>
                                     <button onClick={() => {
                                         const base = calc.subtotal - calc.rush;
                                         updateOrder('rushFee', (base * 0.25).toFixed(2));
-                                    }} className="text-[9px] font-bold text-rose-500 bg-rose-50 hover:bg-rose-100 px-2 py-0.5 rounded border border-rose-100 transition-colors">
+                                    }} className="ka-btn ka-btn-outline ka-btn-sm">
                                         Auto 25%
                                     </button>
                                 </div>
-                                <input type="number" className={`w-full p-2.5 md:p-3 soft-input rounded-xl text-sm ${orderData.rushFeeWaived ? 'line-through text-slate-400 bg-slate-100' : ''}`} value={orderData.rushFee} onFocus={(e) => e.target.select()} onChange={e => updateOrder('rushFee', e.target.value)} />
+                                <input type="number" className={`ka-input w-full p-2.5 md:p-3 text-sm ${orderData.rushFeeWaived ? 'line-through opacity-50' : ''}`} value={orderData.rushFee} onFocus={(e) => e.target.select()} onChange={e => updateOrder('rushFee', e.target.value)} />
                                 <label className="flex items-center gap-1.5 mt-2 cursor-pointer">
-                                    <input type="checkbox" checked={orderData.rushFeeWaived} onChange={e => updateOrder('rushFeeWaived', e.target.checked)} className="rounded text-emerald-500 focus:ring-emerald-500" />
-                                    <span className="text-[10px] font-bold text-emerald-600 uppercase">Waive Fee</span>
+                                    <input type="checkbox" checked={orderData.rushFeeWaived} onChange={e => updateOrder('rushFeeWaived', e.target.checked)} className="accent-[#1a1a1a]" />
+                                    <span className="text-[10px] font-semibold text-[#4b6b45] uppercase">Waive Fee</span>
                                 </label>
                             </div>
 
                             <div>
-                                <label className="block text-[10px] md:text-[11px] font-semibold text-slate-500 mb-1.5 uppercase flex items-center gap-1"><Icon name="tag" size={12}/> Discount ($)</label>
+                                <label className="ka-label flex items-center gap-1"><Icon name="tag" size={12}/> Discount ($)</label>
                                 <div className="relative">
-                                    <span className="absolute left-3 top-2.5 md:top-3 text-emerald-600 font-bold">-$</span>
-                                    <input type="number" className="w-full pl-8 p-2.5 md:p-3 soft-input rounded-xl text-sm text-emerald-600 font-bold focus:ring-emerald-500" value={orderData.discount} onFocus={(e) => e.target.select()} onChange={e => updateOrder('discount', e.target.value)} />
+                                    <span className="absolute left-3 top-2.5 md:top-3 text-[#4b6b45] font-semibold">-$</span>
+                                    <input type="number" className="ka-input w-full pl-8 p-2.5 md:p-3 text-sm" value={orderData.discount} onFocus={(e) => e.target.select()} onChange={e => updateOrder('discount', e.target.value)} />
                                 </div>
                             </div>
 
-                            <div><label className="block text-[10px] md:text-[11px] font-semibold text-slate-500 mb-1.5 uppercase flex items-center gap-1"><Icon name="percent" size={12}/> Tax Rate (%)</label><input type="number" className="w-full p-2.5 md:p-3 soft-input rounded-xl text-sm" value={orderData.taxRate} onFocus={(e) => e.target.select()} onChange={e => updateOrder('taxRate', e.target.value)} /></div>
+                            <div><label className="ka-label flex items-center gap-1"><Icon name="percent" size={12}/> Tax Rate (%)</label><input type="number" className="w-full p-2.5 md:p-3 ka-input text-sm" value={orderData.taxRate} onFocus={(e) => e.target.select()} onChange={e => updateOrder('taxRate', e.target.value)} /></div>
                         </div>
                     </div>
 
                     {showInternalBreakdown && (
-                        <div className="bg-slate-900 text-white rounded-2xl p-4 md:p-6 shadow-lg space-y-6">
+                        <div className="bg-[#faf9f6] text-[#1a1a1a] rounded p-4 md:p-6 border border-[#e3e1d9] space-y-6">
                             <div>
-                                <h3 className="text-sm font-bold border-b border-slate-700 pb-3 mb-4 text-indigo-300 uppercase tracking-widest">Line Item Analysis</h3>
+                                <h3 className="ka-serif text-lg text-[#1a1a1a] border-b border-[#e3e1d9] pb-3 mb-4">Line Item Analysis</h3>
                                 <div className="space-y-4">
                                     {calc.items.map((item, idx) => {
                                         const sizeStr = getSizeString(item);
@@ -1371,101 +1363,73 @@
                                         const trueProfitEa = item.lineTotalPerPiece - totalMatCost;
 
                                         return (
-                                        <div key={item.id} className="bg-slate-800 border border-slate-700 rounded-xl p-4 shadow-sm">
-                                            
-                                            <div className="flex flex-col sm:flex-row sm:justify-between items-start mb-4 border-b border-slate-700 pb-3 gap-2">
+                                        <div key={item.id} className="bg-white border border-[#e3e1d9] rounded overflow-hidden">
+
+                                            <div className="flex flex-col sm:flex-row sm:justify-between items-start px-4 py-3 border-b border-[#e3e1d9] gap-1 bg-[#faf9f6]">
                                                 <div>
-                                                    <h4 className="font-bold text-white text-sm md:text-base">{idx + 1}. {item.name || 'Unnamed Item'} {item.color ? `(${item.color})` : ''} (Qty: {item.calculatedQty})</h4>
-                                                    {sizeStr && <p className="text-[10px] font-bold text-slate-400 mt-1">{sizeStr}</p>}
-                                                </div>
-                                                <div className="text-left sm:text-right">
-                                                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Total Line Value</span>
-                                                    <span className="font-bold text-indigo-300 text-lg block">{formatCurrency(item.lineTotal)}</span>
+                                                    <h4 className="ka-serif text-[#1a1a1a] text-sm md:text-base">{idx + 1}. {item.name || 'Unnamed Item'} {item.color ? `(${item.color})` : ''}</h4>
+                                                    <p className="text-[10px] font-medium text-[#8a8a80] mt-0.5">Qty: {item.calculatedQty}{sizeStr ? ` \u00b7 ${sizeStr}` : ''}</p>
                                                 </div>
                                             </div>
 
-                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                                
-                                                <div className="space-y-2">
-                                                    <h5 className="text-[10px] font-black text-slate-500 uppercase tracking-widest border-b border-slate-700 pb-1 mb-2">Revenue /ea (Client Pays)</h5>
-                                                    <div className="flex justify-between text-xs text-slate-300"><span>Garment Retail:</span><span className="font-semibold">{formatCurrency(item.clientGarmentPrice)}</span></div>
-                                                    <div className="flex justify-between text-xs text-slate-300"><span>Gross Decoration Fees:</span><span className="font-semibold">{formatCurrency(item.grossDecoPerPiece)}</span></div>
-                                                    
-                                                    {item.explicitDecoDiscount > 0 && (
-                                                        <div className="flex justify-between text-xs text-emerald-400 font-bold"><span>Discount Applied:</span><span>-{formatCurrency(item.explicitDecoDiscount)}</span></div>
-                                                    )}
-                                                    
-                                                    {item.explicitDecoDiscount > 0 && (
-                                                        <div className="flex justify-between text-xs text-slate-300"><span>Net Decoration Fees:</span><span className="font-semibold text-indigo-300">{formatCurrency(item.itemDecoPerPiece)}</span></div>
-                                                    )}
-                                                    
-                                                    <div className="flex justify-between text-sm text-white font-bold pt-2 border-t border-slate-700/50">
-                                                        <span>Final Sell Price /ea:</span><span className="text-indigo-300">{formatCurrency(item.lineTotalPerPiece)}</span>
-                                                    </div>
-                                                </div>
-
-                                                <div className="space-y-2">
-                                                    <h5 className="text-[10px] font-black text-slate-500 uppercase tracking-widest border-b border-slate-700 pb-1 mb-2">Costs /ea (You Paid)</h5>
-                                                    <div className="flex justify-between text-xs text-slate-300"><span>Blank Garment (Landed):</span><span className="font-semibold">{formatCurrency(item.landedCost)}</span></div>
-                                                    <div className="flex justify-between text-xs text-slate-300"><span>Materials Cost (DTF/Thread):</span><span className="font-semibold">{formatCurrency(decoMatCost)}</span></div>
-                                                    
-                                                    <div className="flex justify-between text-sm text-white font-bold pt-2 border-t border-slate-700/50">
-                                                        <span>True Cost /ea:</span><span className="text-rose-400">{formatCurrency(totalMatCost)}</span>
-                                                    </div>
-                                                </div>
-
+                                            <div className="flex justify-between px-4 py-2.5 text-[#1a1a1a] text-sm">
+                                                <span>Customer Cost <span className="text-[#8a8a80] text-xs">(Line Revenue)</span></span>
+                                                <span className="font-medium">{formatCurrency(item.lineTotal)}</span>
+                                            </div>
+                                            <div className="flex justify-between px-4 py-2.5 text-[#4a4a44] text-sm border-t border-[#efeee8]">
+                                                <span>Garment Costs (Total)</span>
+                                                <span className="font-medium text-[#9a3f2e]">-{formatCurrency(item.landedCost * item.calculatedQty)}</span>
+                                            </div>
+                                            <div className="flex justify-between px-4 py-2.5 text-[#4a4a44] text-sm border-t border-[#efeee8]">
+                                                <span>Decoration Costs (Total)</span>
+                                                <span className="font-medium text-[#9a3f2e]">-{formatCurrency(decoMatCost * item.calculatedQty)}</span>
                                             </div>
 
-                                            <div className="mt-5 bg-slate-900 border border-slate-700 rounded-lg p-3 flex justify-between items-center">
+                                            <div className={`flex justify-between items-center px-4 py-3 border-t ${getHealthBg(item.itemMarginPercent)}`}>
                                                 <div className="flex flex-col">
-                                                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Item Profit /ea</span>
-                                                    <span className="text-lg font-black text-emerald-400">{formatCurrency(trueProfitEa)}</span>
+                                                    <span className={`ka-serif text-sm ${getHealthColor(item.itemMarginPercent)}`}>Line Item Profit</span>
+                                                    <span className={`text-[10px] font-semibold uppercase tracking-widest mt-0.5 ${getHealthColor(item.itemMarginPercent)}`}>{item.itemMarginPercent.toFixed(1)}% margin</span>
                                                 </div>
-                                                <div className="flex flex-col items-end">
-                                                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Profit Margin</span>
-                                                    <span className={`text-lg font-black ${getHealthColor(item.itemMarginPercent)}`}>
-                                                        {item.itemMarginPercent.toFixed(1)}%
-                                                    </span>
-                                                </div>
+                                                <span className={`ka-serif text-xl ${getHealthColor(item.itemMarginPercent)}`}>{formatCurrency(trueProfitEa * item.calculatedQty)}</span>
                                             </div>
                                         </div>
                                     )})}
 
-                                    <div className="bg-slate-800 border border-slate-700 rounded-xl p-4 shadow-sm flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
+                                    <div className="bg-white border border-[#e3e1d9] rounded p-4 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
                                         <div>
-                                            <h4 className="font-bold text-white text-sm md:text-base">Setup / Art Prep</h4>
-                                            {calc.setup === 0 && <p className="text-[10px] font-bold text-emerald-400 mt-0.5 uppercase tracking-widest">Fee Waived</p>}
+                                            <h4 className="font-medium text-[#1a1a1a] text-sm md:text-base">Setup / Art Prep</h4>
+                                            {calc.setup === 0 && <p className="text-[10px] font-medium text-[#4b6b45] mt-0.5 uppercase tracking-widest">Fee Waived</p>}
                                         </div>
                                         <div className="text-left sm:text-right">
-                                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Line Value</span>
-                                            <span className={`font-bold text-lg block ${calc.setup === 0 ? 'text-emerald-400' : 'text-indigo-300'}`}>
+                                            <span className="text-[10px] font-medium text-[#8a8a80] uppercase tracking-widest">Line Value</span>
+                                            <span className={`font-medium text-lg block ${calc.setup === 0 ? 'text-[#4b6b45]' : 'text-[#1a1a1a]'}`}>
                                                 {calc.setup === 0 ? 'WAIVED' : formatCurrency(calc.setup)}
                                             </span>
                                         </div>
                                     </div>
 
-                                    <div className="bg-slate-800 border border-slate-700 rounded-xl p-4 shadow-sm flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
+                                    <div className="bg-white border border-[#e3e1d9] rounded p-4 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
                                         <div>
-                                            <h4 className="font-bold text-white text-sm md:text-base">Digitizing / File Conversion</h4>
-                                            {calc.digitizing === 0 && <p className="text-[10px] font-bold text-emerald-400 mt-0.5 uppercase tracking-widest">Fee Waived</p>}
+                                            <h4 className="font-medium text-[#1a1a1a] text-sm md:text-base">Digitizing / File Conversion</h4>
+                                            {calc.digitizing === 0 && <p className="text-[10px] font-medium text-[#4b6b45] mt-0.5 uppercase tracking-widest">Fee Waived</p>}
                                         </div>
                                         <div className="text-left sm:text-right">
-                                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Line Value</span>
-                                            <span className={`font-bold text-lg block ${calc.digitizing === 0 ? 'text-emerald-400' : 'text-indigo-300'}`}>
+                                            <span className="text-[10px] font-medium text-[#8a8a80] uppercase tracking-widest">Line Value</span>
+                                            <span className={`font-medium text-lg block ${calc.digitizing === 0 ? 'text-[#4b6b45]' : 'text-[#1a1a1a]'}`}>
                                                 {calc.digitizing === 0 ? 'WAIVED' : formatCurrency(calc.digitizing)}
                                             </span>
                                         </div>
                                     </div>
 
                                     {(orderData.rushFee > 0 || orderData.rushFeeWaived) && (
-                                        <div className="bg-slate-800 border border-slate-700 rounded-xl p-4 shadow-sm flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
+                                        <div className="bg-white border border-[#e3e1d9] rounded p-4 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
                                             <div>
-                                                <h4 className="font-bold text-white text-sm md:text-base">Rush Order Fee</h4>
-                                                {orderData.rushFeeWaived && <p className="text-[10px] font-bold text-emerald-400 mt-0.5 uppercase tracking-widest">Fee Waived</p>}
+                                                <h4 className="font-medium text-[#1a1a1a] text-sm md:text-base">Rush Order Fee</h4>
+                                                {orderData.rushFeeWaived && <p className="text-[10px] font-medium text-[#4b6b45] mt-0.5 uppercase tracking-widest">Fee Waived</p>}
                                             </div>
                                             <div className="text-left sm:text-right">
-                                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Line Value</span>
-                                                <span className={`font-bold text-lg block ${orderData.rushFeeWaived ? 'text-emerald-400' : 'text-indigo-300'}`}>
+                                                <span className="text-[10px] font-medium text-[#8a8a80] uppercase tracking-widest">Line Value</span>
+                                                <span className={`font-medium text-lg block ${orderData.rushFeeWaived ? 'text-[#4b6b45]' : 'text-[#1a1a1a]'}`}>
                                                     {orderData.rushFeeWaived ? 'WAIVED' : formatCurrency(calc.rush)}
                                                 </span>
                                             </div>
@@ -1476,51 +1440,66 @@
                             </div>
                             
                             <div>
-                                <h3 className="text-sm font-bold border-b border-slate-700 pb-3 mb-4 text-amber-300 uppercase tracking-widest">Order Math & Cash Allocation</h3>
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-4 text-xs md:text-sm mb-4">
-                                    <div className="flex justify-between border-b sm:border-0 border-slate-700 pb-1 sm:pb-0"><span className="text-slate-400">Total Rev:</span><span className="font-bold">{formatCurrency(calc.discountedSubtotal)}</span></div>
-                                    <div className="flex justify-between border-b sm:border-0 border-slate-700 pb-1 sm:pb-0"><span className="text-slate-400">Garment Cost:</span><span className="font-bold text-rose-400">-{formatCurrency(calc.orderGarmentCostTotal)}</span></div>
-                                    <div className="flex justify-between border-b sm:border-0 border-slate-700 pb-1 sm:pb-0"><span className="text-slate-400">Decoration Cost:</span><span className="font-bold text-rose-400">-{formatCurrency(calc.orderDecoCostTotal)}</span></div>
-                                    <div className="flex justify-between border-b sm:border-0 border-slate-700 pb-1 sm:pb-0"><span className="text-slate-400">Gross Profit:</span><span className="font-bold text-white">{formatCurrency(calc.discountedSubtotal - calc.orderGarmentCostTotal - calc.orderDecoCostTotal)}</span></div>
-                                </div>
-                                
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                                    <div className="bg-slate-800 p-3 rounded-xl border border-slate-700 space-y-2 text-xs md:text-sm">
-                                        <h4 className="text-[10px] font-black text-rose-400 uppercase tracking-widest">Operating Deductions</h4>
-                                        <div className="flex justify-between"><span className="text-slate-300">Consumables ({shopSettings.fundConsumables}%):</span><span className="font-bold text-rose-400">-{formatCurrency(calc.allocConsumables)}</span></div>
-                                        <div className="flex justify-between"><span className="text-slate-300">Tax Reserve ({shopSettings.fundTax}%):</span><span className="font-bold text-rose-400">-{formatCurrency(calc.allocTax)}</span></div>
-                                        
-                                        {calc.digitizingCost > 0 && (
-                                            <div className="flex justify-between border-t border-slate-700 pt-2 mt-2">
-                                                <span className="text-slate-300">Outsourced Digitizing:</span>
-                                                <span className="font-bold text-rose-400">-{formatCurrency(calc.digitizingCost)}</span>
-                                            </div>
-                                        )}
+                                <h3 className="ka-serif text-lg text-[#1a1a1a] border-b border-[#e3e1d9] pb-3 mb-4">Total Order Math & Cash Allocation (All Line Items)</h3>
+
+                                <div className="bg-white border border-[#e3e1d9] rounded overflow-hidden text-sm mb-4">
+                                    <div className="flex justify-between px-4 py-2.5 text-[#1a1a1a]">
+                                        <span>Customer Cost <span className="text-[#8a8a80] text-xs">(Total Revenue)</span></span>
+                                        <span className="font-medium">{formatCurrency(calc.discountedSubtotal)}</span>
+                                    </div>
+                                    <div className="flex justify-between px-4 py-2.5 text-[#4a4a44] border-t border-[#efeee8]">
+                                        <span>Garment Costs (Total)</span>
+                                        <span className="font-medium text-[#9a3f2e]">-{formatCurrency(calc.orderGarmentCostTotal)}</span>
+                                    </div>
+                                    <div className="flex justify-between px-4 py-2.5 text-[#4a4a44] border-t border-[#efeee8]">
+                                        <span>Decoration Costs</span>
+                                        <span className="font-medium text-[#9a3f2e]">-{formatCurrency(calc.orderDecoCostTotal)}</span>
+                                    </div>
+                                    <div className="flex justify-between px-4 py-3 bg-[#faf9f6] border-t border-[#e3e1d9]">
+                                        <span className="ka-serif text-[#1a1a1a]">Subtotal Gross Profit</span>
+                                        <span className="ka-serif text-[#1a1a1a]">{formatCurrency(calc.discountedSubtotal - calc.orderGarmentCostTotal - calc.orderDecoCostTotal)}</span>
                                     </div>
 
-                                    <div className="bg-indigo-900/30 p-3 rounded-xl border border-indigo-800/50 space-y-2 text-xs md:text-sm">
-                                        <h4 className="text-[10px] font-black text-indigo-400 uppercase tracking-widest">Retained Savings Allocations</h4>
-                                        <div className="flex justify-between"><span className="text-indigo-200">Growth/Machine ({shopSettings.fundGrowth}%):</span><span className="font-bold text-indigo-400">{formatCurrency(calc.allocGrowth)}</span></div>
-                                        <p className="text-[9px] text-indigo-300/70 italic leading-tight mt-1">This is retained profit earmarked for future growth, not an operating expense.</p>
+                                    <div className="px-4 pt-3 pb-1 text-[10px] font-semibold text-[#8a8a80] uppercase tracking-widest border-t border-[#e3e1d9]">Operating Deductions</div>
+                                    <div className="flex justify-between px-4 py-2 pl-6 text-[13px] text-[#4a4a44]">
+                                        <span>Consumable Replacement Costs ({shopSettings.fundConsumables}%)</span>
+                                        <span className="font-medium text-[#9a3f2e]">-{formatCurrency(calc.allocConsumables)}</span>
                                     </div>
-                                </div>
+                                    <div className="flex justify-between px-4 py-2 pl-6 pb-3 text-[13px] text-[#4a4a44]">
+                                        <span>Tax Reserve ({shopSettings.fundTax}%)</span>
+                                        <span className="font-medium text-[#9a3f2e]">-{formatCurrency(calc.allocTax)}</span>
+                                    </div>
+                                    {calc.digitizingCost > 0 && (
+                                        <div className="flex justify-between px-4 py-2 pl-6 pb-3 text-[13px] text-[#4a4a44]">
+                                            <span>Outsourced Digitizing</span>
+                                            <span className="font-medium text-[#9a3f2e]">-{formatCurrency(calc.digitizingCost)}</span>
+                                        </div>
+                                    )}
 
-                                <div className="mt-4 pt-4 border-t border-slate-700 flex justify-between items-center">
-                                    <div className="flex flex-col">
-                                        <span className="font-bold uppercase tracking-widest text-[10px] md:text-xs text-slate-300">True Net Profit</span>
-                                        <span className={`text-[9px] md:text-[11px] font-black uppercase tracking-widest ${getHealthColor(calc.overallMarginPercent)}`}>{calc.overallMarginPercent.toFixed(1)}% MARGIN</span>
+                                    <div className={`flex justify-between items-center px-4 py-4 border-t ${getHealthBg(calc.overallMarginPercent)}`}>
+                                        <div className="flex flex-col">
+                                            <span className={`ka-serif text-sm md:text-base ${getHealthColor(calc.overallMarginPercent)}`}>Profit After Material and Consumables</span>
+                                            <span className={`text-[10px] font-semibold uppercase tracking-widest mt-1 ${getHealthColor(calc.overallMarginPercent)}`}>{calc.overallMarginPercent.toFixed(1)}% margin</span>
+                                        </div>
+                                        <span className={`ka-serif text-2xl md:text-3xl ${getHealthColor(calc.overallMarginPercent)}`}>{formatCurrency(calc.netProfit)}</span>
                                     </div>
-                                    <span className={`text-2xl md:text-3xl font-black ${getHealthColor(calc.overallMarginPercent)}`}>{formatCurrency(calc.netProfit)}</span>
+
+                                    {calc.allocGrowth > 0 && (
+                                        <div className="flex justify-between items-center px-4 py-2.5 border-t border-[#e3e1d9] bg-[#eef1f5]">
+                                            <span className="text-[13px] text-[#26344d]">&#8627; Of this, set aside as Retained Savings ({shopSettings.fundGrowth}%) &mdash; still yours, just earmarked</span>
+                                            <span className="font-medium text-[#26344d] whitespace-nowrap ml-3">{formatCurrency(calc.allocGrowth)}</span>
+                                        </div>
+                                    )}
                                 </div>
 
                                 {calc.netProfit > 0 && (
-                                    <div className="mt-4 bg-slate-800/80 p-3 md:p-4 rounded-xl border border-slate-700">
+                                    <div className="mt-4 bg-[#faf9f6] p-3 md:p-4 rounded border border-[#e3e1d9]">
                                         <div className="flex items-center gap-2 mb-2">
-                                            <Icon name="activity" size={14} className="text-sky-400" />
-                                            <span className="text-[10px] font-black uppercase tracking-widest text-sky-400">Shop Rate Check ({formatCurrency(calc.targetRate)}/hr)</span>
+                                            <Icon name="activity" size={14} className="text-[#26344d]" />
+                                            <span className="text-[10px] font-semibold uppercase tracking-widest text-[#26344d]">Shop Rate Check ({formatCurrency(calc.targetRate)}/hr)</span>
                                         </div>
-                                        <p className="text-xs md:text-sm text-slate-300 leading-relaxed">
-                                            To hit your target shop rate, this entire job (admin, art prep, production, and packing) must be completed in under <strong className="text-white bg-slate-700 px-2 py-0.5 rounded ml-1">{calc.timeString}</strong>.
+                                        <p className="text-xs md:text-sm text-[#4a4a44] leading-relaxed">
+                                            To hit your target shop rate, this entire job (admin, art prep, production, and packing) must be completed in under <strong className="text-[#1a1a1a] bg-[#f1efe9] px-2 py-0.5 rounded ml-1">{calc.timeString}</strong>.
                                         </p>
                                     </div>
                                 )}
@@ -1528,14 +1507,37 @@
                         </div>
                     )}
 
-                    <div className="bg-white rounded-2xl shadow-sm p-4 md:p-6 border border-slate-200 relative overflow-hidden">
-                        <div className={`absolute top-0 left-0 w-2 h-full ${calc.overallMarginPercent >= shopSettings.marginGreen ? 'bg-emerald-500' : calc.overallMarginPercent >= shopSettings.marginYellow ? 'bg-amber-500' : 'bg-rose-500'}`}></div>
-                        <div className="flex justify-between items-end border-b border-slate-100 pb-3 md:pb-4 mb-3 md:mb-4 pl-3 md:pl-4">
-                            <span className="text-slate-500 font-bold uppercase tracking-widest text-xs md:text-sm">Order Total</span>
-                            <span className="text-3xl md:text-4xl font-black text-indigo-700">{formatCurrency(calc.grandTotal)}</span>
+                    <div className="ka-card p-4 md:p-6 relative overflow-hidden">
+                        <div className={`absolute top-0 left-0 w-2 h-full ${calc.overallMarginPercent >= shopSettings.marginGreen ? 'bg-[#4b6b45]' : calc.overallMarginPercent >= shopSettings.marginYellow ? 'bg-[#8a6a1f]' : 'bg-[#9a3f2e]'}`}></div>
+                        <div className="flex justify-between items-end border-b border-[#e3e1d9] pb-3 md:pb-4 mb-3 md:mb-4 pl-3 md:pl-4">
+                            <span className="ka-label mb-0 text-xs md:text-sm">Order Total</span>
+                            <span className="ka-serif text-3xl md:text-4xl text-[#1a1a1a]">{formatCurrency(calc.grandTotal)}</span>
                         </div>
+
+                        <div className="pl-3 md:pl-4 mb-4">
+                            <p className="ka-label mb-2">Your Bottom Line</p>
+                            <div className="grid grid-cols-2 gap-3 md:gap-4">
+                                <div className={`rounded p-3 flex flex-col justify-center border ${getHealthBg(calc.overallMarginPercent)}`}>
+                                    <span className={`text-[9px] md:text-[10px] font-semibold uppercase tracking-widest mb-1 ${getHealthColor(calc.overallMarginPercent)}`}>Net Profit</span>
+                                    <span className={`ka-serif text-lg md:text-xl ${getHealthColor(calc.overallMarginPercent)}`}>{formatCurrency(calc.netProfit)}</span>
+                                </div>
+                                <div className={`rounded p-3 flex flex-col justify-center border ${getHealthBg(calc.overallMarginPercent)}`}>
+                                    <span className={`text-[9px] md:text-[10px] font-semibold uppercase tracking-widest mb-1 ${getHealthColor(calc.overallMarginPercent)}`}>True Margin</span>
+                                    <span className={`ka-serif text-lg md:text-xl ${getHealthColor(calc.overallMarginPercent)}`}>{calc.overallMarginPercent.toFixed(1)}%</span>
+                                </div>
+                            </div>
+                            {calc.netProfit > 0 && (
+                                <div className="mt-3 bg-[#faf9f6] border border-[#e3e1d9] rounded p-3 flex items-start gap-2">
+                                    <Icon name="activity" size={14} className="text-[#26344d] mt-0.5 shrink-0" />
+                                    <p className="text-xs md:text-sm text-[#4a4a44] leading-relaxed">
+                                        At your {formatCurrency(calc.targetRate)}/hr target, you have <strong className="text-[#1a1a1a]">{calc.timeString}</strong> of labor budget on this job before your time starts eating into that profit.
+                                    </p>
+                                </div>
+                            )}
+                        </div>
+
                         <div className="flex flex-col md:flex-row gap-2 md:gap-3 pl-3 md:pl-4">
-                            <button onClick={handleSendToPipeline} className="flex-1 py-3 md:py-4 bg-emerald-600 text-white rounded-xl font-bold text-base md:text-lg shadow-md hover:bg-emerald-700 active:scale-95 transition-all">
+                            <button onClick={handleSendToPipeline} className="ka-btn ka-btn-dark flex-1 py-3 md:py-4 text-sm">
                                 {editingOrderId ? 'Update Quote in Pipeline' : 'Save & Send to Pipeline'}
                             </button>
                             {editingOrderId && (
@@ -1544,7 +1546,7 @@
                                     setOrderData(defaultOrderData);
                                     setItems([defaultItem]);
                                     setAppModule('pipeline');
-                                }} className="px-6 md:px-8 py-3 md:py-4 bg-slate-200 text-slate-700 rounded-xl font-bold hover:bg-slate-300 active:scale-95 transition-all">
+                                }} className="ka-btn ka-btn-outline px-6 md:px-8 py-3 md:py-4 text-sm">
                                     Cancel Edit
                                 </button>
                             )}
